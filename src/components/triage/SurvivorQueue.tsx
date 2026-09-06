@@ -10,11 +10,15 @@ import {
   Send,
   UserCheck,
   CheckCircle2,
-  Sparkles,
+  X,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 
-export const SurvivorQueue: React.FC = () => {
+interface SurvivorQueueProps {
+  onClose?: () => void;
+}
+
+export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
   const {
     survivors,
     robots,
@@ -58,9 +62,20 @@ export const SurvivorQueue: React.FC = () => {
             Survivor Triage Queue ({survivors.length})
           </h2>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800">
-          START PROTOCOL
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800 hidden sm:inline-block">
+            START PROTOCOL
+          </span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Close Triage Panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Survivor List */}

@@ -1078,17 +1078,26 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     </span>
                   </div>
 
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                      selectedRobot.commsStatus === 'connected'
-                        ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
-                        : selectedRobot.commsStatus === 'degraded'
-                        ? 'bg-amber-950 text-amber-300 border-amber-700'
-                        : 'bg-rose-950 text-rose-300 border-rose-700 animate-pulse'
-                    }`}
-                  >
-                    {selectedRobot.commsStatus.toUpperCase()}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                        selectedRobot.commsStatus === 'connected'
+                          ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
+                          : selectedRobot.commsStatus === 'degraded'
+                          ? 'bg-amber-950 text-amber-300 border-amber-700'
+                          : 'bg-rose-950 text-rose-300 border-rose-700 animate-pulse'
+                      }`}
+                    >
+                      {selectedRobot.commsStatus.toUpperCase()}
+                    </span>
+                    <button
+                      onClick={() => selectRobot(null)}
+                      className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                      title="Close Inspector"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Telemetry stats */}
@@ -1150,9 +1159,18 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     <span className="text-base">❤️</span>
                     <span className="font-bold text-white text-sm">{selectedSurvivor.label}</span>
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700 font-bold animate-pulse">
-                    {selectedSurvivor.triage.toUpperCase()}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700 font-bold animate-pulse">
+                      {selectedSurvivor.triage.toUpperCase()}
+                    </span>
+                    <button
+                      onClick={() => selectSurvivor(null)}
+                      className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                      title="Close Inspector"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mb-2 text-[11px] text-slate-300">
@@ -1188,9 +1206,18 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     <span className="text-base">{selectedHazard.type === 'gas_leak' ? '☣' : '⚠'}</span>
                     <span className="font-bold text-white text-sm">{selectedHazard.title}</span>
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700 font-bold">
-                    {selectedHazard.severity.toUpperCase()}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700 font-bold">
+                      {selectedHazard.severity.toUpperCase()}
+                    </span>
+                    <button
+                      onClick={() => selectHazard(null)}
+                      className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                      title="Close Inspector"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <p className="text-xs text-amber-300 font-bold mb-2 bg-amber-950/40 p-2 rounded border border-amber-500/40">

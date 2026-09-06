@@ -11,11 +11,17 @@ import {
   Navigation,
   Bot,
   Compass,
-  AlertTriangle,
   RotateCw,
+  X,
+  MapPin,
 } from 'lucide-react';
+import { soundManager } from '../../utils/sound';
 
-export const RobotRoster: React.FC = () => {
+interface RobotRosterProps {
+  onClose?: () => void;
+}
+
+export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
   const {
     robots,
     selectedRobotId,
@@ -26,6 +32,7 @@ export const RobotRoster: React.FC = () => {
   } = useMission();
 
   const [filter, setFilter] = useState<'all' | 'connected' | 'degraded' | 'disconnected'>('all');
+  const [autoCloseOnSelect, setAutoCloseOnSelect] = useState<boolean>(false);
 
   const filteredRobots = robots.filter((r) => {
     if (filter === 'all') return true;
@@ -49,6 +56,14 @@ export const RobotRoster: React.FC = () => {
     }
   };
 
+  const handleSelectRobot = (botId: string) => {
+    selectRobot(botId);
+    soundManager.playTacticalClick();
+    if (autoCloseOnSelect && onClose) {
+      onClose();
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#070b14] border border-slate-800 rounded-xl overflow-hidden shadow-xl">
       {/* Panel Header */}
@@ -59,10 +74,44 @@ export const RobotRoster: React.FC = () => {
             Swarm Tele-Ops Roster ({robots.length})
           </h2>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
-          MESH AUTO-SYNC
-        </span>
+        
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 hidden sm:inline-block">
+            MESH AUTO-SYNC
+          </span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Close Roster Panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Auto-Close Toggle & Quick Close Bar */}
+      {onClose && (
+        <div className="px-3 py-1.5 bg-slate-950/80 border-b border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <label className="flex items-center gap-1.5 cursor-pointer hover:text-slate-200 select-none">
+            <input
+              type="checkbox"
+              checked={autoCloseOnSelect}
+              onChange={(e) => setAutoCloseOnSelect(e.target.checked)}
+              className="rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-0 focus:ring-offset-0 w-3 h-3 cursor-pointer"
+            />
+            <span>Auto-close when chosen</span>
+          </label>
+          <button
+            onClick={onClose}
+            className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 text-[10px]"
+          >
+            <span>Close menu</span>
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-1 p-2 bg-slate-950/60 border-b border-slate-800 text-[11px] font-mono overflow-x-auto">
@@ -121,7 +170,7 @@ export const RobotRoster: React.FC = () => {
           return (
             <div
               key={bot.id}
-              onClick={() => selectRobot(bot.id)}
+              onClick={() => handleSelectRobot(bot.id)}
               className={`p-3 rounded-lg border transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-cyan-950/40 border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
@@ -161,21 +210,13 @@ export const RobotRoster: React.FC = () => {
                 ) : (
                   <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/50">
                     <Wifi className="w-3 h-3 text-emerald-400" />
-                    <span>{bot.signalStrength}% RSSI</span>
+                    <span>ONLINE</span>
                   </span>
                 )}
               </div>
 
-              {/* Offline Packet Buffer Notice */}
-              {isDisconnected && (
-                <div className="mb-2 p-1.5 rounded bg-rose-900/30 border border-rose-800/40 text-[10px] font-mono text-rose-200 flex items-center justify-between">
-                  <span>Store-and-Forward Telemetry:</span>
-                  <span className="font-bold text-rose-300">{bot.storeAndForwardBacklog} packets buffered</span>
-                </div>
-              )}
-
-              {/* Task Description */}
-              <p className="text-[11px] text-slate-300 font-mono mb-2 line-clamp-2 leading-relaxed">
+              {/* Current Task */}
+              <p className="text-xs text-slate-300 font-mono mb-2 line-clamp-2 leading-relaxed">
                 {bot.currentTask}
               </p>
 
@@ -268,6 +309,22 @@ export const RobotRoster: React.FC = () => {
                   </button>
                 )}
               </div>
+
+              {/* View on Map & Close Menu Button (Shown when selected) */}
+              {isSelected && onClose && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectRobot(bot.id);
+                    soundManager.playTacticalClick();
+                    onClose();
+                  }}
+                  className="w-full mt-2.5 py-1.5 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/50 text-[11px] font-bold font-mono flex items-center justify-center gap-1.5 transition-all shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>View on Map & Close Menu</span>
+                </button>
+              )}
             </div>
           );
         })}
