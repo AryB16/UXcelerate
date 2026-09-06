@@ -13,6 +13,9 @@ import {
   Navigation,
   Sparkles,
   Signal,
+  Compass,
+  MapPin,
+  Shield,
 } from 'lucide-react';
 
 export const TacticalMap: React.FC = () => {
@@ -34,7 +37,6 @@ export const TacticalMap: React.FC = () => {
     deployBeaconAt,
     openFpv,
     restoreComms,
-    isStoreAndForwardSyncing,
   } = useMission();
 
   const [zoom, setZoom] = useState<number>(1);
@@ -45,8 +47,8 @@ export const TacticalMap: React.FC = () => {
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
-  const handleZoomIn = () => setZoom((z) => Math.min(2.2, z + 0.15));
-  const handleZoomOut = () => setZoom((z) => Math.max(0.7, z - 0.15));
+  const handleZoomIn = () => setZoom((z) => Math.min(2.4, z + 0.15));
+  const handleZoomOut = () => setZoom((z) => Math.max(0.65, z - 0.15));
   const handleReset = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -76,22 +78,23 @@ export const TacticalMap: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-full bg-[#05080f] rounded-xl border border-slate-800/80 overflow-hidden flex flex-col shadow-2xl">
+    <div className="relative w-full h-full bg-[#070c16] rounded-xl border-2 border-cyan-500/30 overflow-hidden flex flex-col shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+      
       {/* Top Map Action & Layer Controls Bar */}
-      <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-slate-900/90 border-b border-slate-800 z-10 gap-2">
+      <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-[#0a1120] border-b border-cyan-500/30 z-10 gap-2">
         
         {/* Layer Toggles */}
         <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-mono">
-          <span className="text-slate-500 flex items-center gap-1 mr-1 text-[11px]">
-            <Layers className="w-3.5 h-3.5 text-cyan-400" /> LAYERS:
+          <span className="text-cyan-400 font-bold flex items-center gap-1 mr-1 text-xs">
+            <Layers className="w-4 h-4 text-cyan-400" /> LAYERS:
           </span>
 
           <button
             onClick={() => toggleLayer('blueprint')}
-            className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
               layers.blueprint
-                ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
-                : 'bg-slate-800/50 text-slate-500 border-slate-700/50'
+                ? 'bg-blue-500/25 text-blue-200 border-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.3)]'
+                : 'bg-slate-900 text-slate-500 border-slate-700'
             }`}
           >
             Pre-CAD Grid
@@ -99,21 +102,21 @@ export const TacticalMap: React.FC = () => {
 
           <button
             onClick={() => toggleLayer('slam')}
-            className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
               layers.slam
-                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                : 'bg-slate-800/50 text-slate-500 border-slate-700/50'
+                ? 'bg-cyan-500/25 text-cyan-200 border-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.3)]'
+                : 'bg-slate-900 text-slate-500 border-slate-700'
             }`}
           >
-            SLAM LiDAR
+            LiDAR SLAM
           </button>
 
           <button
             onClick={() => toggleLayer('mesh')}
-            className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
               layers.mesh
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                : 'bg-slate-800/50 text-slate-500 border-slate-700/50'
+                ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]'
+                : 'bg-slate-900 text-slate-500 border-slate-700'
             }`}
           >
             RF Mesh Links
@@ -121,10 +124,10 @@ export const TacticalMap: React.FC = () => {
 
           <button
             onClick={() => toggleLayer('hazards')}
-            className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
               layers.hazards
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                : 'bg-slate-800/50 text-slate-500 border-slate-700/50'
+                ? 'bg-amber-500/25 text-amber-200 border-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
+                : 'bg-slate-900 text-slate-500 border-slate-700'
             }`}
           >
             Hazards
@@ -132,10 +135,10 @@ export const TacticalMap: React.FC = () => {
 
           <button
             onClick={() => toggleLayer('routes')}
-            className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
               layers.routes
-                ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
-                : 'bg-slate-800/50 text-slate-500 border-slate-700/50'
+                ? 'bg-sky-500/25 text-sky-200 border-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.3)]'
+                : 'bg-slate-900 text-slate-500 border-slate-700'
             }`}
           >
             Corridors
@@ -143,10 +146,10 @@ export const TacticalMap: React.FC = () => {
 
           <button
             onClick={() => toggleLayer('staleness')}
-            className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
               layers.staleness
-                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                : 'bg-slate-800/50 text-slate-500 border-slate-700/50'
+                ? 'bg-rose-500/25 text-rose-200 border-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.3)]'
+                : 'bg-slate-900 text-slate-500 border-slate-700'
             }`}
           >
             Staleness Decay
@@ -154,44 +157,44 @@ export const TacticalMap: React.FC = () => {
         </div>
 
         {/* Map Tool Actions: Zoom, Reset, Deploy Beacon */}
-        <div className="flex items-center gap-1.5 text-xs font-mono ml-auto">
+        <div className="flex items-center gap-2 text-xs font-mono ml-auto">
           <button
             onClick={() => setIsDeployMode(!isDeployMode)}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium border transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
               isDeployMode
-                ? 'bg-cyan-500 text-black border-cyan-400 font-bold shadow-[0_0_12px_rgba(6,182,212,0.6)] animate-pulse'
-                : 'bg-slate-800 text-cyan-300 border-cyan-500/30 hover:bg-slate-700'
+                ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-extrabold shadow-[0_0_15px_rgba(6,182,212,0.6)] animate-pulse'
+                : 'bg-slate-800 text-cyan-300 border-cyan-500/40 hover:bg-slate-700'
             }`}
           >
-            <Radio className="w-3.5 h-3.5" />
+            <Radio className="w-4 h-4" />
             <span>{isDeployMode ? 'Click Map to Drop Beacon' : 'Deploy RF Beacon'}</span>
           </button>
 
-          <div className="flex items-center bg-slate-800 rounded border border-slate-700">
+          <div className="flex items-center bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
             <button
               onClick={handleZoomIn}
-              className="p-1 text-slate-300 hover:text-cyan-300 border-r border-slate-700"
+              className="p-1.5 text-slate-300 hover:text-cyan-300 border-r border-slate-700 transition-colors"
               title="Zoom In"
             >
-              <ZoomIn className="w-3.5 h-3.5" />
+              <ZoomIn className="w-4 h-4" />
             </button>
             <button
               onClick={handleZoomOut}
-              className="p-1 text-slate-300 hover:text-cyan-300 border-r border-slate-700"
+              className="p-1.5 text-slate-300 hover:text-cyan-300 border-r border-slate-700 transition-colors"
               title="Zoom Out"
             >
-              <ZoomOut className="w-3.5 h-3.5" />
+              <ZoomOut className="w-4 h-4" />
             </button>
             <button
               onClick={handleReset}
-              className="p-1 text-slate-300 hover:text-cyan-300"
+              className="p-1.5 text-slate-300 hover:text-cyan-300 transition-colors"
               title="Reset View"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="text-[11px] text-slate-400 px-1.5 py-0.5 bg-slate-950 rounded border border-slate-800">
+          <div className="text-xs font-bold text-cyan-300 px-2.5 py-1 bg-slate-950 rounded-lg border border-slate-800">
             {Math.round(zoom * 100)}%
           </div>
         </div>
@@ -200,9 +203,9 @@ export const TacticalMap: React.FC = () => {
 
       {/* Deploy mode alert banner */}
       {isDeployMode && (
-        <div className="absolute top-12 left-1/2 transform -translate-x-1/2 z-20 px-4 py-1.5 bg-cyan-950/95 border border-cyan-400 text-cyan-200 text-xs font-mono rounded-full shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center gap-2">
-          <Radio className="w-3.5 h-3.5 animate-spin" />
-          <span>BEACON DEPLOY MODE: Click anywhere in the disaster field to deploy an RF Mesh Relay</span>
+        <div className="absolute top-14 left-1/2 transform -translate-x-1/2 z-20 px-5 py-2 bg-cyan-950 border-2 border-cyan-400 text-cyan-100 text-xs font-mono font-bold rounded-full shadow-[0_0_25px_rgba(6,182,212,0.5)] flex items-center gap-2">
+          <Radio className="w-4 h-4 animate-spin text-cyan-400" />
+          <span>BEACON DEPLOY ACTIVE: Click anywhere in the disaster rubble to drop a Mesh Relay Node</span>
         </div>
       )}
 
@@ -223,41 +226,33 @@ export const TacticalMap: React.FC = () => {
           onClick={handleMapClick}
         >
           <defs>
-            {/* Fog of uncertainty diagonal hatch pattern */}
+            {/* Fog of uncertainty diagonal hatch pattern - high contrast dark charcoal */}
             <pattern
               id="fogOfUncertainty"
-              width="16"
-              height="16"
+              width="20"
+              height="20"
               patternTransform="rotate(45 0 0)"
               patternUnits="userSpaceOnUse"
             >
-              <line x1="0" y1="0" x2="0" y2="16" stroke="#1e293b" strokeWidth="3" opacity="0.6" />
+              <rect width="20" height="20" fill="#03060a" />
+              <line x1="0" y1="0" x2="0" y2="20" stroke="#1e293b" strokeWidth="4" opacity="0.9" />
             </pattern>
 
-            {/* Pre-disaster CAD Grid Pattern */}
+            {/* Pre-disaster CAD Grid Pattern - clean blue architectural lines */}
             <pattern id="cadGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(30, 58, 138, 0.25)" strokeWidth="0.75" />
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(30, 58, 138, 0.4)" strokeWidth="1" />
             </pattern>
 
-            {/* Radial glow filter for survivors */}
-            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Hazard radial gradient */}
+            {/* Radial hazard pulse */}
             <radialGradient id="hazardPulse" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(239, 68, 68, 0.45)" />
-              <stop offset="70%" stopColor="rgba(239, 68, 68, 0.15)" />
+              <stop offset="0%" stopColor="rgba(239, 68, 68, 0.55)" />
+              <stop offset="70%" stopColor="rgba(239, 68, 68, 0.2)" />
               <stop offset="100%" stopColor="rgba(239, 68, 68, 0)" />
             </radialGradient>
 
             {/* Staleness pulse gradient */}
             <radialGradient id="staleGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(245, 158, 11, 0.2)" />
+              <stop offset="0%" stopColor="rgba(245, 158, 11, 0.28)" />
               <stop offset="100%" stopColor="rgba(245, 158, 11, 0)" />
             </radialGradient>
           </defs>
@@ -265,48 +260,86 @@ export const TacticalMap: React.FC = () => {
           {/* Transform group for Pan & Zoom */}
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
             
-            {/* Background Grid */}
-            <rect x="0" y="0" width="800" height="650" fill="#06090e" />
+            {/* Deep Tactical Canvas Background */}
+            <rect x="0" y="0" width="800" height="650" fill="#060a13" />
 
             {/* Pre-disaster CAD Blueprint Layer */}
             {layers.blueprint && (
               <rect x="0" y="0" width="800" height="650" fill="url(#cadGrid)" />
             )}
 
-            {/* Sector Polygons & Staleness Heatmaps */}
+            {/* SECTOR POLYGONS & HIGH-CONTRAST LABELS */}
             {sectors.map((sec) => {
               const width = sec.bounds.maxX - sec.bounds.minX;
               const height = sec.bounds.maxY - sec.bounds.minY;
               const isStale = sec.stalenessMinutes > 10;
+              const isCritical = sec.structuralRating === 'critical_tilt';
+              const isUnstable = sec.structuralRating === 'unstable';
+
+              const sectorStroke = isCritical ? '#ef4444' : isUnstable ? '#f59e0b' : '#38bdf8';
+              const sectorFill = isCritical
+                ? 'rgba(239, 68, 68, 0.08)'
+                : isUnstable
+                ? 'rgba(245, 158, 11, 0.06)'
+                : 'rgba(56, 189, 248, 0.04)';
 
               return (
                 <g key={sec.id}>
-                  {/* Sector Boundary Box */}
+                  {/* Sector Boundary Box - Thick & High Contrast */}
                   <rect
                     x={sec.bounds.minX}
                     y={sec.bounds.minY}
                     width={width}
                     height={height}
-                    fill={sec.structuralRating === 'critical_tilt' ? 'rgba(239, 68, 68, 0.04)' : 'rgba(15, 23, 42, 0.3)'}
-                    stroke={sec.structuralRating === 'critical_tilt' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(71, 85, 105, 0.4)'}
-                    strokeWidth="1.5"
-                    strokeDasharray={sec.structuralRating === 'critical_tilt' ? '6,3' : undefined}
-                    rx="6"
+                    fill={sectorFill}
+                    stroke={sectorStroke}
+                    strokeWidth="2.5"
+                    strokeDasharray={isCritical ? '8,4' : undefined}
+                    rx="8"
                   />
 
-                  {/* Fog of uncertainty for partially scanned sectors */}
+                  {/* Corner Accent Brackets for High-Tech Military C2 Look */}
+                  <path
+                    d={`M ${sec.bounds.minX} ${sec.bounds.minY + 20} L ${sec.bounds.minX} ${sec.bounds.minY} L ${sec.bounds.minX + 20} ${sec.bounds.minY}`}
+                    fill="none"
+                    stroke={sectorStroke}
+                    strokeWidth="4"
+                  />
+                  <path
+                    d={`M ${sec.bounds.maxX - 20} ${sec.bounds.minY} L ${sec.bounds.maxX} ${sec.bounds.minY} L ${sec.bounds.maxX} ${sec.bounds.minY + 20}`}
+                    fill="none"
+                    stroke={sectorStroke}
+                    strokeWidth="4"
+                  />
+
+                  {/* Fog of uncertainty for uninspected rubble voids */}
                   {sec.scannedPercentage < 100 && (
-                    <rect
-                      x={sec.bounds.minX + (width * sec.scannedPercentage) / 100}
-                      y={sec.bounds.minY}
-                      width={width * (1 - sec.scannedPercentage / 100)}
-                      height={height}
-                      fill="url(#fogOfUncertainty)"
-                      rx="6"
-                    />
+                    <g>
+                      <rect
+                        x={sec.bounds.minX + (width * sec.scannedPercentage) / 100}
+                        y={sec.bounds.minY}
+                        width={width * (1 - sec.scannedPercentage / 100)}
+                        height={height}
+                        fill="url(#fogOfUncertainty)"
+                        rx="8"
+                      />
+                      {/* Unexplored Void Warning Stamp */}
+                      <text
+                        x={sec.bounds.minX + (width * sec.scannedPercentage) / 100 + 15}
+                        y={sec.bounds.minY + height / 2}
+                        fill="#64748b"
+                        fontSize="12"
+                        fontFamily="JetBrains Mono"
+                        fontWeight="bold"
+                        letterSpacing="0.1em"
+                        opacity="0.8"
+                      >
+                        [UNVERIFIED VOID // FOG OF UNCERTAINTY]
+                      </text>
+                    </g>
                   )}
 
-                  {/* Staleness Decay Warning Glow for old scan data */}
+                  {/* Staleness Decay Warning Glow */}
                   {layers.staleness && isStale && (
                     <rect
                       x={sec.bounds.minX}
@@ -318,63 +351,107 @@ export const TacticalMap: React.FC = () => {
                     />
                   )}
 
-                  {/* Sector Header Label */}
-                  <text
-                    x={sec.bounds.minX + 12}
-                    y={sec.bounds.minY + 22}
-                    fill="#94a3b8"
-                    fontSize="11"
-                    fontFamily="JetBrains Mono"
-                    fontWeight="600"
-                    letterSpacing="0.05em"
-                  >
-                    {sec.name.toUpperCase()} [{sec.scannedPercentage}% SCANNED]
-                  </text>
-
-                  {/* Staleness notice badge */}
-                  {layers.staleness && isStale && (
+                  {/* Prominent High-Contrast Sector Header Nameplate */}
+                  <g transform={`translate(${sec.bounds.minX + 10}, ${sec.bounds.minY + 10})`}>
+                    <rect
+                      x="0"
+                      y="0"
+                      width="280"
+                      height="26"
+                      fill="#0b1324"
+                      stroke={sectorStroke}
+                      strokeWidth="1.5"
+                      rx="4"
+                    />
                     <text
-                      x={sec.bounds.minX + 12}
-                      y={sec.bounds.minY + 38}
-                      fill="#f59e0b"
-                      fontSize="9"
+                      x="10"
+                      y="18"
+                      fill="#ffffff"
+                      fontSize="11"
                       fontFamily="JetBrains Mono"
+                      fontWeight="bold"
+                      letterSpacing="0.05em"
                     >
-                      ⚠️ STALENESS: {sec.stalenessMinutes}m (AFTERSHOCK DRIFT RISK)
+                      {sec.name.toUpperCase()}
                     </text>
+                    <rect
+                      x="215"
+                      y="4"
+                      width="58"
+                      height="18"
+                      fill={sec.scannedPercentage > 80 ? '#065f46' : '#78350f'}
+                      rx="3"
+                    />
+                    <text
+                      x="244"
+                      y="16"
+                      textAnchor="middle"
+                      fill="#ffffff"
+                      fontSize="10"
+                      fontFamily="JetBrains Mono"
+                      fontWeight="bold"
+                    >
+                      {sec.scannedPercentage}% SLAM
+                    </text>
+                  </g>
+
+                  {/* High-Visibility Staleness Warning Badge */}
+                  {layers.staleness && isStale && (
+                    <g transform={`translate(${sec.bounds.minX + 10}, ${sec.bounds.minY + 42})`}>
+                      <rect
+                        x="0"
+                        y="0"
+                        width="260"
+                        height="22"
+                        fill="#451a03"
+                        stroke="#f59e0b"
+                        strokeWidth="1.2"
+                        rx="4"
+                      />
+                      <text
+                        x="8"
+                        y="15"
+                        fill="#fef08a"
+                        fontSize="10"
+                        fontFamily="JetBrains Mono"
+                        fontWeight="bold"
+                      >
+                        ⚠️ STALENESS: {sec.stalenessMinutes}m (AFTERSHOCK DRIFT RISK)
+                      </text>
+                    </g>
                   )}
                 </g>
               );
             })}
 
-            {/* SLAM Simulated LiDAR Pointcloud Scatter Dots */}
+            {/* SLAM Simulated LiDAR Pointcloud Vectors */}
             {layers.slam && (
-              <g opacity="0.6">
-                {/* Sector Alpha scanned walls */}
+              <g opacity="0.85">
+                {/* Sector Alpha mapped walls */}
                 <path
                   d="M 60 80 L 360 80 M 60 140 L 220 140 M 60 220 L 360 220 M 180 80 L 180 220"
                   stroke="#00f0ff"
-                  strokeWidth="1.2"
-                  strokeDasharray="2,2"
+                  strokeWidth="2"
+                  strokeDasharray="4,2"
                 />
                 {/* Sector Beta collapsed pancake slabs */}
                 <path
                   d="M 440 80 L 520 140 L 610 110 L 740 90 M 450 200 L 550 230 L 720 190"
                   stroke="#38bdf8"
-                  strokeWidth="1.5"
-                  strokeDasharray="4,3"
+                  strokeWidth="2.5"
+                  strokeDasharray="6,3"
                 />
-                {/* Rubble scatter points */}
-                <circle cx="490" cy="120" r="1.5" fill="#38bdf8" />
-                <circle cx="510" cy="135" r="1" fill="#38bdf8" />
-                <circle cx="560" cy="170" r="1.5" fill="#38bdf8" />
-                <circle cx="630" cy="140" r="2" fill="#38bdf8" />
-                <circle cx="670" cy="180" r="1.5" fill="#38bdf8" />
-                <circle cx="700" cy="110" r="1" fill="#38bdf8" />
+                {/* Rubble scatter points - larger and distinct */}
+                <circle cx="490" cy="120" r="3" fill="#00f0ff" />
+                <circle cx="510" cy="135" r="2.5" fill="#38bdf8" />
+                <circle cx="560" cy="170" r="3.5" fill="#00f0ff" />
+                <circle cx="630" cy="140" r="4" fill="#38bdf8" />
+                <circle cx="670" cy="180" r="3" fill="#00f0ff" />
+                <circle cx="700" cy="110" r="2.5" fill="#38bdf8" />
               </g>
             )}
 
-            {/* Routes and Corridors */}
+            {/* CORRIDORS & EVACUATION PATHS - THICK, VIBRANT, HIGH VISIBILITY */}
             {layers.routes &&
               routes.map((rte) => {
                 const pathD = rte.points.reduce(
@@ -392,51 +469,72 @@ export const TacticalMap: React.FC = () => {
                   ? '#10b981'
                   : isHazardous
                   ? '#f59e0b'
-                  : '#00f0ff';
+                  : '#00e5ff';
+
+                const midPt = rte.points[Math.floor(rte.points.length / 2)];
 
                 return (
                   <g key={rte.id}>
-                    {/* Outer glow line */}
+                    {/* High-visibility glowing background path */}
                     <path
                       d={pathD}
                       fill="none"
                       stroke={strokeColor}
-                      strokeWidth={isBlocked ? 2 : 4}
-                      strokeOpacity={isBlocked ? 0.3 : 0.25}
+                      strokeWidth={isBlocked ? 4 : 6}
+                      strokeOpacity={isBlocked ? 0.4 : 0.3}
                       strokeLinecap="round"
                     />
-                    {/* Inner core line */}
+                    {/* Core Path Line */}
                     <path
                       d={pathD}
                       fill="none"
                       stroke={strokeColor}
-                      strokeWidth={isBlocked ? 2 : 2.5}
-                      strokeDasharray={isBlocked ? '5,4' : isNew ? '6,3' : undefined}
+                      strokeWidth={isBlocked ? 3 : 3.5}
+                      strokeDasharray={isBlocked ? '8,6' : isNew ? '8,4' : undefined}
                       strokeLinecap="round"
-                      className={!isBlocked ? 'animate-pulse' : undefined}
                     />
 
-                    {/* Route Label */}
-                    <text
-                      x={rte.points[Math.floor(rte.points.length / 2)].x + 8}
-                      y={rte.points[Math.floor(rte.points.length / 2)].y - 8}
-                      fill={strokeColor}
-                      fontSize="9"
-                      fontFamily="JetBrains Mono"
-                      fontWeight="bold"
-                      className="bg-black"
-                    >
-                      {isBlocked ? '⛔ BLOCKED: ' : isNew ? '✨ NEW CRAWLWAY: ' : 'CORRIDOR: '}
-                      {rte.name.split(' ')[0]} ({rte.widthCm}cm)
-                    </text>
+                    {/* Blocked Barrier Marker if impassable */}
+                    {isBlocked && (
+                      <g transform={`translate(${midPt.x - 12}, ${midPt.y - 12})`}>
+                        <rect x="0" y="0" width="24" height="24" fill="#7f1d1d" stroke="#ef4444" strokeWidth="2" rx="4" />
+                        <line x1="4" y1="4" x2="20" y2="20" stroke="#ffffff" strokeWidth="3" />
+                        <line x1="20" y1="4" x2="4" y2="20" stroke="#ffffff" strokeWidth="3" />
+                      </g>
+                    )}
+
+                    {/* Route Nameplate Tag */}
+                    <g transform={`translate(${midPt.x + 16}, ${midPt.y - 14})`}>
+                      <rect
+                        x="0"
+                        y="0"
+                        width="180"
+                        height="24"
+                        fill="#070d18"
+                        stroke={strokeColor}
+                        strokeWidth="1.5"
+                        rx="4"
+                      />
+                      <text
+                        x="8"
+                        y="16"
+                        fill={strokeColor}
+                        fontSize="10"
+                        fontFamily="JetBrains Mono"
+                        fontWeight="bold"
+                      >
+                        {isBlocked ? '⛔ BLOCKED: ' : isNew ? '✨ NEW VOID: ' : 'CORRIDOR: '}
+                        {rte.name.split(' ')[0]} ({rte.widthCm}cm)
+                      </text>
+                    </g>
                   </g>
                 );
               })}
 
-            {/* RF Mesh Links & Breadcrumb Beacons */}
+            {/* RF MESH TOPOLOGY & RELAY BEACONS */}
             {layers.mesh && (
               <g>
-                {/* Inter-beacon lines */}
+                {/* Inter-beacon connection trunks */}
                 {beacons.map((bcn, idx) => {
                   if (idx === 0) return null;
                   const parent = beacons[idx - 1];
@@ -448,45 +546,50 @@ export const TacticalMap: React.FC = () => {
                       x2={bcn.x}
                       y2={bcn.y}
                       stroke="#10b981"
-                      strokeWidth="1.5"
-                      strokeDasharray="4,4"
-                      opacity="0.6"
+                      strokeWidth="2.5"
+                      strokeDasharray="6,4"
+                      opacity="0.8"
                     />
                   );
                 })}
 
-                {/* Beacon Coverage Circles & Icons */}
+                {/* Beacon Nodes with Large Coverage Radii */}
                 {beacons.map((bcn) => (
                   <g key={bcn.id}>
                     <circle
                       cx={bcn.x}
                       cy={bcn.y}
                       r={bcn.radius}
-                      fill="rgba(16, 185, 129, 0.04)"
+                      fill="rgba(16, 185, 129, 0.05)"
                       stroke="#10b981"
-                      strokeWidth="1"
-                      strokeDasharray="4,6"
-                      opacity="0.4"
+                      strokeWidth="1.5"
+                      strokeDasharray="6,6"
+                      opacity="0.6"
                     />
-                    <circle cx={bcn.x} cy={bcn.y} r="8" fill="#064e3b" stroke="#10b981" strokeWidth="2" />
-                    <circle cx={bcn.x} cy={bcn.y} r="3" fill="#34d399" className="animate-ping" />
-                    <text
-                      x={bcn.x + 10}
-                      y={bcn.y + 4}
-                      fill="#34d399"
-                      fontSize="9"
-                      fontFamily="JetBrains Mono"
-                    >
-                      {bcn.label.split(' ')[0]} ({bcn.batteryHours}h)
-                    </text>
+                    <circle cx={bcn.x} cy={bcn.y} r="12" fill="#064e3b" stroke="#34d399" strokeWidth="2.5" />
+                    <circle cx={bcn.x} cy={bcn.y} r="4" fill="#6ee7b7" className="animate-ping" />
+                    
+                    {/* Beacon Tag */}
+                    <g transform={`translate(${bcn.x + 16}, ${bcn.y - 12})`}>
+                      <rect x="0" y="0" width="130" height="22" fill="#062e24" stroke="#10b981" strokeWidth="1" rx="4" />
+                      <text
+                        x="8"
+                        y="15"
+                        fill="#6ee7b7"
+                        fontSize="10"
+                        fontFamily="JetBrains Mono"
+                        fontWeight="bold"
+                      >
+                        📡 {bcn.label.split(' ')[0]} ({bcn.batteryHours}h)
+                      </text>
+                    </g>
                   </g>
                 ))}
 
-                {/* Robot-to-Mesh links for connected robots */}
+                {/* Active Robot Mesh Links */}
                 {robots
                   .filter((r) => r.commsStatus === 'connected')
                   .map((r) => {
-                    // Find closest beacon
                     const closestBcn = beacons.reduce((prev, curr) => {
                       const dPrev = Math.hypot(prev.x - r.position.x, prev.y - r.position.y);
                       const dCurr = Math.hypot(curr.x - r.position.x, curr.y - r.position.y);
@@ -501,21 +604,22 @@ export const TacticalMap: React.FC = () => {
                         x2={closestBcn.x}
                         y2={closestBcn.y}
                         stroke="#00f0ff"
-                        strokeWidth="1"
-                        strokeDasharray="3,3"
-                        opacity={r.signalStrength / 120}
+                        strokeWidth="1.5"
+                        strokeDasharray="4,3"
+                        opacity={0.7}
                       />
                     );
                   })}
               </g>
             )}
 
-            {/* Hazards Overlay */}
+            {/* HAZARDS - BOLD DANGER ZONES & NUMERICAL READOUTS */}
             {layers.hazards &&
               hazards.map((haz) => {
                 const isSelected = selectedHazardId === haz.id;
                 const isGas = haz.type === 'gas_leak';
                 const isCollapse = haz.type === 'structural_collapse';
+                const hazColor = isGas ? '#ef4444' : isCollapse ? '#f97316' : '#eab308';
 
                 return (
                   <g
@@ -529,63 +633,77 @@ export const TacticalMap: React.FC = () => {
                       cy={haz.location.y}
                       r={haz.location.radius}
                       fill="url(#hazardPulse)"
-                      stroke={isGas ? '#ef4444' : isCollapse ? '#f97316' : '#eab308'}
-                      strokeWidth={isSelected ? '2' : '1'}
-                      strokeDasharray="4,4"
+                      stroke={hazColor}
+                      strokeWidth={isSelected ? '3' : '2'}
+                      strokeDasharray="6,4"
                       className="animate-pulse"
                     />
 
-                    {/* Hazard Center Badge */}
+                    {/* Hazard Center Badge - Large & Distinct */}
                     <circle
                       cx={haz.location.x}
                       cy={haz.location.y}
-                      r="12"
+                      r="16"
                       fill={isGas ? '#450a0a' : isCollapse ? '#431407' : '#422006'}
-                      stroke={isGas ? '#ef4444' : isCollapse ? '#f97316' : '#eab308'}
-                      strokeWidth="2"
+                      stroke={hazColor}
+                      strokeWidth="2.5"
                     />
 
-                    {/* Hazard Icon */}
                     <text
                       x={haz.location.x}
-                      y={haz.location.y + 4}
+                      y={haz.location.y + 5}
                       textAnchor="middle"
-                      fontSize="11"
+                      fontSize="14"
                       fill="#ffffff"
+                      fontWeight="bold"
                     >
                       {isGas ? '☣' : isCollapse ? '⚠' : '⚡'}
                     </text>
 
-                    {/* Hazard Label */}
-                    <text
-                      x={haz.location.x + 16}
-                      y={haz.location.y - 4}
-                      fill={isGas ? '#ef4444' : '#f97316'}
-                      fontSize="10"
-                      fontFamily="JetBrains Mono"
-                      fontWeight="bold"
-                    >
-                      {haz.title}
-                    </text>
-                    <text
-                      x={haz.location.x + 16}
-                      y={haz.location.y + 10}
-                      fill="#cbd5e1"
-                      fontSize="9"
-                      fontFamily="JetBrains Mono"
-                    >
-                      {haz.readout}
-                    </text>
+                    {/* High-Visibility Hazard Tag */}
+                    <g transform={`translate(${haz.location.x + 22}, ${haz.location.y - 18})`}>
+                      <rect
+                        x="0"
+                        y="0"
+                        width="210"
+                        height="42"
+                        fill="#090e18"
+                        stroke={hazColor}
+                        strokeWidth="1.8"
+                        rx="5"
+                      />
+                      <text
+                        x="10"
+                        y="17"
+                        fill={hazColor}
+                        fontSize="11"
+                        fontFamily="JetBrains Mono"
+                        fontWeight="bold"
+                      >
+                        {haz.title}
+                      </text>
+                      <text
+                        x="10"
+                        y="32"
+                        fill="#ffffff"
+                        fontSize="10"
+                        fontFamily="JetBrains Mono"
+                        fontWeight="600"
+                      >
+                        {haz.readout}
+                      </text>
+                    </g>
                   </g>
                 );
               })}
 
-            {/* Discovered Survivors Layer */}
+            {/* DISCOVERED SURVIVORS - HIGH CONTRAST TRIAGE BEACONS */}
             {layers.vitals &&
               survivors.map((surv) => {
                 const isSelected = selectedSurvivorId === surv.id;
                 const isImmediate = surv.triage === 'immediate';
                 const ringColor = isImmediate ? '#ef4444' : '#f59e0b';
+                const ringBg = isImmediate ? '#450a0a' : '#451a03';
 
                 return (
                   <g
@@ -597,53 +715,63 @@ export const TacticalMap: React.FC = () => {
                     <circle
                       cx={surv.location.x}
                       cy={surv.location.y}
-                      r="22"
+                      r="28"
                       fill="none"
                       stroke={ringColor}
-                      strokeWidth="1.5"
-                      opacity="0.3"
+                      strokeWidth="2"
+                      opacity="0.4"
                       className="animate-ping"
                     />
                     <circle
                       cx={surv.location.x}
                       cy={surv.location.y}
-                      r="14"
-                      fill={isImmediate ? 'rgba(239, 68, 68, 0.25)' : 'rgba(245, 158, 11, 0.25)'}
+                      r="18"
+                      fill={ringBg}
                       stroke={ringColor}
-                      strokeWidth={isSelected ? '2.5' : '1.5'}
+                      strokeWidth={isSelected ? '3.5' : '2.5'}
                     />
 
-                    {/* Heart/Cross Icon */}
-                    <circle cx={surv.location.x} cy={surv.location.y} r="5" fill={ringColor} />
+                    {/* Center Heartbeat Icon */}
+                    <circle cx={surv.location.x} cy={surv.location.y} r="7" fill={ringColor} />
 
-                    {/* Vital Sign HUD Badge */}
-                    <g transform={`translate(${surv.location.x + 18}, ${surv.location.y - 12})`}>
+                    {/* High-Visibility Vital Signs Tag */}
+                    <g transform={`translate(${surv.location.x + 24}, ${surv.location.y - 20})`}>
                       <rect
                         x="0"
                         y="0"
-                        width="120"
-                        height="36"
-                        fill="rgba(10, 15, 26, 0.92)"
+                        width="175"
+                        height="44"
+                        fill="#0a0f1d"
                         stroke={ringColor}
-                        strokeWidth="1"
-                        rx="4"
+                        strokeWidth="2"
+                        rx="5"
+                      />
+                      <rect
+                        x="6"
+                        y="6"
+                        width="163"
+                        height="16"
+                        fill={isImmediate ? '#7f1d1d' : '#78350f'}
+                        rx="3"
                       />
                       <text
-                        x="8"
-                        y="14"
-                        fill={ringColor}
-                        fontSize="9"
+                        x="87"
+                        y="18"
+                        textAnchor="middle"
+                        fill="#ffffff"
+                        fontSize="10"
                         fontFamily="JetBrains Mono"
                         fontWeight="bold"
                       >
                         {surv.label.split(' ')[0]} [{surv.triage.toUpperCase()}]
                       </text>
                       <text
-                        x="8"
-                        y="27"
-                        fill="#e2e8f0"
-                        fontSize="8"
+                        x="10"
+                        y="36"
+                        fill="#ffffff"
+                        fontSize="11"
                         fontFamily="JetBrains Mono"
+                        fontWeight="bold"
                       >
                         ❤️ {surv.vitals.heartRate} BPM • {surv.vitals.spO2}% SpO2
                       </text>
@@ -652,13 +780,13 @@ export const TacticalMap: React.FC = () => {
                 );
               })}
 
-            {/* ROBOT SWARM LAYER (Including Ghost Mode for Disconnected Bots) */}
+            {/* ROBOT SWARM FLEET (BOLD, CRISP, HIGH-VISIBILITY MARKERS) */}
             {robots.map((bot) => {
               const isSelected = selectedRobotId === bot.id;
               const isDisconnected = bot.commsStatus === 'disconnected';
               const isDegraded = bot.commsStatus === 'degraded';
 
-              // GHOST MODE RENDERING FOR DISCONNECTED ROBOTS
+              // GHOST MODE FOR DISCONNECTED ROBOTS (e.g. SERPENS-3)
               if (isDisconnected) {
                 const projectedX = bot.lastKnownPosition.x + bot.deadReckoningVector.dx * 35;
                 const projectedY = bot.lastKnownPosition.y + bot.deadReckoningVector.dy * 35;
@@ -669,77 +797,72 @@ export const TacticalMap: React.FC = () => {
                     <circle
                       cx={bot.lastKnownPosition.x}
                       cy={bot.lastKnownPosition.y}
-                      r="10"
-                      fill="rgba(244, 63, 94, 0.2)"
+                      r="14"
+                      fill="rgba(244, 63, 94, 0.3)"
                       stroke="#f43f5e"
-                      strokeWidth="1.5"
+                      strokeWidth="2.5"
                     />
-                    <circle
-                      cx={bot.lastKnownPosition.x}
-                      cy={bot.lastKnownPosition.y}
-                      r="4"
-                      fill="#f43f5e"
-                    />
+                    <circle cx={bot.lastKnownPosition.x} cy={bot.lastKnownPosition.y} r="6" fill="#f43f5e" />
 
-                    {/* Projected Dead Reckoning Vector (Dashed Trajectory) */}
+                    {/* Projected Dead Reckoning Vector Line */}
                     <line
                       x1={bot.lastKnownPosition.x}
                       y1={bot.lastKnownPosition.y}
                       x2={projectedX}
                       y2={projectedY}
                       stroke="#f43f5e"
-                      strokeWidth="2"
-                      strokeDasharray="4,4"
+                      strokeWidth="3"
+                      strokeDasharray="6,4"
                     />
 
-                    {/* Uncertainty Ellipse / Circle around estimated location */}
+                    {/* Uncertainty Ellipse */}
                     <circle
                       cx={projectedX}
                       cy={projectedY}
-                      r="26"
-                      fill="rgba(244, 63, 94, 0.1)"
+                      r="32"
+                      fill="rgba(244, 63, 94, 0.15)"
                       stroke="#f43f5e"
-                      strokeWidth="1"
-                      strokeDasharray="2,3"
+                      strokeWidth="1.5"
+                      strokeDasharray="4,4"
                       className="animate-pulse"
                     />
 
-                    {/* Ghost Icon at Projected Position */}
-                    <g transform={`translate(${projectedX - 10}, ${projectedY - 10})`}>
+                    {/* Ghost Icon Box */}
+                    <g transform={`translate(${projectedX - 14}, ${projectedY - 14})`}>
                       <rect
                         x="0"
                         y="0"
-                        width="20"
-                        height="20"
-                        fill="rgba(30, 41, 59, 0.85)"
+                        width="28"
+                        height="28"
+                        fill="#1e1b4b"
                         stroke="#f43f5e"
-                        strokeWidth="1.5"
-                        rx="4"
+                        strokeWidth="2.5"
+                        rx="6"
                       />
-                      <text x="10" y="14" textAnchor="middle" fill="#f43f5e" fontSize="10" fontWeight="bold">
+                      <text x="14" y="19" textAnchor="middle" fill="#ffffff" fontSize="13" fontWeight="bold">
                         👻
                       </text>
                     </g>
 
-                    {/* Ghost Status Chip */}
-                    <g transform={`translate(${projectedX + 16}, ${projectedY - 18})`}>
+                    {/* High-Visibility Ghost Telemetry Tag */}
+                    <g transform={`translate(${projectedX + 22}, ${projectedY - 24})`}>
                       <rect
                         x="0"
                         y="0"
-                        width="155"
-                        height="42"
-                        fill="rgba(15, 23, 42, 0.95)"
+                        width="190"
+                        height="50"
+                        fill="#0b0f19"
                         stroke="#f43f5e"
-                        strokeWidth="1.2"
-                        rx="4"
+                        strokeWidth="2"
+                        rx="6"
                       />
-                      <text x="8" y="14" fill="#f43f5e" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                      <text x="10" y="18" fill="#f43f5e" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
                         ⚠️ {bot.name} [GHOST MODE]
                       </text>
-                      <text x="8" y="26" fill="#94a3b8" fontSize="8" fontFamily="JetBrains Mono">
+                      <text x="10" y="32" fill="#cbd5e1" fontSize="10" fontFamily="JetBrains Mono">
                         LOST: {Math.floor(bot.lastContactSecondsAgo / 60)}m {bot.lastContactSecondsAgo % 60}s AGO
                       </text>
-                      <text x="8" y="37" fill="#38bdf8" fontSize="8" fontFamily="JetBrains Mono">
+                      <text x="10" y="44" fill="#38bdf8" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
                         📦 {bot.storeAndForwardBacklog} PKTS BUFFERED
                       </text>
                     </g>
@@ -747,8 +870,9 @@ export const TacticalMap: React.FC = () => {
                 );
               }
 
-              // CONNECTED OR DEGRADED ROBOT RENDERING
+              // CONNECTED OR DEGRADED ACTIVE ROBOT
               const botColor = isDegraded ? '#f59e0b' : '#00f0ff';
+              const botBg = isSelected ? '#083344' : '#0f172a';
 
               return (
                 <g
@@ -762,11 +886,11 @@ export const TacticalMap: React.FC = () => {
                     <circle
                       cx={bot.position.x}
                       cy={bot.position.y}
-                      r="22"
+                      r="28"
                       fill="none"
                       stroke={botColor}
-                      strokeWidth="2"
-                      strokeDasharray="4,2"
+                      strokeWidth="2.5"
+                      strokeDasharray="6,3"
                       className="animate-spin"
                     />
                   )}
@@ -775,56 +899,57 @@ export const TacticalMap: React.FC = () => {
                   <line
                     x1={bot.position.x}
                     y1={bot.position.y}
-                    x2={bot.position.x + Math.cos((bot.heading * Math.PI) / 180) * 16}
-                    y2={bot.position.y + Math.sin((bot.heading * Math.PI) / 180) * 16}
+                    x2={bot.position.x + Math.cos((bot.heading * Math.PI) / 180) * 22}
+                    y2={bot.position.y + Math.sin((bot.heading * Math.PI) / 180) * 22}
                     stroke={botColor}
-                    strokeWidth="2.5"
+                    strokeWidth="3.5"
                     strokeLinecap="round"
                   />
 
-                  {/* Robot Center Body */}
+                  {/* Robot Center Body - Larger (26x26) */}
                   <rect
-                    x={bot.position.x - 9}
-                    y={bot.position.y - 9}
-                    width="18"
-                    height="18"
-                    fill={isSelected ? '#083344' : '#0f172a'}
+                    x={bot.position.x - 13}
+                    y={bot.position.y - 13}
+                    width="26"
+                    height="26"
+                    fill={botBg}
                     stroke={botColor}
-                    strokeWidth={isSelected ? '2.5' : '1.8'}
-                    rx="4"
+                    strokeWidth={isSelected ? '3' : '2'}
+                    rx="6"
                   />
 
                   {/* Inner glyph */}
-                  <circle cx={bot.position.x} cy={bot.position.y} r="3" fill={botColor} />
+                  <circle cx={bot.position.x} cy={bot.position.y} r="4.5" fill={botColor} />
 
-                  {/* Mini floating label */}
-                  <g transform={`translate(${bot.position.x + 12}, ${bot.position.y - 12})`}>
+                  {/* High-Visibility Robot Telemetry Tag */}
+                  <g transform={`translate(${bot.position.x + 18}, ${bot.position.y - 18})`}>
                     <rect
                       x="0"
                       y="0"
-                      width="80"
-                      height="24"
-                      fill="rgba(6, 11, 20, 0.9)"
+                      width="115"
+                      height="34"
+                      fill="#070c18"
                       stroke={botColor}
-                      strokeWidth="0.8"
-                      rx="3"
+                      strokeWidth="1.5"
+                      rx="5"
                     />
                     <text
-                      x="6"
-                      y="11"
+                      x="8"
+                      y="15"
                       fill="#ffffff"
-                      fontSize="9"
+                      fontSize="11"
                       fontFamily="JetBrains Mono"
                       fontWeight="bold"
                     >
                       {bot.name}
                     </text>
                     <text
-                      x="6"
-                      y="20"
+                      x="8"
+                      y="27"
                       fill={bot.battery < 30 ? '#ef4444' : '#34d399'}
-                      fontSize="8"
+                      fontSize="10"
                       fontFamily="JetBrains Mono"
+                      fontWeight="600"
                     >
                       ⚡ {Math.round(bot.battery)}% • 📶 {bot.signalStrength}%
                     </text>
@@ -836,9 +961,37 @@ export const TacticalMap: React.FC = () => {
           </g>
         </svg>
 
-        {/* Floating Quick Action Widget for Selected Entity */}
+        {/* Tactical On-Screen Legend Bar at Bottom of Map */}
+        <div className="absolute bottom-2 right-2 z-20 flex items-center gap-3 px-3 py-1.5 rounded-lg bg-[#080d1a]/95 border border-slate-700 text-[11px] font-mono text-slate-300 shadow-xl backdrop-blur">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400" />
+            <span>Active Bot</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
+            <span>Ghost Bot</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+            <span>Immediate Red</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+            <span>RF Relay</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-4 h-1 rounded bg-cyan-400" />
+            <span>Safe Corridor</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-4 h-1 rounded bg-rose-500 border border-dashed" />
+            <span>Blocked</span>
+          </div>
+        </div>
+
+        {/* Selected Robot Quick Telemetry Widget */}
         {selectedRobotId && (
-          <div className="absolute bottom-4 left-4 z-20 p-3 rounded-lg bg-slate-900/95 border border-cyan-500/40 shadow-xl backdrop-blur max-w-sm">
+          <div className="absolute bottom-3 left-3 z-20 p-3.5 rounded-xl bg-[#080e1c]/95 border-2 border-cyan-400 shadow-2xl backdrop-blur max-w-sm">
             {(() => {
               const bot = robots.find((r) => r.id === selectedRobotId);
               if (!bot) return null;
@@ -846,44 +999,44 @@ export const TacticalMap: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+                      <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse" />
                       <span className="font-bold text-slate-100 tactical-font text-sm">{bot.name}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold">
                         {bot.callsign}
                       </span>
                     </div>
-                    <span className="text-[11px] font-mono text-slate-400 capitalize">{bot.type.replace('_', ' ')}</span>
+                    <span className="text-xs font-mono text-slate-300 capitalize">{bot.type.replace('_', ' ')}</span>
                   </div>
 
-                  <p className="text-xs text-slate-300 font-mono mb-3 line-clamp-2">
+                  <p className="text-xs text-slate-200 font-mono mb-3 line-clamp-2 leading-relaxed">
                     {bot.currentTask}
                   </p>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 font-mono text-xs">
                     <button
                       onClick={() => openFpv(bot.id)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs shadow transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold shadow transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>FPV Tele-Op</span>
+                      <span>FPV Cockpit</span>
                     </button>
 
                     {bot.commsStatus === 'disconnected' && (
                       <button
                         onClick={() => restoreComms(bot.id)}
-                        className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow transition-colors flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow transition-colors flex items-center gap-1"
                       >
                         <Signal className="w-3.5 h-3.5" />
-                        <span>Force Reconnect</span>
+                        <span>Force Sync</span>
                       </button>
                     )}
 
                     <button
                       onClick={() => deployBeaconAt(bot.position.x + 20, bot.position.y + 20)}
-                      className="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs transition-colors"
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
                       title="Drop Mesh Relay Beacon Here"
                     >
-                      <Radio className="w-3.5 h-3.5" />
+                      <Radio className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
