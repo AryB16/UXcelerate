@@ -59,40 +59,19 @@ const MissionControlDeck: React.FC = () => {
     }
   };
 
-  // If tour opens, open only the panel relevant to the current step
+  // Ensure panels remain open and available during normal operation and tour
   useEffect(() => {
     if (!isTourOpen) return;
 
-    if (tourStep === 0) {
-      // Header step: just show map (both panels closed)
-      setIsLeftRosterOpen(false);
-      setIsRightPanelOpen(false);
-      setMobileTab('map');
-    } else if (tourStep === 1) {
-      // Robot Roster step: open left panel only
+    if (tourStep === 1 || tourStep === 3) {
       setIsLeftRosterOpen(true);
-      setIsRightPanelOpen(false);
-      setMobileTab('roster');
-    } else if (tourStep === 2) {
-      // Live Map step: both closed so map is full width
-      setIsLeftRosterOpen(false);
-      setIsRightPanelOpen(false);
-      setMobileTab('map');
-    } else if (tourStep === 3) {
-      // Offline Radio step: open left panel to show Serpens disconnected
-      setIsLeftRosterOpen(true);
-      setIsRightPanelOpen(false);
-      setMobileTab('roster');
     } else if (tourStep === 4) {
-      // Survivor step: open right panel only
-      setIsLeftRosterOpen(false);
       setIsRightPanelOpen(true);
       setRightPanelMode('triage');
-      setMobileTab('triage');
     }
   }, [isTourOpen, tourStep]);
 
-  // Determine if a section should be spotlighted or blurred during the interactive tour
+  // Subtle spotlight border during interactive tour without breaking or blurring normal UI
   const getTourSpotlightStyle = (section: 'header' | 'left' | 'center' | 'right' | 'footer') => {
     if (!isTourOpen) return '';
 
@@ -104,10 +83,10 @@ const MissionControlDeck: React.FC = () => {
       (tourStep === 4 && section === 'right');
 
     if (isTarget) {
-      return 'relative z-20 ring-1 ring-cyan-400 shadow-2xl rounded-md pointer-events-auto filter-none opacity-100 transition-all duration-300 bg-[#131822]';
+      return 'ring-2 ring-cyan-400/90 shadow-2xl transition-all duration-300';
     }
 
-    return 'filter blur-[5px] opacity-20 brightness-50 pointer-events-none transition-all duration-300';
+    return 'transition-all duration-300';
   };
 
   // Global Keyboard shortcuts
