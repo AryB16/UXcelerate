@@ -59,22 +59,36 @@ const MissionControlDeck: React.FC = () => {
     }
   };
 
-  // If tour opens, restore all panels and adapt tabs so they can be spotlighted properly
+  // If tour opens, open only the panel relevant to the current step
   useEffect(() => {
-    if (isTourOpen) {
+    if (!isTourOpen) return;
+
+    if (tourStep === 0) {
+      // Header step: just show map (both panels closed)
+      setIsLeftRosterOpen(false);
+      setIsRightPanelOpen(false);
+      setMobileTab('map');
+    } else if (tourStep === 1) {
+      // Robot Roster step: open left panel only
       setIsLeftRosterOpen(true);
+      setIsRightPanelOpen(false);
+      setMobileTab('roster');
+    } else if (tourStep === 2) {
+      // Live Map step: both closed so map is full width
+      setIsLeftRosterOpen(false);
+      setIsRightPanelOpen(false);
+      setMobileTab('map');
+    } else if (tourStep === 3) {
+      // Offline Radio step: open left panel to show Serpens disconnected
+      setIsLeftRosterOpen(true);
+      setIsRightPanelOpen(false);
+      setMobileTab('roster');
+    } else if (tourStep === 4) {
+      // Survivor step: open right panel only
+      setIsLeftRosterOpen(false);
       setIsRightPanelOpen(true);
-      if (tourStep === 4) {
-        setRightPanelMode('triage');
-      }
-      // On mobile view, align tab with current tour step
-      if (tourStep === 0 || tourStep === 2) {
-        setMobileTab('map');
-      } else if (tourStep === 1 || tourStep === 3) {
-        setMobileTab('roster');
-      } else if (tourStep === 4) {
-        setMobileTab('triage');
-      }
+      setRightPanelMode('triage');
+      setMobileTab('triage');
     }
   }, [isTourOpen, tourStep]);
 

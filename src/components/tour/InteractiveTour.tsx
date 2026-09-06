@@ -58,18 +58,20 @@ export const InteractiveTour: React.FC = () => {
       description:
         'Here are your 6 rescue robots. Click on any robot to check its battery, signal, camera view, and live sensor readings like heat and gas levels.',
       hint: 'Click on Vulcan-X (K9-TITAN) or SkyEye-1 to see their sensors update in the bottom box.',
-      positionClasses: 'top-1/2 -translate-y-1/2 left-[280px]',
+      // Left panel is open (col-span-3 = ~25%). Card sits in the remaining center/right zone.
+      positionClasses: 'top-1/2 -translate-y-1/2 left-[calc(25%+16px)]',
     },
     {
       step: 3,
       badge: 'LIVE MAP',
       icon: <MapPin className="w-5 h-5 text-cyan-400" />,
       title: 'Disaster Area Map',
-      directionalNotice: '👈 THE CENTER SHOWS THE MAP',
+      directionalNotice: '⬛ THE MAP IS FULLY OPEN NOW',
       description:
         'This map combines old building blueprints with real-time drone scans. Hatched warning stripes mark unexplored danger zones where robots have not yet checked.',
       hint: 'Hover over or click any robot pin, survivor, or hazard on the map to see details.',
-      positionClasses: 'top-1/2 -translate-y-1/2 right-4 md:right-8',
+      // Both panels closed — map is full width. Card centered on screen.
+      positionClasses: 'top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2',
     },
     {
       step: 4,
@@ -80,7 +82,8 @@ export const InteractiveTour: React.FC = () => {
       description:
         'When concrete blocks radio signals, robots keep searching on their own and save data locally. Dropping a small relay restores full communication.',
       hint: 'Click "Eject Relay Beacon" or "Deploy RF Beacon" near Serpens to bring it back online.',
-      positionClasses: 'top-1/2 -translate-y-1/2 left-[280px]',
+      // Left panel is open. Card sits in the remaining center/right zone.
+      positionClasses: 'top-1/2 -translate-y-1/2 left-[calc(25%+16px)]',
     },
     {
       step: 5,
@@ -91,7 +94,8 @@ export const InteractiveTour: React.FC = () => {
       description:
         'Found survivors are sorted by medical urgency (Red = Immediate, Yellow = Stable, Green = Minor). You can send rescue teams or oxygen with a click.',
       hint: 'Check the bottom bar for overall rescue progress and cleared routes.',
-      positionClasses: 'top-1/2 -translate-y-1/2 right-[280px]',
+      // Right panel is open. Card sits in the center/left zone.
+      positionClasses: 'top-1/2 -translate-y-1/2 right-[calc(25%+16px)]',
     },
   ];
 
