@@ -14,6 +14,7 @@ import {
   Activity,
   Flame,
   Zap,
+  Sparkles,
 } from 'lucide-react';
 
 export const MissionHeader: React.FC = () => {
@@ -28,6 +29,7 @@ export const MissionHeader: React.FC = () => {
     triggerCommsDrop,
     discoverNewSurvivor,
     isStoreAndForwardSyncing,
+    startTour,
   } = useMission();
 
   return (
@@ -172,6 +174,16 @@ export const MissionHeader: React.FC = () => {
             className="p-2 rounded-lg bg-slate-900 border border-slate-700/60 text-slate-300 hover:text-cyan-300 hover:border-cyan-500/50 transition-colors"
           >
             {isSimPaused ? <Play className="w-4 h-4 text-emerald-400" /> : <Pause className="w-4 h-4 text-amber-400" />}
+          </button>
+
+          {/* Guided Interactive Tour Button */}
+          <button
+            onClick={startTour}
+            title="Start 30-Second Guided Walkthrough"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs tracking-wider border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-all font-mono uppercase"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+            <span>Tour (30s)</span>
           </button>
 
           {/* UX Case Study & Evaluation Deck Button */}

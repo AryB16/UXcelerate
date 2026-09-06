@@ -43,6 +43,8 @@ interface MissionContextType {
   isCaseStudyOpen: boolean;
   activeCaseStudyTab: string;
   isStoreAndForwardSyncing: boolean;
+  isTourOpen: boolean;
+  tourStep: number;
 
   // Actions
   selectRobot: (id: string | null) => void;
@@ -56,6 +58,10 @@ interface MissionContextType {
   closeFpv: () => void;
   setIsCaseStudyOpen: (open: boolean) => void;
   setActiveCaseStudyTab: (tab: string) => void;
+  startTour: () => void;
+  nextTourStep: () => void;
+  prevTourStep: () => void;
+  endTour: () => void;
   
   // Disaster simulation triggers
   triggerAftershock: () => void;
@@ -103,6 +109,8 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isCaseStudyOpen, setIsCaseStudyOpen] = useState<boolean>(false);
   const [activeCaseStudyTab, setActiveCaseStudyTab] = useState<string>('executive_summary');
   const [isStoreAndForwardSyncing, setIsStoreAndForwardSyncing] = useState<boolean>(false);
+  const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
+  const [tourStep, setTourStep] = useState<number>(0);
 
   const addTacticalLog = useCallback((
     type: 'emergency' | 'warning' | 'info' | 'success',
@@ -219,6 +227,47 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const closeFpv = () => {
     soundManager.playTacticalClick();
     setIsFpvOpen(false);
+  };
+
+  const startTour = () => {
+    soundManager.playTacticalClick();
+    setTourStep(0);
+    setIsTourOpen(true);
+    setSelectedRobotId('ROB-01');
+  };
+
+  const nextTourStep = () => {
+    soundManager.playTacticalClick();
+    setTourStep((prev) => {
+      const next = prev + 1;
+      if (next === 1) {
+        setSelectedRobotId('ROB-03'); // Select Ghost Robot
+        setSelectedSurvivorId(null);
+        setSelectedHazardId(null);
+      } else if (next === 2) {
+        setSelectedRobotId('ROB-04'); // Select Relay Rover
+      } else if (next === 3) {
+        setSelectedSurvivorId('SURV-01'); // Select Red Triage Survivor
+        setSelectedRobotId(null);
+      } else if (next === 4) {
+        setSelectedHazardId('HAZ-01'); // Select Methane Hazard
+        setSelectedSurvivorId(null);
+      } else if (next > 4) {
+        setIsTourOpen(false);
+        return 0;
+      }
+      return next;
+    });
+  };
+
+  const prevTourStep = () => {
+    soundManager.playTacticalClick();
+    setTourStep((prev) => Math.max(0, prev - 1));
+  };
+
+  const endTour = () => {
+    soundManager.playTacticalClick();
+    setIsTourOpen(false);
   };
 
   // TRIGGER AFTERSHOCK SCENARIO
@@ -491,6 +540,8 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isCaseStudyOpen,
         activeCaseStudyTab,
         isStoreAndForwardSyncing,
+        isTourOpen,
+        tourStep,
 
         selectRobot,
         selectSurvivor,
@@ -503,6 +554,10 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         closeFpv,
         setIsCaseStudyOpen,
         setActiveCaseStudyTab,
+        startTour,
+        nextTourStep,
+        prevTourStep,
+        endTour,
 
         triggerAftershock,
         triggerCommsDrop,

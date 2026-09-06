@@ -8,12 +8,10 @@ import { HazardAndRoutePanel } from './components/triage/HazardAndRoutePanel';
 import { TacticalLogFeed } from './components/triage/TacticalLogFeed';
 import { RobotFpvModal } from './components/swarm/RobotFpvModal';
 import { CaseStudyModal } from './components/case-study/CaseStudyModal';
+import { InteractiveTour } from './components/tour/InteractiveTour';
 import {
-  Heart,
   AlertTriangle,
   Terminal,
-  Layers,
-  HelpCircle,
 } from 'lucide-react';
 
 const MissionControlDeck: React.FC = () => {
@@ -23,9 +21,22 @@ const MissionControlDeck: React.FC = () => {
     toggleSimPaused,
     setIsCaseStudyOpen,
     isFpvOpen,
+    startTour,
   } = useMission();
 
   const [rightPanelTab, setRightPanelTab] = useState<'survivors' | 'hazards' | 'logs'>('survivors');
+
+  // Auto-launch guided tour on first visit after 1.2s
+  useEffect(() => {
+    const hasSeen = localStorage.getItem('aegis_tour_seen');
+    if (!hasSeen) {
+      const timer = setTimeout(() => {
+        startTour();
+        localStorage.setItem('aegis_tour_seen', 'true');
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [startTour]);
 
   // Global Keyboard shortcuts
   useEffect(() => {
@@ -133,9 +144,10 @@ const MissionControlDeck: React.FC = () => {
         </div>
       </footer>
 
-      {/* Modals */}
+      {/* Modals & Interactive Tour */}
       <RobotFpvModal />
       <CaseStudyModal />
+      <InteractiveTour />
     </div>
   );
 };
