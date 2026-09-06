@@ -180,15 +180,22 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     }
   }, [mapMode]);
 
-  // Invalidate map size when expanded or container dimensions change
+  // Invalidate map size whenever container dimensions change (ResizeObserver)
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (!mapContainerRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
       }
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [isExpanded]);
+    });
+
+    resizeObserver.observe(mapContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   // Render Routes and Polylines
   useEffect(() => {

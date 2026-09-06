@@ -43,8 +43,8 @@ const MissionControlDeck: React.FC = () => {
   } = useMission();
 
   const [rightPanelMode, setRightPanelMode] = useState<'triage' | 'hazards' | 'logs' | 'split'>('triage');
-  const [isLeftRosterOpen, setIsLeftRosterOpen] = useState<boolean>(false);
-  const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(false);
+  const [isLeftRosterOpen, setIsLeftRosterOpen] = useState<boolean>(true);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
   const [mobileTab, setMobileTab] = useState<'map' | 'roster' | 'triage'>('map');
 
   const isMapExpanded = !isLeftRosterOpen && !isRightPanelOpen;
@@ -194,46 +194,68 @@ const MissionControlDeck: React.FC = () => {
         <MissionHeader />
       </div>
 
-      {/* Main Command Deck Layout: Big Fixed Map with Slender Side Panels */}
+      {/* Main Command Deck Layout: Exactly matching C2 reference */}
       <main className="flex-1 flex flex-col md:flex-row gap-2 p-2 min-h-0 overflow-hidden relative">
         
-        {/* LEFT COLUMN: Slender Swarm Tele-Ops Roster */}
+        {/* LEFT COLUMN: Fixed width Robot Fleet Panel */}
         <div
           className={`relative ${
             mobileTab === 'roster' ? 'flex' : 'hidden'
-          } ${isLeftRosterOpen ? 'md:flex md:w-64 lg:w-72 shrink-0' : 'md:hidden'} h-full min-h-0 z-20 transition-all duration-200 ${getTourSpotlightStyle('left')}`}
+          } ${isLeftRosterOpen ? 'md:flex md:w-64 lg:w-72 xl:w-80 shrink-0' : 'md:hidden'} h-full min-h-0 z-20 transition-all duration-200 ${getTourSpotlightStyle('left')}`}
         >
           <RobotRoster onClose={() => setIsLeftRosterOpen(false)} />
           {/* Collapse tab on the right (map-facing) edge */}
           <button
             onClick={() => setIsLeftRosterOpen(false)}
             title="Collapse Robots panel"
-            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -right-3 z-30 flex-col items-center justify-center w-3 h-16 bg-slate-800 hover:bg-cyan-900/80 border border-slate-700 hover:border-cyan-500/60 rounded-r-md text-slate-400 hover:text-cyan-300 transition-all shadow-md"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -right-3 z-30 flex-col items-center justify-center w-3 h-16 bg-[#0c121e] hover:bg-cyan-950 border border-slate-700 hover:border-cyan-500/60 rounded-r-md text-slate-400 hover:text-cyan-300 transition-all shadow-md cursor-pointer"
           >
             <ChevronLeft className="w-2.5 h-2.5" />
           </button>
         </div>
 
-        {/* CENTER COLUMN: Big Fixed Tactical Disaster Map */}
+        {/* Floating reopen button if left panel is closed */}
+        {!isLeftRosterOpen && (
+          <button
+            onClick={() => setIsLeftRosterOpen(true)}
+            title="Open Robot Fleet panel"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 left-2 z-30 flex-col items-center justify-center w-4 h-16 bg-[#0c121e]/90 hover:bg-cyan-950 border border-slate-700 hover:border-cyan-500 rounded-r-md text-cyan-400 transition-all shadow-xl cursor-pointer"
+          >
+            <ChevronRight className="w-3 h-3" />
+          </button>
+        )}
+
+        {/* CENTER COLUMN: Central Large Fixed GIS Map */}
         <div
           className={`${
             mobileTab === 'map' ? 'flex' : 'hidden'
-          } md:flex flex-1 w-full h-full min-w-0 min-h-0 flex-col rounded-md overflow-hidden border border-slate-800 shadow-xl ${getTourSpotlightStyle('center')}`}
+          } md:flex flex-1 w-full h-full min-w-0 min-h-0 flex-col rounded-md overflow-hidden border border-slate-800/90 shadow-2xl relative ${getTourSpotlightStyle('center')}`}
         >
           <TacticalMap />
         </div>
 
-        {/* RIGHT COLUMN: Slender Dedicated Triage, Hazards & Incident Log */}
+        {/* Floating reopen button if right panel is closed */}
+        {!isRightPanelOpen && (
+          <button
+            onClick={() => setIsRightPanelOpen(true)}
+            title="Open Alerts & Rescue Planning panel"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-2 z-30 flex-col items-center justify-center w-4 h-16 bg-[#0c121e]/90 hover:bg-rose-950 border border-slate-700 hover:border-rose-500 rounded-l-md text-rose-400 transition-all shadow-xl cursor-pointer"
+          >
+            <ChevronLeft className="w-3 h-3" />
+          </button>
+        )}
+
+        {/* RIGHT COLUMN: Fixed width Priority Alerts & Rescue Planning */}
         <div
           className={`relative ${
             mobileTab === 'triage' ? 'flex' : 'hidden'
-          } ${isRightPanelOpen ? 'md:flex md:w-64 lg:w-72 shrink-0' : 'md:hidden'} h-full min-h-0 flex-col gap-1.5 z-20 transition-all duration-200 ${getTourSpotlightStyle('right')}`}
+          } ${isRightPanelOpen ? 'md:flex md:w-72 lg:w-80 xl:w-[340px] shrink-0' : 'md:hidden'} h-full min-h-0 flex-col gap-1.5 z-20 transition-all duration-200 ${getTourSpotlightStyle('right')}`}
         >
           {/* Collapse tab on the left (map-facing) edge */}
           <button
             onClick={() => setIsRightPanelOpen(false)}
-            title="Collapse Survivors panel"
-            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-3 z-30 flex-col items-center justify-center w-3 h-16 bg-slate-800 hover:bg-rose-900/80 border border-slate-700 hover:border-rose-500/60 rounded-l-md text-slate-400 hover:text-rose-300 transition-all shadow-md"
+            title="Collapse Alerts panel"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-3 z-30 flex-col items-center justify-center w-3 h-16 bg-[#0c121e] hover:bg-rose-950 border border-slate-700 hover:border-rose-500/60 rounded-l-md text-slate-400 hover:text-rose-300 transition-all shadow-md cursor-pointer"
           >
             <ChevronRight className="w-2.5 h-2.5" />
           </button>
@@ -326,154 +348,7 @@ const MissionControlDeck: React.FC = () => {
 
       </main>
 
-      {/* Organized Left Side Strip: Quick Robot Fleet Summary */}
-      {!isTourOpen && !isLeftRosterOpen && (
-        <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-3 z-30 flex-col w-48 lg:w-52 bg-[#111722]/95 border border-slate-700/80 hover:border-cyan-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-left duration-200">
-          {/* Header click opens panel */}
-          <button
-            onClick={() => setIsLeftRosterOpen(true)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-slate-900/90 border-b border-slate-800 text-left hover:bg-slate-850 transition-colors rounded-t-md group"
-            title="Expand Full Robots Menu"
-          >
-            <div className="flex items-center gap-1.5">
-              <Bot className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
-              <span className="font-bold text-xs text-slate-100 font-mono tracking-wide">
-                Robots ({robots.length})
-              </span>
-            </div>
-            <div className="flex items-center gap-1 text-[10px] font-mono text-cyan-400 font-semibold group-hover:translate-x-0.5 transition-transform">
-              <span>Open</span>
-              <ChevronRight className="w-3 h-3" />
-            </div>
-          </button>
-
-          {/* Compact Mini List: 6 Robots Glanceable */}
-          <div className="p-2 space-y-1 text-[11px] font-mono">
-            {robots.map((r) => {
-              const isOffline = r.commsStatus === 'disconnected';
-              return (
-                <div
-                  key={r.id}
-                  onClick={() => {
-                    selectRobot(r.id);
-                    setIsLeftRosterOpen(true);
-                  }}
-                  className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/70 hover:border-cyan-500/50 cursor-pointer transition-all"
-                  title={`Click to view ${r.name} (${r.callsign})`}
-                >
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                        isOffline ? 'bg-rose-500 animate-pulse' : 'bg-emerald-400'
-                      }`}
-                    />
-                    <span className="font-bold text-slate-200 truncate">{r.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 text-slate-400 text-[10px]">
-                    <span className={r.battery < 30 ? 'text-rose-400' : 'text-slate-300'}>
-                      {Math.round(r.battery)}%
-                    </span>
-                    <span
-                      className={`text-[9px] px-1 py-0.2 rounded font-bold ${
-                        isOffline
-                          ? 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
-                          : 'bg-slate-800 text-slate-400'
-                      }`}
-                    >
-                      {isOffline ? 'OFFLINE' : 'OK'}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Bottom Quick-Action hint */}
-          <button
-            onClick={() => setIsLeftRosterOpen(true)}
-            className="px-3 py-1.5 bg-[#0b101b] border-t border-slate-800/80 text-[10px] font-mono text-slate-400 hover:text-cyan-300 transition-colors flex items-center justify-between rounded-b-md"
-          >
-            <span>Live Cameras & Sensors</span>
-            <span>→</span>
-          </button>
-        </aside>
-      )}
-
-      {/* Organized Right Side Strip: Quick Survivors & Rescue Queue Summary */}
-      {!isTourOpen && !isRightPanelOpen && (
-        <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-3 z-30 flex-col w-48 lg:w-52 bg-[#111722]/95 border border-slate-700/80 hover:border-rose-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-right duration-200">
-          {/* Header click opens panel */}
-          <button
-            onClick={() => setIsRightPanelOpen(true)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-slate-900/90 border-b border-slate-800 text-left hover:bg-slate-850 transition-colors rounded-t-md group"
-            title="Expand Full Survivors Menu"
-          >
-            <div className="flex items-center gap-1.5">
-              <Heart className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform animate-pulse" />
-              <span className="font-bold text-xs text-slate-100 font-mono tracking-wide">
-                Survivors ({survivors.length})
-              </span>
-            </div>
-            <div className="flex items-center gap-1 text-[10px] font-mono text-rose-400 font-semibold group-hover:-translate-x-0.5 transition-transform">
-              <ChevronLeft className="w-3 h-3" />
-              <span>Open</span>
-            </div>
-          </button>
-
-          {/* Compact Mini List: Found Survivors Glanceable */}
-          <div className="p-2 space-y-1 text-[11px] font-mono">
-            {survivors.map((s) => {
-              const isRed = s.triage === 'immediate';
-              const isYellow = s.triage === 'delayed';
-              return (
-                <div
-                  key={s.id}
-                  onClick={() => {
-                    selectSurvivor(s.id);
-                    setIsRightPanelOpen(true);
-                  }}
-                  className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/70 hover:border-rose-500/50 cursor-pointer transition-all"
-                  title={`Click to view ${s.label}`}
-                >
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                        isRed ? 'bg-rose-500 animate-pulse' : isYellow ? 'bg-amber-400' : 'bg-emerald-400'
-                      }`}
-                    />
-                    <span className="font-bold text-slate-200 truncate">{s.label.split(' ')[0]} {s.label.split(' ')[1]}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0 text-slate-400 text-[10px]">
-                    <span className="text-slate-300">{s.vitals.heartRate} bpm</span>
-                    <span
-                      className={`text-[9px] px-1 py-0.2 rounded font-bold ${
-                        isRed
-                          ? 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
-                          : isYellow
-                          ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
-                          : 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
-                      }`}
-                    >
-                      {isRed ? 'URGENT' : isYellow ? 'DELAY' : 'MINOR'}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Bottom Quick-Action hint */}
-          <button
-            onClick={() => setIsRightPanelOpen(true)}
-            className="px-3 py-1.5 bg-[#0b101b] border-t border-slate-800/80 text-[10px] font-mono text-slate-400 hover:text-rose-300 transition-colors flex items-center justify-between rounded-b-md"
-          >
-            <span>Rescue Dispatch & Vitals</span>
-            <span>→</span>
-          </button>
-        </aside>
-      )}
-
-      {/* Responsive Mobile Bottom Navigation Bar (< md) */}
+{/* Responsive Mobile Bottom Navigation Bar (< md) */}
       <nav className="flex md:hidden items-center justify-around bg-[#060a12] border-t border-slate-800 py-2 px-2 text-xs font-mono select-none z-30 shrink-0">
         <button
           onClick={() => setMobileTab('map')}
