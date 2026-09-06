@@ -17,6 +17,7 @@ export const InteractiveTour: React.FC = () => {
     tourStep,
     nextTourStep,
     prevTourStep,
+    goToTourStep,
     endTour,
   } = useMission();
 
@@ -56,7 +57,7 @@ export const InteractiveTour: React.FC = () => {
       directionalNotice: '👈 THE LEFT PANEL SHOWS YOUR ROBOTS',
       description:
         'Here are your 6 rescue robots. Click on any robot to check its battery, signal, camera view, and live sensor readings like heat and gas levels.',
-      hint: 'Click on Titan Dog or Scout Drone to see their sensors update in the bottom box.',
+      hint: 'Click on Vulcan-X (K9-TITAN) or SkyEye-1 to see their sensors update in the bottom box.',
       positionClasses: 'top-20 right-4 md:right-8',
     },
     {
@@ -155,14 +156,17 @@ export const InteractiveTour: React.FC = () => {
           {/* Progress dots */}
           <div className="flex items-center gap-1.5">
             {tourSteps.map((s, idx) => (
-              <div
+              <button
                 key={idx}
-                className={`h-1.5 rounded-full transition-all ${
+                type="button"
+                onClick={() => goToTourStep(idx)}
+                title={`Go to step ${idx + 1}: ${s.badge}`}
+                className={`h-2 rounded-full transition-all focus:outline-none ${
                   idx === tourStep
                     ? 'w-6 bg-cyan-400'
                     : idx < tourStep
-                    ? 'w-2 bg-cyan-700'
-                    : 'w-2 bg-slate-800'
+                    ? 'w-2.5 bg-cyan-700 hover:bg-cyan-500'
+                    : 'w-2.5 bg-slate-700 hover:bg-slate-500'
                 }`}
               />
             ))}

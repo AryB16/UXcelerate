@@ -62,6 +62,7 @@ interface MissionContextType {
   startTour: () => void;
   nextTourStep: () => void;
   prevTourStep: () => void;
+  goToTourStep: (step: number) => void;
   endTour: () => void;
   confirmReroute: () => void;
   dismissReroute: () => void;
@@ -233,40 +234,69 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsFpvOpen(false);
   };
 
+  const syncEntitiesForTourStep = (step: number) => {
+    if (step === 0) {
+      // Step 1: Test Bench Controls
+      setSelectedRobotId(null);
+      setSelectedSurvivorId(null);
+      setSelectedHazardId(null);
+    } else if (step === 1) {
+      // Step 2: Robot Roster & Telemetry
+      setSelectedRobotId('ROB-02'); // Select K9-TITAN
+      setSelectedSurvivorId(null);
+      setSelectedHazardId(null);
+    } else if (step === 2) {
+      // Step 3: Tactical Map
+      setSelectedRobotId('ROB-01'); // SkyEye-1 aerial drone
+      setSelectedSurvivorId(null);
+      setSelectedHazardId(null);
+    } else if (step === 3) {
+      // Step 4: Offline Radio (Ghost Mode)
+      setSelectedRobotId('ROB-03'); // Serpens-3 crawler (disconnected ghost mode)
+      setSelectedSurvivorId(null);
+      setSelectedHazardId(null);
+    } else if (step === 4) {
+      // Step 5: Survivor Rescue & START Triage
+      setSelectedSurvivorId('SURV-01'); // Select Survivor #1
+      setSelectedRobotId(null);
+      setSelectedHazardId(null);
+    }
+  };
+
   const startTour = () => {
     soundManager.playTacticalClick();
     setTourStep(0);
     setIsTourOpen(true);
-    setSelectedRobotId('ROB-01');
+    syncEntitiesForTourStep(0);
   };
 
   const nextTourStep = () => {
     soundManager.playTacticalClick();
     setTourStep((prev) => {
       const next = prev + 1;
-      if (next === 1) {
-        setSelectedRobotId('ROB-03'); // Select Ghost Robot
-        setSelectedSurvivorId(null);
-        setSelectedHazardId(null);
-      } else if (next === 2) {
-        setSelectedRobotId('ROB-04'); // Select Relay Rover
-      } else if (next === 3) {
-        setSelectedSurvivorId('SURV-01'); // Select Red Triage Survivor
-        setSelectedRobotId(null);
-      } else if (next === 4) {
-        setSelectedHazardId('HAZ-01'); // Select Methane Hazard
-        setSelectedSurvivorId(null);
-      } else if (next > 4) {
+      if (next > 4) {
         setIsTourOpen(false);
         return 0;
       }
+      syncEntitiesForTourStep(next);
       return next;
     });
   };
 
   const prevTourStep = () => {
     soundManager.playTacticalClick();
-    setTourStep((prev) => Math.max(0, prev - 1));
+    setTourStep((prev) => {
+      const next = Math.max(0, prev - 1);
+      syncEntitiesForTourStep(next);
+      return next;
+    });
+  };
+
+  const goToTourStep = (step: number) => {
+    soundManager.playTacticalClick();
+    const clamped = Math.max(0, Math.min(4, step));
+    setTourStep(clamped);
+    syncEntitiesForTourStep(clamped);
   };
 
   const endTour = () => {
@@ -602,6 +632,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         startTour,
         nextTourStep,
         prevTourStep,
+        goToTourStep,
         endTour,
 
         triggerAftershock,

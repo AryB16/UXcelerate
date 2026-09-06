@@ -54,13 +54,21 @@ const MissionControlDeck: React.FC = () => {
     }
   };
 
-  // If tour opens, restore all panels so they can be spotlighted
+  // If tour opens, restore all panels and adapt tabs so they can be spotlighted properly
   useEffect(() => {
     if (isTourOpen) {
       setIsLeftRosterOpen(true);
       setIsRightPanelOpen(true);
       if (tourStep === 4) {
         setRightPanelMode('triage');
+      }
+      // On mobile view, align tab with current tour step
+      if (tourStep === 0 || tourStep === 2) {
+        setMobileTab('map');
+      } else if (tourStep === 1 || tourStep === 3) {
+        setMobileTab('roster');
+      } else if (tourStep === 4) {
+        setMobileTab('triage');
       }
     }
   }, [isTourOpen, tourStep]);

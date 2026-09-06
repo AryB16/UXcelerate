@@ -34,6 +34,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     routes,
     beacons,
     layers,
+    isTourOpen,
     selectedRobotId,
     selectedSurvivorId,
     selectedHazardId,
@@ -1444,7 +1445,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         {/* ========================================================= */}
         {/* 8. DOCKED ENTITY INSPECTOR PANEL (At Bottom-Left)         */}
         {/* ========================================================= */}
-        {(selectedRobot || selectedSurvivor || selectedHazard) && (
+        {!isTourOpen && (selectedRobot || selectedSurvivor || selectedHazard) && (
           <div className="absolute bottom-9 left-3 z-30 p-3 rounded-md bg-[#08101e]/95 border border-cyan-500/40 shadow-2xl backdrop-blur w-80 max-w-[calc(100%-24px)] max-h-[calc(100%-110px)] overflow-y-auto no-scrollbar font-mono text-xs select-none">
             
             {/* Robot Inspector */}
