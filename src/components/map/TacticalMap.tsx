@@ -1315,10 +1315,13 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             {/* ========================================================= */}
             {/* 7. SLEEK ON-DEMAND HOVER TOOLTIP                          */}
             {/* ========================================================= */}
-            {hoveredEntity && (
+            {hoveredEntity && 
+             hoveredEntity.id !== selectedRobotId && 
+             hoveredEntity.id !== selectedSurvivorId && 
+             hoveredEntity.id !== selectedHazardId && (
               <g
                 transform={`translate(${
-                  hoveredEntity.x > 500 ? hoveredEntity.x - 240 : hoveredEntity.x + 20
+                  hoveredEntity.x > 520 ? hoveredEntity.x - 260 : hoveredEntity.x + 20
                 }, ${
                   hoveredEntity.y > 450 ? hoveredEntity.y - 75 : hoveredEntity.y - 45
                 })`}
@@ -1327,8 +1330,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 <rect
                   x="0"
                   y="0"
-                  width="230"
-                  height="56"
+                  width="250"
+                  height="58"
                   fill="#07101e"
                   stroke="#38bdf8"
                   strokeWidth="1.5"
@@ -1356,16 +1359,16 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   fontFamily="JetBrains Mono"
                   fontWeight="bold"
                 >
-                  {hoveredEntity.title}
+                  {hoveredEntity.title.length > 28 ? hoveredEntity.title.slice(0, 27) + '…' : hoveredEntity.title}
                 </text>
                 <text
                   x="10"
-                  y="46"
+                  y="47"
                   fill="#94a3b8"
                   fontSize="9.5"
                   fontFamily="JetBrains Mono"
                 >
-                  {hoveredEntity.subtitle}
+                  {hoveredEntity.subtitle.length > 38 ? hoveredEntity.subtitle.slice(0, 36) + '…' : hoveredEntity.subtitle}
                 </text>
               </g>
             )}
@@ -1377,23 +1380,23 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         {/* 8. DOCKED ENTITY INSPECTOR PANEL (At Bottom-Left)         */}
         {/* ========================================================= */}
         {(selectedRobot || selectedSurvivor || selectedHazard) && (
-          <div className="absolute bottom-8 left-3 z-30 p-3.5 rounded-md bg-[#091122]/95 border border-cyan-500/40 shadow-xl backdrop-blur max-w-sm font-mono text-xs">
+          <div className="absolute bottom-9 left-3 z-30 p-3 rounded-md bg-[#08101e]/95 border border-cyan-500/40 shadow-2xl backdrop-blur w-80 max-w-[calc(100%-24px)] max-h-[calc(100%-110px)] overflow-y-auto no-scrollbar font-mono text-xs select-none">
             
             {/* Robot Inspector */}
             {selectedRobot && (
               <div>
                 <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">{getRobotEmoji(selectedRobot.type)}</span>
-                    <span className="font-bold text-white text-sm">{selectedRobot.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-base shrink-0">{getRobotEmoji(selectedRobot.type)}</span>
+                    <span className="font-bold text-white text-sm truncate">{selectedRobot.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold shrink-0">
                       {selectedRobot.callsign}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-sm border ${
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm border ${
                         selectedRobot.commsStatus === 'connected'
                           ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
                           : selectedRobot.commsStatus === 'degraded'
@@ -1429,9 +1432,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   </div>
                 </div>
 
-                <p className="text-[11px] text-slate-300 mb-3 leading-relaxed bg-slate-900/50 p-1.5 rounded-sm border border-slate-800/60 line-clamp-2">
+                <div className="text-[11px] text-slate-300 mb-2.5 leading-relaxed bg-slate-900/50 p-1.5 rounded-sm border border-slate-800/60 break-words">
                   <strong className="text-cyan-400">Mission:</strong> {selectedRobot.currentTask}
-                </p>
+                </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
@@ -1446,16 +1449,16 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   {selectedRobot.commsStatus === 'disconnected' && (
                     <button
                       onClick={() => restoreComms(selectedRobot.id)}
-                      className="py-1.5 px-3 rounded-md bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow transition-all"
+                      className="py-1.5 px-2.5 rounded-md bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow transition-all shrink-0"
                     >
                       <Signal className="w-3.5 h-3.5" />
-                      <span>Sync Comms</span>
+                      <span>Sync</span>
                     </button>
                   )}
 
                   <button
                     onClick={() => deployBeaconAt(selectedRobot.position.x + 20, selectedRobot.position.y + 20)}
-                    className="p-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
+                    className="p-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors shrink-0"
                     title="Drop RF Mesh Relay at Robot Spot"
                   >
                     <Radio className="w-4 h-4" />
@@ -1468,12 +1471,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             {!selectedRobot && selectedSurvivor && (
               <div>
                 <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">❤️</span>
-                    <span className="font-bold text-white text-sm">{selectedSurvivor.label}</span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-base shrink-0">❤️</span>
+                    <span className="font-bold text-white text-sm truncate">{selectedSurvivor.label}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded-sm bg-rose-950 text-rose-300 border border-rose-700 font-bold animate-pulse">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-sm bg-rose-950 text-rose-300 border border-rose-700 font-bold animate-pulse">
                       {selectedSurvivor.triage.toUpperCase()}
                     </span>
                     <button
@@ -1497,9 +1500,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   </div>
                 </div>
 
-                <p className="text-[11px] text-slate-300 mb-3 bg-slate-900/50 p-1.5 rounded-sm border border-slate-800/60 leading-relaxed">
+                <div className="text-[11px] text-slate-300 mb-2.5 bg-slate-900/50 p-1.5 rounded-sm border border-slate-800/60 leading-relaxed break-words">
                   <strong className="text-amber-400">Entrapment:</strong> Depth {selectedSurvivor.location.depthMeters}m • {selectedSurvivor.notes}
-                </p>
+                </div>
 
                 <button
                   onClick={() => dispatchRobotToSurvivor('ROB-02', selectedSurvivor.id)}
@@ -1515,12 +1518,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             {!selectedRobot && !selectedSurvivor && selectedHazard && (
               <div>
                 <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">{selectedHazard.type === 'gas_leak' ? '☣' : '⚠'}</span>
-                    <span className="font-bold text-white text-sm">{selectedHazard.title}</span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-base shrink-0">{selectedHazard.type === 'gas_leak' ? '☣' : '⚠'}</span>
+                    <span className="font-bold text-white text-sm truncate">{selectedHazard.title}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded-sm bg-amber-950 text-amber-300 border border-amber-700 font-bold">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-sm bg-amber-950 text-amber-300 border border-amber-700 font-bold">
                       {selectedHazard.severity.toUpperCase()}
                     </span>
                     <button
@@ -1533,11 +1536,11 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   </div>
                 </div>
 
-                <p className="text-xs text-amber-300 font-bold mb-2 bg-amber-950/40 p-2 rounded-sm border border-amber-500/40">
+                <div className="text-xs text-amber-300 font-bold mb-2 bg-amber-950/40 p-2 rounded-sm border border-amber-500/40 break-words leading-snug">
                   {selectedHazard.readout}
-                </p>
+                </div>
 
-                <p className="text-[11px] text-slate-400 mb-2">
+                <p className="text-[11px] text-slate-400 mb-1">
                   Location: {selectedHazard.location.sector} • Perimeter: {selectedHazard.location.radius}m
                 </p>
               </div>
