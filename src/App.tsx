@@ -282,18 +282,7 @@ const MissionControlDeck: React.FC = () => {
                 <span className="hidden xl:inline">Logs</span>
               </button>
 
-              <button
-                onClick={() => setRightPanelMode('split')}
-                className={`py-1 px-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${
-                  rightPanelMode === 'split'
-                    ? 'bg-slate-700 text-slate-100 font-bold border border-slate-500 shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-                title="Split View (Triage + Hazards Together)"
-              >
-                <Columns className="w-3 h-3 text-slate-300" />
-                <span className="hidden xl:inline">Split</span>
-              </button>
+
             </div>
           </div>
 
