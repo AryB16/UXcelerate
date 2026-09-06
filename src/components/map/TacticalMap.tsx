@@ -143,141 +143,139 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   return (
     <div className="relative w-full h-full bg-[#060a13] rounded-xl border border-slate-800 overflow-hidden flex flex-col shadow-2xl">
       
-      {/* Top Map Toolbar: Clean, intuitive, legible */}
-      <div className="flex items-center justify-between px-3 py-2 bg-[#0a1020]/95 border-b border-slate-800 z-10 text-xs font-mono select-none">
-        {/* Layer Controls */}
-        <div className="flex items-center gap-1.5 overflow-x-auto">
-          <span className="text-slate-400 font-semibold mr-1 flex items-center gap-1 hidden sm:flex">
-            <Layers className="w-3.5 h-3.5 text-cyan-400" /> Layers:
+      {/* Top Map Toolbar: Seamless, aerospace HUD command bar */}
+      <div className="flex items-center justify-between px-2.5 py-1.5 bg-[#080e1b]/95 border-b border-slate-800/90 z-10 text-xs font-mono select-none shrink-0 gap-2">
+        {/* Left: Layer Controls in a single unified segmented pill */}
+        <div className="flex items-center bg-[#050b16] border border-slate-800 rounded-lg p-0.5 text-[11px] shrink-0">
+          <span className="text-slate-400 font-semibold px-2 flex items-center gap-1.5 border-r border-slate-800/80 mr-0.5">
+            <Layers className="w-3 h-3 text-cyan-400" />
+            <span className="hidden sm:inline">Layers</span>
           </span>
 
           <button
             onClick={() => toggleLayer('slam')}
-            className={`px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
+            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1.5 ${
               layers.slam
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-cyan-500/20 text-cyan-300 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
+            title="CAD Blueprint & SLAM Pointcloud"
           >
-            <span>Blueprint</span>
+            <span className={`w-1.5 h-1.5 rounded-full ${layers.slam ? 'bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.8)]' : 'bg-slate-600'}`}></span>
+            <span>CAD</span>
           </button>
 
           <button
             onClick={() => toggleLayer('mesh')}
-            className={`px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
+            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1.5 ${
               layers.mesh
-                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-emerald-500/20 text-emerald-300 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
+            title="RF Mesh Links & Repeater Beacons"
           >
-            <span>RF Mesh</span>
+            <span className={`w-1.5 h-1.5 rounded-full ${layers.mesh ? 'bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]' : 'bg-slate-600'}`}></span>
+            <span>Mesh</span>
           </button>
 
           <button
             onClick={() => toggleLayer('hazards')}
-            className={`px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
+            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1.5 ${
               layers.hazards
-                ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-amber-500/20 text-amber-300 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
+            title="Hazards & Environmental Risks"
           >
+            <span className={`w-1.5 h-1.5 rounded-full ${layers.hazards ? 'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)]' : 'bg-slate-600'}`}></span>
             <span>Hazards</span>
           </button>
 
           <button
             onClick={() => toggleLayer('routes')}
-            className={`px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
+            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1.5 ${
               layers.routes
-                ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/40'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-sky-500/20 text-sky-300 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
+            title="Safe Evac Corridors & Autopath"
           >
-            <span>Corridors</span>
+            <span className={`w-1.5 h-1.5 rounded-full ${layers.routes ? 'bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]' : 'bg-slate-600'}`}></span>
+            <span>Routes</span>
           </button>
         </div>
 
-        {/* Action Tools & Zoom */}
-        <div className="flex items-center gap-1.5">
-          {/* Detail Mode Switcher */}
-          <div className="flex items-center bg-slate-900/90 rounded-lg p-0.5 border border-slate-700/80">
-            <button
-              onClick={() => setDetailMode('simple')}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-all ${
-                detailMode === 'simple'
-                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/50 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-              title="Clean, simplified overview map"
-            >
-              <Eye className="w-3 h-3 text-cyan-400" />
-              <span>Simple</span>
-            </button>
-            <button
-              onClick={() => setDetailMode('detailed')}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-all ${
-                detailMode === 'detailed'
-                  ? 'bg-cyan-400 text-slate-950 font-bold border border-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.4)]'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-              title="Deep telemetry, RF topology & sensor readouts"
-            >
-              <Layers className="w-3 h-3" />
-              <span>Detailed</span>
-            </button>
-          </div>
+        {/* Right: Actions, Expand & Zoom */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Detail Mode Pill (Compact & non-intrusive) */}
+          <button
+            onClick={() => setDetailMode((m) => (m === 'simple' ? 'detailed' : 'simple'))}
+            className={`px-2 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 border ${
+              detailMode === 'detailed'
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-[0_0_8px_rgba(6,182,212,0.3)] font-bold'
+                : 'bg-slate-800/60 text-slate-400 border-slate-700 hover:text-slate-200'
+            }`}
+            title={detailMode === 'detailed' ? 'Switch to Simplified Overview' : 'Switch to Deep Telemetry Mode'}
+          >
+            <Eye className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden xl:inline">{detailMode === 'detailed' ? 'Deep' : 'Simple'}</span>
+          </button>
 
+          {/* Deploy Relay Button */}
           <button
             onClick={() => setIsDeployMode(!isDeployMode)}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold border transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
               isDeployMode
                 ? 'bg-cyan-400 text-slate-950 border-cyan-300 animate-pulse shadow-[0_0_12px_rgba(6,182,212,0.5)]'
-                : 'bg-slate-800/90 text-cyan-300 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-800/80 text-cyan-300 border-slate-700 hover:bg-slate-700'
             }`}
+            title="Deploy RF Relay Beacon"
           >
             <Radio className="w-3.5 h-3.5" />
-            <span>{isDeployMode ? 'Click Map' : 'Deploy Relay'}</span>
+            <span className="hidden sm:inline">{isDeployMode ? 'Click Map' : 'Deploy Relay'}</span>
+            <span className="sm:hidden">Relay</span>
           </button>
 
           {/* Full-view / Expand Map toggle */}
           {onToggleExpand && (
             <button
               onClick={onToggleExpand}
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono bg-slate-800/90 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors"
-              title={isExpanded ? 'Restore 3-Column Deck' : 'Expand Map Full Width'}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono bg-slate-800/80 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors"
+              title={isExpanded ? 'Restore 3-Column Deck (M)' : 'Maximize Map Full Width (M)'}
             >
               {isExpanded ? (
                 <>
                   <Minimize2 className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>3-Column Deck</span>
+                  <span className="hidden sm:inline">3-Deck</span>
                 </>
               ) : (
                 <>
                   <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Expand Map</span>
+                  <span className="hidden sm:inline">Expand</span>
                 </>
               )}
             </button>
           )}
 
           {/* Zoom controls */}
-          <div className="flex items-center bg-slate-800/90 rounded border border-slate-700">
+          <div className="flex items-center bg-slate-800/80 rounded-lg border border-slate-700 p-0.5">
             <button
               onClick={handleZoomIn}
-              className="p-1 text-slate-300 hover:text-white border-r border-slate-700"
+              className="p-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={handleZoomOut}
-              className="p-1 text-slate-300 hover:text-white border-r border-slate-700"
+              className="p-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={handleReset}
-              className="p-1 text-slate-300 hover:text-white"
+              className="p-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
               title="Reset View"
             >
               <RotateCcw className="w-3.5 h-3.5" />
