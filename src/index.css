@@ -482,6 +482,37 @@
   border: 1.5px solid rgba(6, 182, 212, 0.8);
   border-radius: 50%;
   box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Dynamic Reticle Clamping Stages */
+.reticle-box-dubai {
+  width: 220px;
+  height: 220px;
+  border: 1.5px dashed rgba(6, 182, 212, 0.45);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reticle-box-diac {
+  width: 150px;
+  height: 150px;
+  border: 2px solid rgba(245, 158, 11, 0.8);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reticle-box-bpdc {
+  width: 100px;
+  height: 100px;
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.85), inset 0 0 15px rgba(239, 68, 68, 0.4);
+  animation: lockPulse 0.8s ease-in-out infinite alternate;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lockPulse {
+  0% { transform: scale(0.96); border-color: #ef4444; }
+  100% { transform: scale(1.04); border-color: #fca5a5; }
 }
 
 .recon-scan-line {

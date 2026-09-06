@@ -86,7 +86,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   const [filterHazards, setFilterHazards] = useState<boolean>(true);
   const [filterRoutes, setFilterRoutes] = useState<boolean>(true);
   const [currentZoom, setCurrentZoom] = useState<number>(16);
-  const [flyinStage, setFlyinStage] = useState<'idle' | 'dubai' | 'difc' | 'bpdc'>('idle');
+  const [flyinStage, setFlyinStage] = useState<'idle' | 'dubai' | 'diac' | 'bpdc'>('idle');
+  const [altMeter, setAltMeter] = useState<number>(64000);
+  const [targetAlt, setTargetAlt] = useState<number>(64000);
+  const [opticalZoom, setOpticalZoom] = useState<string>('1.0x');
   const flyinTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // References
@@ -468,7 +471,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     }
   };
 
-  // Cinematic Multi-Stage Satellite Fly-In (Dubai -> DIFC -> BITS Pilani Dubai Campus)
+  // Animated altitude ticker effect
+  useEffect(() => {
+    if (flyinStage === 'idle') return;
+    const interval = setInterval(() => {
+      setAltMeter((curr) => {
+        if (Math.abs(curr - targetAlt) < 60) return targetAlt;
+        return Math.round(curr + (targetAlt - curr) * 0.18);
+      });
+    }, 40);
+    return () => clearInterval(interval);
+  }, [flyinStage, targetAlt]);
+
+  // Cinematic Multi-Stage Satellite Fly-In (Dubai Coastline -> DIAC Corridor -> BPDC Campus Lock)
   const runCinematicFlyIn = () => {
     if (!mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
@@ -478,29 +493,36 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
     soundManager.playTacticalClick();
 
-    // Stage 1: High-Altitude Dubai Reconnaissance (Persian Gulf Coastline & Metropolis)
+    // Stage 1: High-Altitude UAE & Dubai Coastline Orbital Surveillance (Zoom 10)
     setFlyinStage('dubai');
-    map.flyTo([25.2048, 55.2708], 11, { duration: 2.0, easeLinearity: 0.25 });
+    setTargetAlt(64000);
+    setAltMeter(64000);
+    setOpticalZoom('1.0x WIDE');
+    map.flyTo([25.1950, 55.3000], 10, { duration: 2.2, easeLinearity: 0.2 });
 
-    // Stage 2: Zooming into DIFC & Downtown Dubai Central Corridor
+    // Stage 2: Ingress Vector over Dubai International Academic City (DIAC) (Zoom 13.8)
     const t1 = setTimeout(() => {
-      setFlyinStage('difc');
+      setFlyinStage('diac');
+      setTargetAlt(7200);
+      setOpticalZoom('8.5x RECON');
       soundManager.playTacticalClick();
-      map.flyTo([25.2048, 55.2708], 13.8, { duration: 2.0, easeLinearity: 0.25 });
-    }, 2200);
+      map.flyTo([25.1275, 55.4080], 13.8, { duration: 2.2, easeLinearity: 0.2 });
+    }, 2400);
 
-    // Stage 3: Low-Altitude Swoop into BITS Pilani Dubai Campus (DIAC Sector 4)
+    // Stage 3: Low-Altitude Pinpoint Target Lock into BITS Pilani Dubai Campus (Zoom 17.0)
     const t2 = setTimeout(() => {
       setFlyinStage('bpdc');
-      soundManager.playSonarPing();
-      map.flyTo([CENTER_LAT, CENTER_LNG], 16.5, { duration: 2.4, easeLinearity: 0.25 });
-    }, 4500);
+      setTargetAlt(320);
+      setOpticalZoom('32.0x FLIR');
+      soundManager.playTargetLock();
+      map.flyTo([CENTER_LAT, CENTER_LNG], 17.0, { duration: 2.5, easeLinearity: 0.25 });
+    }, 4800);
 
-    // Stage 4: Settle and hand over to active interactive deck
+    // Stage 4: Affirmative target lock hold, then hand over to active interactive deck
     const t3 = setTimeout(() => {
       setFlyinStage('idle');
-      soundManager.playTacticalClick();
-    }, 7200);
+      soundManager.playSonarPing();
+    }, 8000);
 
     flyinTimeoutsRef.current.push(t1, t2, t3);
   };
@@ -616,11 +638,53 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <div className="recon-corner recon-corner-bl" />
             <div className="recon-corner recon-corner-br" />
 
-            {/* Center Target Lock Reticle */}
+            {/* Center Target Lock Reticle with Stage-based Dynamic Clamping */}
             <div className="recon-crosshair-center">
-              <div className="recon-reticle-ring" />
-              <div className="recon-reticle-ring-inner" />
-              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+              <div
+                className={`relative flex items-center justify-center rounded-lg ${
+                  flyinStage === 'dubai'
+                    ? 'reticle-box-dubai'
+                    : flyinStage === 'diac'
+                    ? 'reticle-box-diac'
+                    : 'reticle-box-bpdc'
+                }`}
+              >
+                {/* Center target indicator dot */}
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    flyinStage === 'bpdc'
+                      ? 'bg-rose-500 shadow-[0_0_14px_#ef4444]'
+                      : flyinStage === 'diac'
+                      ? 'bg-amber-400 shadow-[0_0_10px_#f59e0b]'
+                      : 'bg-cyan-400 shadow-[0_0_10px_#06b6d4]'
+                  } animate-ping`}
+                />
+
+                {/* Target label tag directly above the crosshair */}
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none">
+                  <span
+                    className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded border backdrop-blur transition-all ${
+                      flyinStage === 'bpdc'
+                        ? 'bg-rose-950/95 text-rose-300 border-rose-500/80 shadow-[0_0_15px_rgba(239,68,68,0.7)] animate-pulse'
+                        : flyinStage === 'diac'
+                        ? 'bg-amber-950/90 text-amber-300 border-amber-500/70 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+                        : 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50'
+                    }`}
+                  >
+                    {flyinStage === 'bpdc'
+                      ? '● TARGET LOCKED: BPDC CAMPUS'
+                      : flyinStage === 'diac'
+                      ? 'INGRESS CORRIDOR: DIAC'
+                      : 'SEARCH THEATRE: DUBAI'}
+                  </span>
+                </div>
+
+                {/* Crosshair precision ticks */}
+                <div className="absolute -top-3 w-0.5 h-3 bg-cyan-400/80" />
+                <div className="absolute -bottom-3 w-0.5 h-3 bg-cyan-400/80" />
+                <div className="absolute -left-3 h-0.5 w-3 bg-cyan-400/80" />
+                <div className="absolute -right-3 h-0.5 w-3 bg-cyan-400/80" />
+              </div>
               <div className="recon-scan-line" />
             </div>
 
@@ -632,17 +696,17 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   <span className="text-xs font-bold tracking-widest text-cyan-300 bg-cyan-950/90 px-2.5 py-1 rounded border border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.5)]">
                     {flyinStage === 'dubai'
                       ? 'SATELLITE RECON // THEATRE: DUBAI METROPOLIS'
-                      : flyinStage === 'difc'
-                      ? 'TRANSIT CORRIDOR // DIFC & DOWNTOWN SECTOR'
+                      : flyinStage === 'diac'
+                      ? 'INGRESS CORRIDOR // DUBAI INTL ACADEMIC CITY (DIAC)'
                       : 'TARGET LOCKED // BITS PILANI DUBAI CAMPUS (BPDC)'}
                   </span>
                 </div>
                 <div className="text-[10.5px] text-slate-200 bg-black/75 px-2.5 py-1 rounded border border-slate-700/70 max-w-lg backdrop-blur shadow-lg">
                   {flyinStage === 'dubai' && (
-                    <span>HIGH-ALTITUDE OPTICAL DOWNLINK ACTIVE • RECON OVER THEATRE & GULF COASTLINE</span>
+                    <span>HIGH-ALTITUDE OPTICAL DOWNLINK ACTIVE • SURVEILLANCE OVER EMIRATE & GULF COASTLINE</span>
                   )}
-                  {flyinStage === 'difc' && (
-                    <span>TRANSIT VECTOR CONFIRMED • TRAVERSING DOWNTOWN AXIS TOWARDS DIAC SECTOR 4</span>
+                  {flyinStage === 'diac' && (
+                    <span>VECTOR CONFIRMED • APPROACHING DUBAI INTERNATIONAL ACADEMIC CITY (DIAC) SECTOR</span>
                   )}
                   {flyinStage === 'bpdc' && (
                     <span className="text-rose-400 font-bold">DISASTER PERIMETER ACQUIRED • SECTOR 4 COLLAPSE EPICENTER CONFIRMED</span>
@@ -661,28 +725,26 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
             {/* Bottom Live Flight Telemetry Ticker */}
             <div className="flex items-end justify-between z-10 text-[10px] text-cyan-300/90 select-none">
-              <div className="bg-black/80 px-3 py-1.5 rounded border border-cyan-500/40 backdrop-blur flex items-center gap-4 shadow-lg">
+              <div className="bg-black/80 px-3 py-1.5 rounded border border-cyan-500/40 backdrop-blur flex items-center gap-5 shadow-lg">
                 <div>
                   <span className="text-slate-400">COORDS: </span>
-                  <span className="font-bold text-slate-100">
+                  <span className="font-bold text-slate-100 font-mono">
                     {flyinStage === 'bpdc'
                       ? '25.1312° N, 55.4190° E'
-                      : '25.2048° N, 55.2708° E'}
+                      : flyinStage === 'diac'
+                      ? '25.1275° N, 55.4080° E'
+                      : '25.1950° N, 55.3000° E'}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400">ALTITUDE: </span>
-                  <span className="font-bold text-amber-400">
-                    {flyinStage === 'dubai'
-                      ? '42,000m (ORBIT)'
-                      : flyinStage === 'difc'
-                      ? '8,400m (DESCENT)'
-                      : '380m (TACTICAL)'}
+                  <span className="font-bold text-amber-400 font-mono">
+                    {altMeter.toLocaleString()}m AMSL
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400">OPTICAL: </span>
-                  <span className="font-bold text-emerald-400">8K MULTISPECTRAL FLIR</span>
+                  <span className="font-bold text-emerald-400 font-mono">{opticalZoom}</span>
                 </div>
               </div>
 
