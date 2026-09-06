@@ -48,6 +48,7 @@ export const InteractiveTour: React.FC = () => {
         'Try out different disaster scenarios with one click: trigger an aftershock, cut off radio signal to test offline mode, or find a new survivor.',
       hint: 'Click "Simulate Aftershock" to watch robots automatically recalculate safer paths in real time.',
       positionClasses: 'top-20 left-1/2 -translate-x-1/2',
+      widthClass: 'w-[420px]',
     },
     {
       step: 2,
@@ -58,32 +59,34 @@ export const InteractiveTour: React.FC = () => {
       description:
         'Here are your 6 rescue robots. Click on any robot to check its battery, signal, camera view, and live sensor readings like heat and gas levels.',
       hint: 'Click on Vulcan-X (K9-TITAN) or SkyEye-1 to see their sensors update in the bottom box.',
-      // Left panel is open (col-span-3 = ~25%). Card sits in the remaining center/right zone.
       positionClasses: 'top-1/2 -translate-y-1/2 left-1/3',
+      widthClass: 'w-[420px]',
     },
     {
       step: 3,
       badge: 'LIVE MAP',
       icon: <MapPin className="w-5 h-5 text-cyan-400" />,
       title: 'Disaster Area Map',
-      directionalNotice: '⬛ THE MAP IS FULLY OPEN NOW',
+      directionalNotice: '👇 THE MAP IS BELOW & AROUND THIS CARD',
       description:
-        'This map combines old building blueprints with real-time drone scans. Hatched warning stripes mark unexplored danger zones where robots have not yet checked.',
-      hint: 'Hover over or click any robot pin, survivor, or hazard on the map to see details.',
-      // Both panels closed — map is full width. Card at top-center so the map is visible below.
-      positionClasses: 'top-20 left-1/2 -translate-x-1/2',
+        'This map combines old building blueprints with real-time drone scans. Hatched stripes mark danger zones robots have not yet checked.',
+      hint: 'Hover or click any robot pin, survivor, or hazard on the map to see details.',
+      // Top-right corner — center and bottom of the map stay fully visible
+      positionClasses: 'top-20 right-4',
+      widthClass: 'w-72',
     },
     {
       step: 4,
       badge: 'OFFLINE RADIO',
       icon: <Radio className="w-5 h-5 text-rose-400" />,
       title: 'Offline Mode & Radio Relays',
-      directionalNotice: '👈 NOTICE SERPENS IS DISCONNECTED',
+      directionalNotice: '👇 FIND SERPENS ON THE MAP BELOW',
       description:
         'When concrete blocks radio signals, robots keep searching on their own and save data locally. Dropping a small relay restores full communication.',
-      hint: 'Click "Eject Relay Beacon" or "Deploy RF Beacon" near Serpens to bring it back online.',
-      // Left panel is open. Card at top of center zone so Serpens is visible on map below.
-      positionClasses: 'top-20 left-1/3',
+      hint: 'Spot Serpens (bottom-right of map) — it\'s the robot shown in red as offline.',
+      // Top-right of the map area — Serpens (bottom-right) stays clearly visible below
+      positionClasses: 'top-20 right-4',
+      widthClass: 'w-72',
     },
     {
       step: 5,
@@ -94,8 +97,8 @@ export const InteractiveTour: React.FC = () => {
       description:
         'Found survivors are sorted by medical urgency (Red = Immediate, Yellow = Stable, Green = Minor). You can send rescue teams or oxygen with a click.',
       hint: 'Check the bottom bar for overall rescue progress and cleared routes.',
-      // Right panel is open. Card sits in the center/left zone.
       positionClasses: 'top-1/2 -translate-y-1/2 right-1/3',
+      widthClass: 'w-[420px]',
     },
   ];
 
@@ -107,7 +110,7 @@ export const InteractiveTour: React.FC = () => {
 
       {/* Tutorial Floating Card */}
       <div
-        className={`pointer-events-auto fixed ${current.positionClasses} w-[420px] max-w-[92vw] bg-[#090e1a]/95 backdrop-blur-md border border-cyan-400/80 rounded-md p-5 md:p-6 shadow-2xl animate-fade-in text-slate-100 font-sans z-50`}
+        className={`pointer-events-auto fixed ${current.positionClasses} ${current.widthClass} max-w-[92vw] bg-[#090e1a]/95 backdrop-blur-md border border-cyan-400/80 rounded-md p-5 md:p-6 shadow-2xl animate-fade-in text-slate-100 font-sans z-50`}
       >
         {/* Directional Callout Banner */}
         <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md bg-cyan-950/90 border border-cyan-400/60 text-cyan-300 font-mono text-[11px] font-bold tracking-wider mb-3.5 shadow-inner">
