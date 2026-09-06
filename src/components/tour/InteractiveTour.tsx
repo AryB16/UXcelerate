@@ -40,39 +40,33 @@ export const InteractiveTour: React.FC = () => {
   const tourSteps = [
     {
       step: 1,
-      badge: 'C2 TACTICAL GIS',
-      icon: <MapPin className="w-5 h-5 text-cyan-400" />,
-      title: 'Disaster Map & BPDC Perimeter',
-      directionalNotice: '📍 CENTER • SATELLITE TACTICAL DECK',
+      badge: 'TACTICAL GIS',
+      icon: <MapPin className="w-4 h-4 text-cyan-400" />,
+      title: 'BPDC Tactical Map',
       description:
-        'Live GIS map of BITS Pilani Dubai Campus. The red perimeter designates the Sector 4 collapse boundary. Click any unit or survivor pin to inspect real-time data.',
-      hint: 'Use mouse scroll to zoom or click "RECON FLY-IN" in the header to replay the orbital flyover.',
+        'Live GIS map of BITS Pilani Dubai Campus showing the Sector 4 collapse perimeter. Click any robot or survivor pin to track live telemetry.',
       positionClasses: 'top-20 left-1/2 -translate-x-1/2',
-      widthClass: 'w-[440px]',
+      widthClass: 'w-[320px] md:w-[350px]',
     },
     {
       step: 2,
       badge: 'SWARM FLEET',
-      icon: <Eye className="w-5 h-5 text-cyan-400" />,
-      title: 'Robotic Fleet & FPV Cockpits',
-      directionalNotice: '👈 LEFT PANEL • 6 RESCUE UNITS',
+      icon: <Eye className="w-4 h-4 text-cyan-400" />,
+      title: 'Robot Swarm Roster',
       description:
-        '6 specialized robots: drone, K9 quadruped, snake crawler, and rovers. Monitor battery, mesh latency, and sensor telemetry. Click FPV to enter direct first-person pilot mode.',
-      hint: 'Vulcan-X (K9-TITAN) is selected — note its real-time flash LiDAR and acoustic sensors in the bottom panel.',
-      positionClasses: 'top-20 left-4 md:left-72',
-      widthClass: 'w-[440px]',
+        'Manage your 6 specialized rescue units with live battery, signal, and sensor feeds. Click any robot to inspect telemetry or enter FPV pilot mode.',
+      positionClasses: 'top-20 left-3 md:left-64',
+      widthClass: 'w-[320px] md:w-[350px]',
     },
     {
       step: 3,
       badge: 'RAPID RESPONSE',
-      icon: <Heart className="w-5 h-5 text-rose-400" />,
-      title: 'Survivor Triage & Simulations',
-      directionalNotice: '👉 RIGHT & TOP TOOLBARS',
+      icon: <Heart className="w-4 h-4 text-rose-400" />,
+      title: 'Survivor Triage & Controls',
       description:
-        'Survivors are prioritized by medical vitals (Immediate, Delayed, Minor). Dispatch rescue teams, deploy RF mesh beacons, or trigger test simulations like secondary aftershocks.',
-      hint: 'Click "Simulate Aftershock" anytime in the top bar to test dynamic route recalculation.',
-      positionClasses: 'top-20 right-4 md:right-72',
-      widthClass: 'w-[440px]',
+        'Survivors are prioritized by medical vitals from Immediate to Minor. Dispatch rescue units, deploy mesh beacons, or trigger test simulations.',
+      positionClasses: 'top-20 right-3 md:right-68',
+      widthClass: 'w-[320px] md:w-[350px]',
     },
   ];
 
@@ -81,103 +75,92 @@ export const InteractiveTour: React.FC = () => {
   return (
     <div
       style={{ zIndex: 99999 }}
-      className={`pointer-events-auto fixed ${current.positionClasses} ${current.widthClass} max-w-[94vw] bg-[#090e1a]/98 border-2 border-cyan-400 rounded-xl p-5 md:p-6 shadow-[0_12px_45px_rgba(0,0,0,0.95),0_0_35px_rgba(6,182,212,0.45)] text-slate-100 font-sans`}
+      className={`pointer-events-auto fixed ${current.positionClasses} ${current.widthClass} max-w-[94vw] bg-[#090e1a]/98 border-2 border-cyan-400 rounded-lg p-3.5 md:p-4 shadow-[0_12px_45px_rgba(0,0,0,0.95),0_0_35px_rgba(6,182,212,0.45)] text-slate-100 font-sans`}
     >
-        {/* Directional Callout Banner */}
-        <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md bg-cyan-950/90 border border-cyan-400/60 text-cyan-300 font-mono text-[11px] font-bold tracking-wider mb-3.5 shadow-inner">
-          <span className="flex items-center gap-1.5 truncate">
-            <span>{current.directionalNotice}</span>
+      {/* Top Header: Badge, Step Counter & Close */}
+      <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-800/80">
+        <div className="flex items-center gap-1.5">
+          <span className="p-1 rounded bg-cyan-950/80 border border-cyan-400/50">
+            {current.icon}
           </span>
-          <span className="text-[10px] text-slate-400 shrink-0">
+          <span className="text-[10px] font-mono font-bold tracking-wider text-cyan-400 uppercase">
+            {current.badge}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono font-bold text-slate-400">
             {current.step} / {tourSteps.length}
           </span>
-        </div>
-
-        {/* Top Header: Badge, Step Indicator & Close */}
-        <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-slate-800">
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-md bg-cyan-950/80 border border-cyan-400/50 shadow-inner">
-              {current.icon}
-            </span>
-            <span className="text-[11px] font-mono font-bold tracking-wider text-cyan-400 uppercase">
-              {current.badge}
-            </span>
-          </div>
-
           <button
             onClick={endTour}
-            className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             title="Exit Tour (ESC)"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
+      </div>
 
-        {/* Title */}
-        <h3 className="text-base md:text-lg font-bold text-slate-100 tactical-font mb-2 tracking-wide">
-          {current.title}
-        </h3>
+      {/* Title */}
+      <h3 className="text-sm font-bold text-slate-100 tactical-font mb-1.5 tracking-wide">
+        {current.title}
+      </h3>
 
-        {/* Short, Punchy Description */}
-        <p className="text-xs text-slate-200 leading-relaxed font-sans mb-3">
-          {current.description}
-        </p>
+      {/* 2-Sentence Concise Description */}
+      <p className="text-[11.5px] text-slate-300 leading-relaxed font-sans mb-3">
+        {current.description}
+      </p>
 
-        {/* Technical Hint Callout */}
-        <div className="p-2.5 rounded-md bg-slate-950/90 border border-cyan-500/30 text-[11px] font-mono text-cyan-300 mb-4 flex items-start gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
-          <span className="leading-snug">{current.hint}</span>
+      {/* Bottom Actions: Progress Dots & Next/Back */}
+      <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+        {/* Progress dots */}
+        <div className="flex items-center gap-1">
+          {tourSteps.map((s, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => goToTourStep(idx)}
+              title={`Go to step ${idx + 1}: ${s.badge}`}
+              className={`h-1.5 rounded-full transition-all focus:outline-none ${
+                idx === tourStep
+                  ? 'w-5 bg-cyan-400'
+                  : idx < tourStep
+                  ? 'w-2 bg-cyan-700 hover:bg-cyan-500'
+                  : 'w-2 bg-slate-700 hover:bg-slate-500'
+              }`}
+            />
+          ))}
         </div>
 
-        {/* Bottom Actions: Progress Dots, Skip, Back, Next */}
-        <div className="flex items-center justify-between pt-2.5 border-t border-slate-800">
-          {/* Progress dots */}
-          <div className="flex items-center gap-1.5">
-            {tourSteps.map((s, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => goToTourStep(idx)}
-                title={`Go to step ${idx + 1}: ${s.badge}`}
-                className={`h-2 rounded-full transition-all focus:outline-none ${
-                  idx === tourStep
-                    ? 'w-6 bg-cyan-400'
-                    : idx < tourStep
-                    ? 'w-2.5 bg-cyan-700 hover:bg-cyan-500'
-                    : 'w-2.5 bg-slate-700 hover:bg-slate-500'
-                }`}
-              />
-            ))}
-          </div>
+        {/* Navigation buttons */}
+        <div className="flex items-center gap-1.5 font-mono text-xs">
+          <button
+            onClick={endTour}
+            className="px-2 py-0.5 text-[11px] text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            Skip
+          </button>
 
-          {/* Navigation buttons */}
-          <div className="flex items-center gap-2 font-mono text-xs">
+          {tourStep > 0 && (
             <button
-              onClick={endTour}
-              className="px-2.5 py-1 text-slate-400 hover:text-slate-200 transition-colors"
+              onClick={prevTourStep}
+              className="flex items-center gap-1 px-2.5 py-1 text-[11px] rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
             >
-              Skip
+              <ArrowLeft className="w-3 h-3" />
+              <span>Back</span>
             </button>
+          )}
 
-            {tourStep > 0 && (
-              <button
-                onClick={prevTourStep}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
-              >
-                <ArrowLeft className="w-3 h-3" />
-                <span>Back</span>
-              </button>
-            )}
-
-            <button
-              onClick={nextTourStep}
-              className="flex items-center gap-1 px-4 py-1.5 rounded-md bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold tracking-wider transition-all transform hover:scale-[1.02]"
-            >
-              <span>{tourStep === tourSteps.length - 1 ? 'Finish Tour' : 'Next'}</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
+          <button
+            onClick={nextTourStep}
+            className="flex items-center gap-1 px-3 py-1 text-[11px] rounded bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold tracking-wider transition-all"
+          >
+            <span>{tourStep === tourSteps.length - 1 ? 'Finish' : 'Next'}</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
         </div>
       </div>
+    </div>
   );
 };

@@ -70,7 +70,20 @@ const MissionControlDeck: React.FC = () => {
     }
   }, [isTourOpen, tourStep]);
 
-  const getTourSpotlightStyle = (_section: 'header' | 'left' | 'center' | 'right' | 'footer') => '';
+  const getTourSpotlightStyle = (section: 'header' | 'left' | 'center' | 'right' | 'footer') => {
+    if (!isTourOpen) return '';
+
+    const isSpotlighted =
+      (tourStep === 0 && section === 'center') ||
+      (tourStep === 1 && section === 'left') ||
+      (tourStep === 2 && section === 'right');
+
+    if (isSpotlighted) {
+      return 'relative z-30 ring-2 ring-cyan-400 shadow-[0_0_35px_rgba(6,182,212,0.35)] transition-all duration-300 pointer-events-auto filter-none opacity-100';
+    }
+
+    return 'filter blur-[5px] opacity-25 pointer-events-none transition-all duration-300';
+  };
 
   // Global Keyboard shortcuts
   useEffect(() => {
