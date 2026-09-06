@@ -442,7 +442,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     <div
       data-tour="tactical-map"
       className={`relative flex flex-col w-full h-full bg-[#050914] text-slate-100 overflow-hidden font-sans ${
-        isExpanded ? 'fixed inset-0 z-50 p-3 bg-black/85 backdrop-blur-md' : ''
+        ''
       }`}
     >
       {/* Top Tactical Map C2 Header */}

@@ -71,23 +71,7 @@ const MissionControlDeck: React.FC = () => {
     }
   }, [isTourOpen, tourStep]);
 
-  // Subtle spotlight border during interactive tour without breaking or blurring normal UI
-  const getTourSpotlightStyle = (section: 'header' | 'left' | 'center' | 'right' | 'footer') => {
-    if (!isTourOpen) return '';
-
-    const isTarget =
-      (tourStep === 0 && section === 'header') ||
-      (tourStep === 1 && section === 'left') ||
-      (tourStep === 2 && section === 'center') ||
-      (tourStep === 3 && (section === 'left' || section === 'center')) ||
-      (tourStep === 4 && section === 'right');
-
-    if (isTarget) {
-      return 'ring-2 ring-cyan-400/90 shadow-2xl transition-all duration-300';
-    }
-
-    return 'transition-all duration-300';
-  };
+  const getTourSpotlightStyle = (_section: 'header' | 'left' | 'center' | 'right' | 'footer') => '';
 
   // Global Keyboard shortcuts
   useEffect(() => {
@@ -384,7 +368,7 @@ const MissionControlDeck: React.FC = () => {
       </footer>
 
       {/* Modals & Interactive Tour */}
-      <WelcomeModal />
+      {/* <WelcomeModal /> */}
       <RobotFpvModal />
       <CaseStudyModal />
       <InteractiveTour />
