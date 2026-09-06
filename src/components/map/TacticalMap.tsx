@@ -11,6 +11,11 @@ import {
   X,
   AlertTriangle,
   Mountain,
+  Plus,
+  Minus,
+  RotateCcw,
+  Compass,
+  Map,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 
@@ -85,11 +90,27 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   // Wheel zoom handler: smoothly zooms in/out with trackpad/mouse scroll wheel
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
     setZoom((prevZoom) => {
-      const nextZoom = Math.min(3.0, Math.max(0.7, prevZoom * zoomFactor));
+      const nextZoom = Math.min(4.5, Math.max(0.7, prevZoom * zoomFactor));
       return nextZoom;
     });
+  };
+
+  const handleZoomIn = () => {
+    soundManager.playTacticalClick();
+    setZoom((prev) => Math.min(4.5, prev * 1.3));
+  };
+
+  const handleZoomOut = () => {
+    soundManager.playTacticalClick();
+    setZoom((prev) => Math.max(0.7, prev / 1.3));
+  };
+
+  const handleResetZoom = () => {
+    soundManager.playTacticalClick();
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
