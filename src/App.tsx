@@ -63,9 +63,9 @@ const MissionControlDeck: React.FC = () => {
   useEffect(() => {
     if (!isTourOpen) return;
 
-    if (tourStep === 1 || tourStep === 3) {
+    if (tourStep === 1) {
       setIsLeftRosterOpen(true);
-    } else if (tourStep === 4) {
+    } else if (tourStep === 2) {
       setIsRightPanelOpen(true);
       setRightPanelMode('triage');
     }

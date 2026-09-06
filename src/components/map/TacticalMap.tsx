@@ -78,6 +78,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     openFpv,
     restoreComms,
     dispatchRobotToSurvivor,
+    startTour,
   } = useMission();
 
   // Local state
@@ -100,6 +101,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   const routesLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const perimeterLayerRef = useRef<L.Rectangle | null>(null);
   const perimeterLabelRef = useRef<L.Marker | null>(null);
+  const hasTourStartedRef = useRef<boolean>(false);
 
   // Initialize Map
   useEffect(() => {
@@ -193,6 +195,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
       const t3 = setTimeout(() => {
         setFlyinStage('idle');
         soundManager.playSonarPing();
+        if (!hasTourStartedRef.current) {
+          hasTourStartedRef.current = true;
+          startTour();
+        }
       }, 7200);
 
       flyinTimeoutsRef.current.push(t1, t2, t3);
@@ -559,6 +565,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     }
     setFlyinStage('idle');
     soundManager.playTacticalClick();
+    if (!hasTourStartedRef.current) {
+      hasTourStartedRef.current = true;
+      setTimeout(() => startTour(), 400);
+    }
   };
 
   // Keyboard shortcut: ESC to skip fly-in anytime

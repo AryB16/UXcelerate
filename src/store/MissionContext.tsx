@@ -239,7 +239,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const syncEntitiesForTourStep = (step: number) => {
     if (step === 0) {
-      // Step 1: Test Bench Controls
+      // Step 1: Tactical GIS Map & BPDC Perimeter
       setSelectedRobotId(null);
       setSelectedSurvivorId(null);
       setSelectedHazardId(null);
@@ -249,17 +249,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setSelectedSurvivorId(null);
       setSelectedHazardId(null);
     } else if (step === 2) {
-      // Step 3: Tactical Map
-      setSelectedRobotId('ROB-01'); // SkyEye-1 aerial drone
-      setSelectedSurvivorId(null);
-      setSelectedHazardId(null);
-    } else if (step === 3) {
-      // Step 4: Offline Radio (Ghost Mode)
-      setSelectedRobotId('ROB-03'); // Serpens-3 crawler (disconnected ghost mode)
-      setSelectedSurvivorId(null);
-      setSelectedHazardId(null);
-    } else if (step === 4) {
-      // Step 5: Survivor Rescue & START Triage
+      // Step 3: Survivor Rescue, Triage & Simulation Controls
       setSelectedSurvivorId('SURV-01'); // Select Survivor #1
       setSelectedRobotId(null);
       setSelectedHazardId(null);
@@ -277,7 +267,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     soundManager.playTacticalClick();
     setTourStep((prev) => {
       const next = prev + 1;
-      if (next > 4) {
+      if (next > 2) {
         setIsTourOpen(false);
         return 0;
       }
@@ -297,7 +287,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const goToTourStep = (step: number) => {
     soundManager.playTacticalClick();
-    const clamped = Math.max(0, Math.min(4, step));
+    const clamped = Math.max(0, Math.min(2, step));
     setTourStep(clamped);
     syncEntitiesForTourStep(clamped);
   };
