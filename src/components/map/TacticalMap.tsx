@@ -329,178 +329,107 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <rect x="0" y="0" width="800" height="620" fill="url(#tacGrid)" />
 
             {/* ========================================================= */}
-            {/* 1. SECTOR BLUEPRINTS (Clear, identifiable building wings) */}
+            {/* 1. CLEAN ARCHITECTURAL ZONES (Minimalist & Uncluttered)   */}
             {/* ========================================================= */}
-
-            {/* SECTOR A: North Wing ER (Top-Left: 30,30 to 380,285) */}
-            <g id="sector-a">
+            <g id="architectural-zones">
+              {/* Outer Facility Boundary */}
               <rect
                 x="30"
                 y="30"
-                width="350"
-                height="255"
-                rx="8"
-                fill="#0a1424"
-                stroke="#1e3a5f"
-                strokeWidth="2"
+                width="740"
+                height="560"
+                rx="12"
+                fill="#080e1b"
+                stroke="#1e293b"
+                strokeWidth="1.5"
               />
-              {/* Room partitions */}
-              <line x1="30" y1="120" x2="200" y2="120" stroke="#1e3a5f" strokeWidth="1.5" strokeDasharray="6,3" />
-              <line x1="200" y1="30" x2="200" y2="200" stroke="#1e3a5f" strokeWidth="1.5" />
-              <line x1="30" y1="200" x2="380" y2="200" stroke="#1e3a5f" strokeWidth="1.5" />
 
-              {/* Room labels */}
-              <text x="45" y="65" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">Triage Bay A</text>
-              <text x="45" y="150" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">Trauma Suite 1</text>
-              <text x="215" y="65" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">ER Clean Zone</text>
-              <text x="45" y="235" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">Hallway Alpha</text>
-
-              {/* Sector Header Badge */}
-              <g transform="translate(42, 38)">
-                <rect x="0" y="0" width="240" height="22" rx="4" fill="#071224" stroke="#0284c7" strokeWidth="1.5" />
-                <text x="8" y="15" fill="#38bdf8" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
-                  🏥 SECTOR A: NORTH WING ER
-                </text>
-                <text x="175" y="14" fill="#34d399" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                  STABLE • 94%
-                </text>
-              </g>
-            </g>
-
-            {/* SECTOR B: Main Tower Collapse (Top-Right: 420,30 to 770,285) */}
-            <g id="sector-b">
+              {/* Sector B: Rubble Collapse Zone Subtle Tint (Top-Right) */}
               <rect
-                x="420"
+                x="400"
                 y="30"
-                width="350"
-                height="255"
+                width="370"
+                height="280"
                 rx="8"
-                fill="#16101c"
-                stroke="#4c1d30"
-                strokeWidth="2"
-              />
-
-              {/* Rubble collapse field */}
-              <rect
-                x="430"
-                y="75"
-                width="330"
-                height="195"
-                rx="6"
-                fill="url(#rubblePattern)"
-                stroke="#ef4444"
-                strokeWidth="1"
-                strokeDasharray="4,4"
-                opacity="0.8"
-              />
-
-              {/* Rubble Field Warning Label */}
-              <text x="595" y="95" textAnchor="middle" fill="#f87171" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                ⚠️ COLLAPSED PANCAKE RUBBLE SLAB
-              </text>
-
-              {/* Sector Header Badge */}
-              <g transform="translate(432, 38)">
-                <rect x="0" y="0" width="260" height="22" rx="4" fill="#1c0f1a" stroke="#f43f5e" strokeWidth="1.5" />
-                <text x="8" y="15" fill="#fb7185" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
-                  🏢 SECTOR B: MAIN TOWER COLLAPSE
-                </text>
-                <text x="195" y="14" fill="#f43f5e" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                  UNSTABLE • 68%
-                </text>
-              </g>
-            </g>
-
-            {/* SECTOR C: Metro Void & Basement (Bottom-Right: 420,325 to 770,580) */}
-            <g id="sector-c">
-              <rect
-                x="420"
-                y="325"
-                width="350"
-                height="255"
-                rx="8"
-                fill="#120e18"
-                stroke="#3f1a28"
-                strokeWidth="2"
-              />
-
-              {/* Elevator shafts & voids */}
-              <rect x="440" y="375" width="80" height="90" rx="4" fill="#1e1324" stroke="#6b21a8" strokeWidth="1.5" />
-              <text x="450" y="420" fill="#a855f7" fontSize="10" fontFamily="JetBrains Mono">Elevator Shaft</text>
-
-              {/* Fog of Uncertainty over unexplored subterranean void */}
-              <rect
-                x="540"
-                y="370"
-                width="220"
-                height="200"
-                rx="6"
-                fill="url(#cleanFogPattern)"
-                stroke="#64748b"
-                strokeWidth="1"
+                fill="rgba(239, 68, 68, 0.03)"
+                stroke="rgba(239, 68, 68, 0.15)"
                 strokeDasharray="4,4"
               />
-              <text x="650" y="555" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                🌫️ UNEXPLORED SUBTERRANEAN VOID
-              </text>
 
-              {/* Sector Header Badge */}
-              <g transform="translate(432, 333)">
-                <rect x="0" y="0" width="260" height="22" rx="4" fill="#1b0e1a" stroke="#e11d48" strokeWidth="1.5" />
-                <text x="8" y="15" fill="#f43f5e" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
-                  🚇 SECTOR C: METRO BASEMENT VOID
-                </text>
-                <text x="195" y="14" fill="#f43f5e" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                  CRITICAL • 35%
-                </text>
-              </g>
-            </g>
+              {/* Sector C: Subterranean Void Tint (Bottom-Right) */}
+              <rect
+                x="400"
+                y="310"
+                width="370"
+                height="280"
+                rx="8"
+                fill="rgba(245, 158, 11, 0.02)"
+                stroke="rgba(245, 158, 11, 0.12)"
+                strokeDasharray="4,4"
+              />
 
-            {/* SECTOR D: South Courtyard & Staging (Bottom-Left: 30,325 to 380,580) */}
-            <g id="sector-d">
+              {/* Sector D: Staging & HQ Tint (Bottom-Left) */}
               <rect
                 x="30"
-                y="325"
-                width="350"
-                height="255"
+                y="310"
+                width="370"
+                height="280"
                 rx="8"
-                fill="#081418"
-                stroke="#134e4a"
-                strokeWidth="2"
+                fill="rgba(16, 185, 129, 0.02)"
+                stroke="rgba(16, 185, 129, 0.12)"
+                strokeDasharray="4,4"
               />
 
-              {/* Courtyard staging zones */}
-              <rect x="50" y="370" width="130" height="80" rx="4" fill="#042f2e" stroke="#10b981" strokeWidth="1" strokeDasharray="4,2" />
-              <text x="65" y="415" fill="#34d399" fontSize="10" fontFamily="JetBrains Mono">Staging Base HQ</text>
+              {/* Hairline Zone Dividers */}
+              <line x1="400" y1="30" x2="400" y2="590" stroke="#152438" strokeWidth="1.5" strokeDasharray="6,4" />
+              <line x1="30" y1="310" x2="770" y2="310" stroke="#152438" strokeWidth="1.5" strokeDasharray="6,4" />
 
-              <rect x="210" y="370" width="150" height="180" rx="4" fill="#07232b" stroke="#0e7490" strokeWidth="1" />
-              <text x="225" y="415" fill="#38bdf8" fontSize="10" fontFamily="JetBrains Mono">Basement Sump Area</text>
-              <text x="225" y="430" fill="#64748b" fontSize="9" fontFamily="JetBrains Mono">(Flooded Drainage)</text>
+              {/* Central Atrium Hub */}
+              <circle cx="400" cy="310" r="28" fill="#0b1322" stroke="#1e2d44" strokeWidth="1.5" />
+              <text x="400" y="314" textAnchor="middle" fill="#475569" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                ATRIUM
+              </text>
 
-              {/* Sector Header Badge */}
-              <g transform="translate(42, 333)">
-                <rect x="0" y="0" width="250" height="22" rx="4" fill="#051c1c" stroke="#10b981" strokeWidth="1.5" />
-                <text x="8" y="15" fill="#34d399" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
-                  🌲 SECTOR D: COURTYARD STAGING
+              {/* 4 Clean Sector Watermarks */}
+              <g transform="translate(50, 56)">
+                <text fill="#38bdf8" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                  SECTOR A • NORTH WING
                 </text>
-                <text x="185" y="14" fill="#34d399" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                  SAFE • 88%
+                <text y="16" fill="#64748b" fontSize="9.5" fontFamily="JetBrains Mono">
+                  Structure Intact // Stable 94%
+                </text>
+              </g>
+
+              <g transform="translate(420, 56)">
+                <text fill="#f87171" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                  SECTOR B • MAIN COLLAPSE
+                </text>
+                <text y="16" fill="#ef4444" fontSize="9.5" fontFamily="JetBrains Mono">
+                  Pancake Rubble // Unstable 68%
+                </text>
+              </g>
+
+              <g transform="translate(50, 340)">
+                <text fill="#34d399" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                  SECTOR D • STAGING & HQ
+                </text>
+                <text y="16" fill="#64748b" fontSize="9.5" fontFamily="JetBrains Mono">
+                  Command Base // Ground Entry
+                </text>
+              </g>
+
+              <g transform="translate(420, 340)">
+                <text fill="#fbbf24" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                  SECTOR C • METRO BASEMENT
+                </text>
+                <text y="16" fill="#f59e0b" fontSize="9.5" fontFamily="JetBrains Mono">
+                  Subterranean Voids // Critical 35%
                 </text>
               </g>
             </g>
 
-            {/* CENTRAL CORRIDORS (Connecting all sectors) */}
-            <rect x="380" y="100" width="40" height="420" fill="#070d18" stroke="#1e293b" strokeWidth="1" />
-            <rect x="120" y="285" width="560" height="40" fill="#070d18" stroke="#1e293b" strokeWidth="1" />
-            <text x="400" y="310" textAnchor="middle" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-              ATRIUM
-            </text>
-
             {/* ========================================================= */}
-            {/* 2. ROUTES & CORRIDORS (Safe vs Blocked paths)             */}
-            {/* ========================================================= */}
-            {/* ========================================================= */}
-            {/* 2. ROUTES & CORRIDORS (Safe vs Blocked paths)             */}
+            {/* 2. ROUTES & CORRIDORS (Clean Vector Paths)                */}
             {/* ========================================================= */}
             {layers.routes && (
               <g id="routes-layer">
@@ -514,54 +443,47 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   const isHazardous = route.status === 'hazardous';
                   const isNew = route.status === 'newly_discovered';
 
-                  let strokeColor = '#00e5ff';
-                  let strokeDash = undefined;
-                  if (isBlocked) {
-                    strokeColor = '#ef4444';
-                    strokeDash = '6,4';
-                  } else if (isHazardous) {
-                    strokeColor = '#f59e0b';
-                  } else if (isNew) {
-                    strokeColor = '#10b981';
-                    strokeDash = '5,3';
-                  }
+                  const strokeColor = isBlocked ? '#ef4444' : isHazardous ? '#f59e0b' : isNew ? '#10b981' : '#00e5ff';
+                  const strokeDash = isBlocked ? '6,4' : isNew ? '5,3' : undefined;
 
                   return (
-                    <g key={route.id} className="cursor-pointer">
+                    <g key={route.id}>
                       <path
                         d={pathD}
                         fill="none"
                         stroke={strokeColor}
-                        strokeWidth={isBlocked ? 3.5 : 4}
+                        strokeWidth={isBlocked ? 2.5 : 3.5}
                         strokeDasharray={strokeDash}
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        opacity={0.85}
+                        opacity={isBlocked ? 0.7 : 0.85}
                       />
-                      {/* Route Badge at Midpoint */}
-                      <g transform={`translate(${midPoint.x - 45}, ${midPoint.y - 10})`}>
-                        <rect
-                          x="0"
-                          y="0"
-                          width="90"
-                          height="18"
-                          rx="4"
-                          fill={isBlocked ? '#2d0c13' : isHazardous ? '#261706' : isNew ? '#062e24' : '#071b28'}
-                          stroke={strokeColor}
-                          strokeWidth="1.2"
-                        />
-                        <text
-                          x="45"
-                          y="13"
-                          textAnchor="middle"
-                          fill={isBlocked ? '#fca5a5' : isHazardous ? '#fde68a' : isNew ? '#34d399' : '#38bdf8'}
-                          fontSize="9"
-                          fontFamily="JetBrains Mono"
-                          fontWeight="bold"
-                        >
-                          {isBlocked ? '⛔ BLOCKED' : isHazardous ? '⚠️ HAZARDOUS' : isNew ? '✨ NEW VOID' : '🟢 SAFE ROUTE'}
-                        </text>
-                      </g>
+                      {/* Clean badge only for blocked or newly discovered corridors */}
+                      {(isBlocked || isNew) && (
+                        <g transform={`translate(${midPoint.x - 36}, ${midPoint.y - 9})`}>
+                          <rect
+                            x="0"
+                            y="0"
+                            width="72"
+                            height="18"
+                            rx="4"
+                            fill={isBlocked ? '#2d0c13' : '#062e24'}
+                            stroke={strokeColor}
+                            strokeWidth="1"
+                          />
+                          <text
+                            x="36"
+                            y="13"
+                            textAnchor="middle"
+                            fill={isBlocked ? '#fca5a5' : '#34d399'}
+                            fontSize="8.5"
+                            fontFamily="JetBrains Mono"
+                            fontWeight="bold"
+                          >
+                            {isBlocked ? '⛔ BLOCKED' : '✨ NEW VOID'}
+                          </text>
+                        </g>
+                      )}
                     </g>
                   );
                 })}
@@ -569,7 +491,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             )}
 
             {/* ========================================================= */}
-            {/* 3. RF MESH NETWORK & RELAYS                               */}
+            {/* 3. RF MESH NETWORK & RELAYS (Subtle & Crisp)              */}
             {/* ========================================================= */}
             {layers.mesh && (
               <g id="mesh-layer">
@@ -585,9 +507,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       x2={prevBcn.x}
                       y2={prevBcn.y}
                       stroke="#10b981"
-                      strokeWidth="1.8"
+                      strokeWidth="1.5"
                       strokeDasharray="4,4"
-                      opacity="0.5"
+                      opacity="0.45"
                     />
                   );
                 })}
@@ -614,9 +536,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         x2={closest.x}
                         y2={closest.y}
                         stroke="#00f0ff"
-                        strokeWidth="1.2"
+                        strokeWidth="1"
                         strokeDasharray="3,3"
-                        opacity="0.35"
+                        opacity="0.3"
                       />
                     );
                   })}
@@ -627,12 +549,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     key={`rad-${bcn.id}`}
                     cx={bcn.x}
                     cy={bcn.y}
-                    r={Math.min(bcn.radius, 100)}
-                    fill="rgba(16, 185, 129, 0.04)"
+                    r={Math.min(bcn.radius, 90)}
+                    fill="rgba(16, 185, 129, 0.03)"
                     stroke="#10b981"
                     strokeWidth="1"
                     strokeDasharray="4,4"
-                    opacity="0.4"
+                    opacity="0.3"
                   />
                 ))}
 
@@ -654,9 +576,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     }
                     onMouseLeave={() => setHoveredEntity(null)}
                   >
-                    <circle cx={bcn.x} cy={bcn.y} r="10" fill="#042f2e" stroke="#10b981" strokeWidth="2" />
-                    <circle cx={bcn.x} cy={bcn.y} r="4" fill="#34d399" />
-                    <text x={bcn.x} y={bcn.y + 20} textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                    <circle cx={bcn.x} cy={bcn.y} r="8" fill="#042f2e" stroke="#10b981" strokeWidth="1.5" />
+                    <circle cx={bcn.x} cy={bcn.y} r="3" fill="#34d399" />
+                    <text x={bcn.x} y={bcn.y + 17} textAnchor="middle" fill="#6ee7b7" fontSize="8.5" fontFamily="JetBrains Mono">
                       {bcn.label.split(' ')[0]}
                     </text>
                   </g>
@@ -665,7 +587,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             )}
 
             {/* ========================================================= */}
-            {/* 4. HAZARDS (Dynamic list with aftershock reaction)        */}
+            {/* 4. HAZARDS (Clean Warning Markers)                         */}
             {/* ========================================================= */}
             {layers.hazards && (
               <g id="hazards-layer">
@@ -676,11 +598,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
                   const strokeCol = isGas ? '#ef4444' : isStructural ? '#f59e0b' : '#eab308';
                   const fillCol = isGas
-                    ? 'rgba(239, 68, 68, 0.14)'
+                    ? 'rgba(239, 68, 68, 0.08)'
                     : isStructural
-                    ? 'rgba(245, 158, 11, 0.14)'
-                    : 'rgba(234, 179, 8, 0.12)';
+                    ? 'rgba(245, 158, 11, 0.08)'
+                    : 'rgba(234, 179, 8, 0.08)';
                   const iconChar = isGas ? '☣' : isStructural ? '⚠' : '⚡';
+                  const shortTitle = isGas ? 'Methane 520PPM' : isStructural ? 'Column Tilt 18°' : '480V Arc';
 
                   return (
                     <g
@@ -700,54 +623,56 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       }
                       onMouseLeave={() => setHoveredEntity(null)}
                     >
+                      {/* Perimeter radius circle */}
                       <circle
                         cx={haz.location.x}
                         cy={haz.location.y}
-                        r={Math.min(haz.location.radius, 48)}
+                        r={Math.min(haz.location.radius, 38)}
                         fill={fillCol}
                         stroke={strokeCol}
-                        strokeWidth="1.5"
+                        strokeWidth="1"
                         strokeDasharray="4,4"
                       />
+                      {/* Pin Center */}
                       <circle
                         cx={haz.location.x}
                         cy={haz.location.y}
-                        r="14"
-                        fill="#1a0f16"
+                        r="12"
+                        fill="#160c12"
                         stroke={strokeCol}
-                        strokeWidth={isSelected ? '3' : '2'}
+                        strokeWidth={isSelected ? '2.5' : '1.8'}
                       />
                       <text
                         x={haz.location.x}
-                        y={haz.location.y + 4.5}
+                        y={haz.location.y + 4}
                         textAnchor="middle"
-                        fontSize="13"
+                        fontSize="11"
                         fill="#ffffff"
                       >
                         {iconChar}
                       </text>
 
-                      {/* Clean Pill Label Below */}
+                      {/* Clean Small Pill Label */}
                       <rect
-                        x={haz.location.x - 55}
-                        y={haz.location.y + 18}
-                        width="110"
-                        height="18"
-                        rx="4"
-                        fill="#1c0a12"
+                        x={haz.location.x - 44}
+                        y={haz.location.y + 16}
+                        width="88"
+                        height="16"
+                        rx="3"
+                        fill="#12080e"
                         stroke={strokeCol}
                         strokeWidth="1"
                       />
                       <text
                         x={haz.location.x}
-                        y={haz.location.y + 31}
+                        y={haz.location.y + 28}
                         textAnchor="middle"
                         fill={isGas ? '#fca5a5' : '#fde68a'}
-                        fontSize="9"
+                        fontSize="8.5"
                         fontFamily="JetBrains Mono"
                         fontWeight="bold"
                       >
-                        {iconChar} {haz.title.split(' ')[0]} {haz.severity === 'critical' ? '[CRITICAL]' : ''}
+                        {iconChar} {shortTitle}
                       </text>
                     </g>
                   );
@@ -756,7 +681,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             )}
 
             {/* ========================================================= */}
-            {/* 5. SURVIVORS (Pulsing beacons & START triage badges)       */}
+            {/* 5. SURVIVORS (Clean Glowing Beacon Pins)                  */}
             {/* ========================================================= */}
             <g id="survivors-layer">
               {survivors.map((surv) => {
@@ -765,10 +690,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 const isDelayed = surv.triage === 'delayed';
 
                 const strokeCol = isCrit ? '#ef4444' : isDelayed ? '#f59e0b' : '#10b981';
-                const fillCol = isCrit ? '#1c0c14' : isDelayed ? '#1c1608' : '#06221c';
+                const fillCol = isCrit ? '#220812' : isDelayed ? '#201406' : '#061e16';
                 const textCol = isCrit ? '#fca5a5' : isDelayed ? '#fde68a' : '#6ee7b7';
-                const heartEmoji = isCrit ? '❤️' : isDelayed ? '💛' : '💚';
-                const tagText = isCrit ? 'CRITICAL' : isDelayed ? 'DELAYED' : 'MINOR';
 
                 return (
                   <g
@@ -786,65 +709,64 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         y: surv.location.y,
                         title: surv.label,
                         subtitle: `HR: ${surv.vitals.heartRate} BPM • SpO2: ${surv.vitals.spO2}% • Depth: ${surv.location.depthMeters}m`,
-                        badge: `${surv.triage.toUpperCase()} // ${tagText}`,
+                        badge: `${surv.triage.toUpperCase()} TRIAGE`,
                       })
                     }
                     onMouseLeave={() => setHoveredEntity(null)}
                   >
-                    {/* Soft pulse wave for immediate critical survivors */}
+                    {/* Pulsing ring for critical */}
                     {isCrit && (
                       <circle
                         cx={surv.location.x}
                         cy={surv.location.y}
-                        r="24"
+                        r="20"
                         fill="none"
                         stroke="#ef4444"
-                        strokeWidth="2"
-                        opacity="0.4"
+                        strokeWidth="1.5"
+                        opacity="0.45"
                         className="animate-ping"
                       />
                     )}
 
-                    {/* Pin Body */}
+                    {/* Clean Pin Circle */}
                     <circle
                       cx={surv.location.x}
                       cy={surv.location.y}
-                      r="15"
+                      r="13"
                       fill={fillCol}
                       stroke={strokeCol}
-                      strokeWidth={isSelected ? '3.5' : '2'}
-                      filter={isCrit ? 'url(#redGlow)' : undefined}
+                      strokeWidth={isSelected ? '3' : '2'}
                     />
                     <text
                       x={surv.location.x}
-                      y={surv.location.y + 5}
+                      y={surv.location.y + 4}
                       textAnchor="middle"
-                      fontSize="13"
+                      fontSize="11"
                     >
-                      {heartEmoji}
+                      ❤️
                     </text>
 
-                    {/* Clean Pill Label Above */}
+                    {/* Small Clean Pill Badge Above */}
                     <rect
-                      x={surv.location.x - 55}
-                      y={surv.location.y - 32}
-                      width="110"
-                      height="19"
-                      rx="4"
-                      fill={isCrit ? '#200a12' : isDelayed ? '#1f1307' : '#071e19'}
+                      x={surv.location.x - 26}
+                      y={surv.location.y - 24}
+                      width="52"
+                      height="16"
+                      rx="3"
+                      fill="#0b0f19"
                       stroke={strokeCol}
-                      strokeWidth="1.2"
+                      strokeWidth="1"
                     />
                     <text
                       x={surv.location.x}
-                      y={surv.location.y - 19}
+                      y={surv.location.y - 12}
                       textAnchor="middle"
                       fill={textCol}
-                      fontSize="9.5"
+                      fontSize="9"
                       fontFamily="JetBrains Mono"
                       fontWeight="bold"
                     >
-                      {heartEmoji} {surv.id} [{tagText}]
+                      {surv.id}
                     </text>
                   </g>
                 );
@@ -852,7 +774,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             </g>
 
             {/* ========================================================= */}
-            {/* 6. ROBOTS & GHOST MESH (Reactive live positions & states) */}
+            {/* 6. ROBOTS (Clean Fleet Pins)                              */}
             {/* ========================================================= */}
             <g id="robots-layer">
               {robots.map((robot) => {
@@ -861,12 +783,11 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 const isDegraded = robot.commsStatus === 'degraded';
 
                 if (isDisconnected) {
-                  // GHOST MODE: Last known position pin + trajectory vector + ghost pin
+                  // GHOST MODE: Last known pin + clean dashed line + ghost pin
                   const lkp = robot.lastKnownPosition || {
                     x: robot.position.x - 30,
                     y: robot.position.y - 30,
                   };
-                  const minutesLost = Math.max(1, Math.round(robot.lastContactSecondsAgo / 60));
 
                   return (
                     <g
@@ -881,92 +802,65 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                           x: robot.position.x,
                           y: robot.position.y,
                           title: `${robot.name} (${robot.callsign})`,
-                          subtitle: `GHOST MODE // Lost ${minutesLost}m ago • ${robot.storeAndForwardBacklog} Pkts Buffered Offline`,
-                          badge: 'LOST SIGNAL // GHOST',
+                          subtitle: `GHOST OFFLINE // ${robot.storeAndForwardBacklog} Pkts Buffered`,
+                          badge: 'NO CARRIER',
                         })
                       }
                       onMouseLeave={() => setHoveredEntity(null)}
                     >
-                      {/* Last Known Position Pin */}
-                      <circle cx={lkp.x} cy={lkp.y} r="5" fill="#f43f5e" />
-                      <text x={lkp.x - 10} y={lkp.y - 8} fill="#f43f5e" fontSize="9" fontFamily="JetBrains Mono">
-                        Last Contact
-                      </text>
+                      {/* Last known position dot */}
+                      <circle cx={lkp.x} cy={lkp.y} r="4" fill="#f43f5e" />
 
-                      {/* Projected Dead Reckoning Trajectory Vector */}
+                      {/* Clean trajectory line */}
                       <line
                         x1={lkp.x}
                         y1={lkp.y}
                         x2={robot.position.x}
                         y2={robot.position.y}
                         stroke="#f43f5e"
-                        strokeWidth="2.5"
-                        strokeDasharray="5,3"
+                        strokeWidth="1.8"
+                        strokeDasharray="4,3"
                       />
 
-                      {/* Expanding Uncertainty Ellipse */}
-                      <ellipse
-                        cx={robot.position.x}
-                        cy={robot.position.y}
-                        rx={Math.min(45, 20 + Math.round(robot.lastContactSecondsAgo / 15))}
-                        ry={Math.min(35, 15 + Math.round(robot.lastContactSecondsAgo / 20))}
-                        fill="rgba(244, 63, 94, 0.08)"
-                        stroke="#f43f5e"
-                        strokeWidth="1"
-                        strokeDasharray="3,3"
-                      />
-
-                      {/* Ghost Robot Pin */}
-                      {isSelected && (
-                        <circle
-                          cx={robot.position.x}
-                          cy={robot.position.y}
-                          r="23"
-                          fill="none"
-                          stroke="#f43f5e"
-                          strokeWidth="1.5"
-                          strokeDasharray="4,2"
-                          className="animate-spin"
-                        />
-                      )}
+                      {/* Ghost Pin */}
                       <circle
                         cx={robot.position.x}
                         cy={robot.position.y}
-                        r="16"
-                        fill="#200d18"
+                        r="14"
+                        fill="#1f0a12"
                         stroke="#f43f5e"
-                        strokeWidth={isSelected ? '3' : '2'}
+                        strokeWidth={isSelected ? '2.5' : '1.8'}
                       />
                       <text
                         x={robot.position.x}
-                        y={robot.position.y + 5}
+                        y={robot.position.y + 4.5}
                         textAnchor="middle"
-                        fontSize="13"
+                        fontSize="12"
                       >
                         👻
                       </text>
 
-                      {/* High-Visibility Ghost Badge Below */}
+                      {/* Small Ghost Pill */}
                       <rect
-                        x={robot.position.x - 65}
-                        y={robot.position.y + 22}
-                        width="130"
-                        height="20"
-                        rx="4"
-                        fill="#200b14"
+                        x={robot.position.x - 45}
+                        y={robot.position.y + 18}
+                        width="90"
+                        height="16"
+                        rx="3"
+                        fill="#15050c"
                         stroke="#f43f5e"
-                        strokeWidth="1.2"
+                        strokeWidth="1"
                       />
                       <text
                         x={robot.position.x}
-                        y={robot.position.y + 36}
+                        y={robot.position.y + 30}
                         textAnchor="middle"
                         fill="#fca5a5"
-                        fontSize="10"
+                        fontSize="8.5"
                         fontFamily="JetBrains Mono"
                         fontWeight="bold"
                       >
-                        {robot.callsign} ⚠️ LOST ({minutesLost}m)
+                        {robot.name.split('-')[0]} [Lost]
                       </text>
                     </g>
                   );
@@ -974,8 +868,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
                 // CONNECTED OR DEGRADED ROBOT
                 const strokeColor = isDegraded ? '#f59e0b' : '#00f0ff';
-                const bgBadgeColor = isDegraded ? '#191307' : '#071220';
-                const textBadgeColor = isDegraded ? '#fde68a' : '#ffffff';
+                const shortName = robot.name.split('-')[0] || robot.callsign;
 
                 return (
                   <g
@@ -991,7 +884,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         y: robot.position.y,
                         title: `${robot.name} (${robot.callsign})`,
                         subtitle: `Battery: ${Math.round(robot.battery)}% • Signal: ${robot.signalStrength}% • ${robot.currentTask}`,
-                        badge: isDegraded ? 'DEGRADED RSSI' : 'CONNECTED MESH',
+                        badge: isDegraded ? 'DEGRADED RSSI' : 'ONLINE MESH',
                       })
                     }
                     onMouseLeave={() => setHoveredEntity(null)}
@@ -1001,11 +894,11 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       <circle
                         cx={robot.position.x}
                         cy={robot.position.y}
-                        r="22"
+                        r="19"
                         fill="none"
                         stroke={strokeColor}
                         strokeWidth="1.5"
-                        strokeDasharray="4,2"
+                        strokeDasharray="3,2"
                         className="animate-spin"
                       />
                     )}
@@ -1014,41 +907,41 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     <circle
                       cx={robot.position.x}
                       cy={robot.position.y}
-                      r="16"
-                      fill="#071b28"
+                      r="14"
+                      fill="#071322"
                       stroke={strokeColor}
-                      strokeWidth={isSelected ? '3' : '2'}
+                      strokeWidth={isSelected ? '2.5' : '1.8'}
                     />
                     <text
                       x={robot.position.x}
-                      y={robot.position.y + 5}
+                      y={robot.position.y + 4.5}
                       textAnchor="middle"
-                      fontSize="13"
+                      fontSize="12"
                     >
                       {getRobotEmoji(robot.type)}
                     </text>
 
                     {/* Clean Pill Label Below */}
                     <rect
-                      x={robot.position.x - 52}
-                      y={robot.position.y + 22}
-                      width="104"
-                      height="20"
-                      rx="4"
-                      fill={bgBadgeColor}
+                      x={robot.position.x - 38}
+                      y={robot.position.y + 18}
+                      width="76"
+                      height="16"
+                      rx="3"
+                      fill="#060c18"
                       stroke={strokeColor}
                       strokeWidth="1"
                     />
                     <text
                       x={robot.position.x}
-                      y={robot.position.y + 36}
+                      y={robot.position.y + 30}
                       textAnchor="middle"
-                      fill={textBadgeColor}
-                      fontSize="10"
+                      fill="#e2e8f0"
+                      fontSize="8.5"
                       fontFamily="JetBrains Mono"
                       fontWeight="bold"
                     >
-                      {robot.callsign} {Math.round(robot.battery)}%
+                      {shortName} {Math.round(robot.battery)}%
                     </text>
                   </g>
                 );

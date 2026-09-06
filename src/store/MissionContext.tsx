@@ -97,7 +97,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     staleness: true,
   });
 
-  const [selectedRobotId, setSelectedRobotId] = useState<string | null>('ROB-02');
+  const [selectedRobotId, setSelectedRobotId] = useState<string | null>(null);
   const [selectedSurvivorId, setSelectedSurvivorId] = useState<string | null>(null);
   const [selectedHazardId, setSelectedHazardId] = useState<string | null>(null);
   const [selectedSectorId, setSelectedSectorId] = useState<string | null>(null);
