@@ -7,9 +7,14 @@ import {
   AlertTriangle,
   Info,
   CheckCircle2,
+  X,
 } from 'lucide-react';
 
-export const TacticalLogFeed: React.FC = () => {
+interface TacticalLogFeedProps {
+  onClose?: () => void;
+}
+
+export const TacticalLogFeed: React.FC<TacticalLogFeedProps> = ({ onClose }) => {
   const { logs } = useMission();
   const [filter, setFilter] = useState<'all' | 'emergency' | 'warning' | 'info'>('all');
 
@@ -67,6 +72,15 @@ export const TacticalLogFeed: React.FC = () => {
           >
             Warn
           </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-1"
+              title="Close Logs Panel"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

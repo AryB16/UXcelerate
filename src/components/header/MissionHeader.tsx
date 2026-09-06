@@ -11,7 +11,6 @@ import {
   Zap,
   Sparkles,
   Heart,
-  ShieldCheck,
 } from 'lucide-react';
 
 export const MissionHeader: React.FC = () => {
@@ -38,9 +37,9 @@ export const MissionHeader: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 select-none shrink-0 shadow-xl">
-      {/* 1. Dedicated Top-Docked Evaluator Test Bench (28px height) */}
-      <div className="h-7 bg-[#04070d] border-b border-amber-500/30 px-3 flex items-center justify-between text-[10px] font-mono shrink-0 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-2 text-amber-400 shrink-0">
+      {/* 1. Dedicated Top-Docked Evaluator Test Bench (24px compact strip) */}
+      <div className="h-6 bg-[#04070d] border-b border-amber-500/30 px-3 flex items-center justify-between text-[10px] font-mono shrink-0 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 text-amber-400/90 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
           <span className="font-bold tracking-wider">[EVALUATOR TEST BENCH // LIVE SCENARIO INJECTORS]</span>
         </div>
@@ -49,47 +48,47 @@ export const MissionHeader: React.FC = () => {
           <button
             onClick={triggerAftershock}
             title="Simulate 5.2M Aftershock & Secondary Collapse"
-            className="flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-transparent hover:bg-slate-800 text-amber-400/90 border border-slate-700 text-[10px] transition-colors"
           >
-            <Flame className="w-3 h-3 text-amber-400" />
+            <Flame className="w-2.5 h-2.5 text-amber-400" />
             <span>Simulate Aftershock</span>
           </button>
 
           <button
             onClick={() => triggerCommsDrop()}
             title="Simulate RF Mesh Disconnect & Store-and-Forward"
-            className="flex items-center gap-1 px-2 py-0.5 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-colors"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-transparent hover:bg-slate-800 text-rose-400/90 border border-slate-700 text-[10px] transition-colors"
           >
-            <WifiOff className="w-3 h-3 text-rose-400" />
+            <WifiOff className="w-2.5 h-2.5 text-rose-400" />
             <span>Sever RF Mesh</span>
           </button>
 
           <button
             onClick={discoverNewSurvivor}
             title="Simulate Biosignal Detection"
-            className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-colors"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-transparent hover:bg-slate-800 text-emerald-400/90 border border-slate-700 text-[10px] transition-colors"
           >
-            <Zap className="w-3 h-3 text-emerald-400" />
+            <Zap className="w-2.5 h-2.5 text-emerald-400" />
             <span>+Discover Survivor</span>
           </button>
 
-          <span className="text-slate-700 px-1">|</span>
+          <span className="text-slate-700 px-0.5">|</span>
 
           <button
             onClick={startTour}
             title="Start 30-Second Guided Walkthrough"
-            className="flex items-center gap-1 px-2 py-0.5 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 transition-colors font-bold"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-transparent hover:bg-slate-800 text-cyan-300 border border-slate-700 text-[10px] transition-colors"
           >
-            <Sparkles className="w-3 h-3 text-cyan-400 animate-spin" />
-            <span>Interactive Tour (30s)</span>
+            <Sparkles className="w-2.5 h-2.5 text-cyan-400 animate-spin" />
+            <span>Tour (30s)</span>
           </button>
 
           <button
             onClick={() => setIsCaseStudyOpen(true)}
             title="Open Complete UX Design Case Study"
-            className="flex items-center gap-1 px-2 py-0.5 rounded bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold border border-cyan-300 transition-colors"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-transparent hover:bg-slate-800 text-cyan-300 border border-slate-700 text-[10px] transition-colors"
           >
-            <BookOpen className="w-3 h-3" />
+            <BookOpen className="w-2.5 h-2.5" />
             <span>UX Case Study</span>
           </button>
         </div>
@@ -192,17 +191,11 @@ export const MissionHeader: React.FC = () => {
 
         {/* Right: Operational Telemetry Status & Zulu Clock */}
         <div className="flex items-center gap-3 shrink-0 font-mono text-xs">
-          <div className="hidden sm:flex flex-col items-end">
-            <div className="flex items-center gap-1.5 text-slate-300 font-bold tracking-wider text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>C2 ONLINE</span>
-              <span className="text-slate-600">|</span>
-              <span className="text-cyan-400">{zuluTime}</span>
-            </div>
-            <div className="text-[9px] text-slate-400 tracking-wider flex items-center gap-1 mt-0.5">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
-              <span>SWARM LINK: NOMINAL (6/6)</span>
-            </div>
+          <div className="hidden sm:flex items-center gap-1.5 text-slate-300 font-bold tracking-wider text-[11px] bg-[#0a101d] border border-slate-800 px-2.5 py-1 rounded-md">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>C2 ONLINE</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-cyan-400">{zuluTime}</span>
           </div>
 
           {/* Tablet compact indicators if screen < lg */}

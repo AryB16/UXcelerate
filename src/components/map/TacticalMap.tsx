@@ -409,7 +409,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 strokeWidth="1"
                 strokeDasharray="4,4"
               />
-              <text x="585" y="62" textAnchor="middle" fill="rgba(248, 113, 113, 0.45)" fontSize="8.5" fontFamily="JetBrains Mono" fontWeight="bold">
+              <text x="745" y="56" textAnchor="end" fill="rgba(248, 113, 113, 0.35)" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
                 [⚠️ SECTOR B // UNINSPECTED VOID • AFTERSHOCK COLLAPSE]
               </text>
 
@@ -425,7 +425,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 strokeWidth="1"
                 strokeDasharray="4,4"
               />
-              <text x="585" y="342" textAnchor="middle" fill="rgba(251, 191, 36, 0.4)" fontSize="8.5" fontFamily="JetBrains Mono" fontWeight="bold">
+              <text x="745" y="336" textAnchor="end" fill="rgba(251, 191, 36, 0.35)" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
                 [⚠️ SECTOR C // SUBTERRANEAN METRO VOID • UNVERIFIED]
               </text>
 
@@ -861,53 +861,29 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         {iconChar}
                       </text>
 
-                      {/* Pill Label: Minimalist in simple mode vs full specs in detailed mode */}
-                      {detailMode === 'simple' ? (
-                        <g>
+                      {/* On-Demand Hazard Tooltip on Hover or Selection */}
+                      {(isSelected || hoveredEntity?.id === haz.id) && (
+                        <g className="pointer-events-none transition-opacity">
                           <rect
-                            x={haz.location.x - 22}
-                            y={haz.location.y + 13}
-                            width="44"
-                            height="14"
-                            rx="2.5"
-                            fill="#12080e"
-                            stroke={strokeCol}
-                            strokeWidth="0.8"
-                          />
-                          <text
-                            x={haz.location.x}
-                            y={haz.location.y + 23.5}
-                            textAnchor="middle"
-                            fill={isGas ? '#fca5a5' : '#fde68a'}
-                            fontSize="8"
-                            fontFamily="JetBrains Mono"
-                            fontWeight="bold"
-                          >
-                            {iconChar} {simpleTitle}
-                          </text>
-                        </g>
-                      ) : (
-                        <g>
-                          <rect
-                            x={haz.location.x - 52}
-                            y={haz.location.y + 16}
-                            width="104"
-                            height="18"
+                            x={haz.location.x - 44}
+                            y={haz.location.y + 14}
+                            width="88"
+                            height="16"
                             rx="3"
-                            fill="#12080e"
+                            fill="#0d070b"
                             stroke={strokeCol}
                             strokeWidth="1"
                           />
                           <text
                             x={haz.location.x}
-                            y={haz.location.y + 28}
+                            y={haz.location.y + 25.5}
                             textAnchor="middle"
                             fill={isGas ? '#fca5a5' : '#fde68a'}
-                            fontSize="8"
+                            fontSize="10"
                             fontFamily="JetBrains Mono"
                             fontWeight="bold"
                           >
-                            {iconChar} {detailedTitle}
+                            {haz.title}
                           </text>
                         </g>
                       )}
@@ -983,103 +959,50 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       ❤️
                     </text>
 
-                    {/* Pill Badge: Simple vs Detailed with Overlap Prevention */}
-                    {surv.id === 'SURV-03' ? (
-                      /* SURV-03: Floating to the right with 1px connector leader line */
-                      <g id="surv-03-callout">
-                        <polyline
-                          points={`${surv.location.x + 11},${surv.location.y} ${surv.location.x + 22},${surv.location.y} ${surv.location.x + 28},${surv.location.y + 4}`}
-                          fill="none"
-                          stroke="rgba(245, 158, 11, 0.45)"
-                          strokeWidth="1"
-                        />
-                        <circle cx={surv.location.x + 11} cy={surv.location.y} r="1.5" fill="#f59e0b" />
-                        
-                        {detailMode === 'simple' ? (
+                    {/* On-Demand Survivor Pill: Shown only on hover or selection */}
+                    {(isSelected || hoveredEntity?.id === surv.id) && (
+                      surv.id === 'SURV-03' ? (
+                        /* SURV-03: Offset to the right with 1px connector leader line */
+                        <g id="surv-03-callout" className="pointer-events-none">
+                          <polyline
+                            points={`${surv.location.x + 11},${surv.location.y} ${surv.location.x + 22},${surv.location.y} ${surv.location.x + 28},${surv.location.y + 4}`}
+                            fill="none"
+                            stroke="rgba(245, 158, 11, 0.45)"
+                            strokeWidth="1"
+                          />
+                          <circle cx={surv.location.x + 11} cy={surv.location.y} r="1.5" fill="#f59e0b" />
                           <g transform={`translate(${surv.location.x + 28}, ${surv.location.y - 6})`}>
                             <rect width="44" height="15" rx="2.5" fill="#0b0f19" stroke={strokeCol} strokeWidth="1" />
                             <text x="22" y="10.5" textAnchor="middle" fill={textCol} fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
                               {surv.id}
                             </text>
                           </g>
-                        ) : (
-                          <g transform={`translate(${surv.location.x + 28}, ${surv.location.y - 10})`}>
-                            <rect width="108" height="20" rx="3" fill="#0b0f19" stroke={strokeCol} strokeWidth="1" />
-                            <text x="54" y="10" textAnchor="middle" fill={textCol} fontSize="7.8" fontFamily="JetBrains Mono" fontWeight="bold">
-                              {surv.id} • HR:{surv.vitals.heartRate} | {surv.vitals.spO2}%
-                            </text>
-                            <text x="54" y="17" textAnchor="middle" fill="#94a3b8" fontSize="6.8" fontFamily="JetBrains Mono">
-                              {surv.location.depthMeters}m depth • {surv.triage.toUpperCase()}
-                            </text>
-                          </g>
-                        )}
-                      </g>
-                    ) : detailMode === 'simple' ? (
-                      <g>
-                        <rect
-                          x={surv.location.x - 20}
-                          y={surv.location.y - 21}
-                          width="40"
-                          height="14"
-                          rx="2.5"
-                          fill="#0b0f19"
-                          stroke={strokeCol}
-                          strokeWidth="1"
-                        />
-                        <text
-                          x={surv.location.x}
-                          y={surv.location.y - 10.5}
-                          textAnchor="middle"
-                          fill={textCol}
-                          fontSize="8"
-                          fontFamily="JetBrains Mono"
-                          fontWeight="bold"
-                        >
-                          {surv.id}
-                        </text>
-                      </g>
-                    ) : (
-                      <g>
-                        <rect
-                          x={surv.location.x - 55}
-                          y={surv.location.y - 26}
-                          width="110"
-                          height="20"
-                          rx="3"
-                          fill="#0b0f19"
-                          stroke={strokeCol}
-                          strokeWidth="1"
-                        />
-                        <text
-                          x={surv.location.x}
-                          y={surv.location.y - 16}
-                          textAnchor="middle"
-                          fill={textCol}
-                          fontSize="8"
-                          fontFamily="JetBrains Mono"
-                          fontWeight="bold"
-                        >
-                          {surv.id} • HR:{surv.vitals.heartRate} | {surv.vitals.spO2}%
-                        </text>
-                        <text
-                          x={surv.location.x}
-                          y={surv.location.y - 8}
-                          textAnchor="middle"
-                          fill="#94a3b8"
-                          fontSize="7"
-                          fontFamily="JetBrains Mono"
-                        >
-                          {surv.location.depthMeters}m depth • {surv.triage.toUpperCase()}
-                        </text>
-                        {surv.id === 'SURV-01' && (
-                          <g transform={`translate(${surv.location.x - 42}, ${surv.location.y + 16})`}>
-                            <rect width="84" height="13" rx="2" fill="#2d0a14" stroke="#f43f5e" strokeWidth="0.8" />
-                            <text x="42" y="9.5" textAnchor="middle" fill="#fda4af" fontSize="7" fontFamily="JetBrains Mono">
-                              🔊 180 Hz VOID TAP
-                            </text>
-                          </g>
-                        )}
-                      </g>
+                        </g>
+                      ) : (
+                        <g className="pointer-events-none">
+                          <rect
+                            x={surv.location.x - 22}
+                            y={surv.location.y - 21}
+                            width="44"
+                            height="14"
+                            rx="2.5"
+                            fill="#0b0f19"
+                            stroke={strokeCol}
+                            strokeWidth="1"
+                          />
+                          <text
+                            x={surv.location.x}
+                            y={surv.location.y - 10.5}
+                            textAnchor="middle"
+                            fill={textCol}
+                            fontSize="8"
+                            fontFamily="JetBrains Mono"
+                            fontWeight="bold"
+                          >
+                            {surv.id}
+                          </text>
+                        </g>
+                      )
                     )}
                   </g>
                 );
@@ -1186,63 +1109,29 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         👻
                       </text>
 
-                      {/* Ghost Pill */}
-                      {detailMode === 'simple' ? (
-                        <g>
+                      {/* Ghost Pill: Shown only on hover or selection */}
+                      {(isSelected || hoveredEntity?.id === robot.id) && (
+                        <g className="pointer-events-none">
                           <rect
-                            x={robot.position.x - 34}
+                            x={robot.position.x - 30}
                             y={robot.position.y + 15}
-                            width="68"
-                            height="15"
-                            rx="3"
+                            width="60"
+                            height="14"
+                            rx="2.5"
                             fill="#15050c"
                             stroke="#f43f5e"
                             strokeWidth="1"
                           />
                           <text
                             x={robot.position.x}
-                            y={robot.position.y + 26}
+                            y={robot.position.y + 25}
                             textAnchor="middle"
                             fill="#fca5a5"
                             fontSize="8"
                             fontFamily="JetBrains Mono"
                             fontWeight="bold"
                           >
-                            {shortName} [Lost]
-                          </text>
-                        </g>
-                      ) : (
-                        <g>
-                          <rect
-                            x={robot.position.x - 52}
-                            y={robot.position.y + 16}
-                            width="104"
-                            height="20"
-                            rx="3"
-                            fill="#15050c"
-                            stroke="#f43f5e"
-                            strokeWidth="1"
-                          />
-                          <text
-                            x={robot.position.x}
-                            y={robot.position.y + 26}
-                            textAnchor="middle"
-                            fill="#fca5a5"
-                            fontSize="8"
-                            fontFamily="JetBrains Mono"
-                            fontWeight="bold"
-                          >
-                            {robot.name} ⚠️ GHOST
-                          </text>
-                          <text
-                            x={robot.position.x}
-                            y={robot.position.y + 34}
-                            textAnchor="middle"
-                            fill="#fda4af"
-                            fontSize="6.8"
-                            fontFamily="JetBrains Mono"
-                          >
-                            {robot.storeAndForwardBacklog} Pkts Buffered
+                            {shortName}
                           </text>
                         </g>
                       )}
@@ -1362,95 +1251,50 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       {getRobotEmoji(robot.type)}
                     </text>
 
-                    {/* Overlap Prevention: SkyEye offset to upper-left with 1px connector leader-line */}
-                    {robot.id === 'ROB-01' ? (
-                      <g id="skyeye-callout">
-                        {/* 1px Connector Leader Line */}
-                        <polyline
-                          points={`${robot.position.x - 9},${robot.position.y - 9} ${robot.position.x - 24},${robot.position.y - 20} ${robot.position.x - 38},${robot.position.y - 20}`}
-                          fill="none"
-                          stroke="rgba(0, 240, 255, 0.5)"
-                          strokeWidth="1"
-                        />
-                        <circle cx={robot.position.x - 9} cy={robot.position.y - 9} r="1.5" fill="#00f0ff" />
-
-                        {detailMode === 'simple' ? (
-                          <g transform={`translate(${robot.position.x - 98}, ${robot.position.y - 28})`}>
-                            <rect width="60" height="15" rx="2.5" fill="#060c18" stroke={strokeColor} strokeWidth="1" />
-                            <text x="30" y="10.5" textAnchor="middle" fill="#e2e8f0" fontSize="7.8" fontFamily="JetBrains Mono" fontWeight="bold">
-                              {shortName} {Math.round(robot.battery)}%
+                    {/* On-Demand Robot Callsign Pill: Shown only on hover or selection */}
+                    {(isSelected || hoveredEntity?.id === robot.id) && (
+                      robot.id === 'ROB-01' ? (
+                        <g id="skyeye-callout" className="pointer-events-none">
+                          {/* 1px Connector Leader Line */}
+                          <polyline
+                            points={`${robot.position.x - 9},${robot.position.y - 9} ${robot.position.x - 22},${robot.position.y - 18} ${robot.position.x - 34},${robot.position.y - 18}`}
+                            fill="none"
+                            stroke="rgba(0, 240, 255, 0.5)"
+                            strokeWidth="1"
+                          />
+                          <circle cx={robot.position.x - 9} cy={robot.position.y - 9} r="1.5" fill="#00f0ff" />
+                          <g transform={`translate(${robot.position.x - 80}, ${robot.position.y - 25})`}>
+                            <rect width="46" height="14" rx="2.5" fill="#060c18" stroke={strokeColor} strokeWidth="1" />
+                            <text x="23" y="10" textAnchor="middle" fill="#e2e8f0" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
+                              {shortName}
                             </text>
                           </g>
-                        ) : (
-                          <g transform={`translate(${robot.position.x - 134}, ${robot.position.y - 32})`}>
-                            <rect width="96" height="20" rx="3" fill="#060c18" stroke={strokeColor} strokeWidth="1" />
-                            <text x="48" y="10" textAnchor="middle" fill="#f8fafc" fontSize="7.8" fontFamily="JetBrains Mono" fontWeight="bold">
-                              {robot.name} • {Math.round(robot.battery)}%
-                            </text>
-                            <text x="48" y="17" textAnchor="middle" fill="#38bdf8" fontSize="6.8" fontFamily="JetBrains Mono">
-                              {robot.signalStrength}% RSSI • 2.4 m/s
-                            </text>
-                          </g>
-                        )}
-                      </g>
-                    ) : detailMode === 'simple' ? (
-                      <g>
-                        <rect
-                          x={robot.position.x - 30}
-                          y={robot.position.y + 15}
-                          width="60"
-                          height="14"
-                          rx="2.5"
-                          fill="#060c18"
-                          stroke={strokeColor}
-                          strokeWidth="1"
-                        />
-                        <text
-                          x={robot.position.x}
-                          y={robot.position.y + 25}
-                          textAnchor="middle"
-                          fill="#e2e8f0"
-                          fontSize="7.8"
-                          fontFamily="JetBrains Mono"
-                          fontWeight="bold"
-                        >
-                          {shortName} {Math.round(robot.battery)}%
-                        </text>
-                      </g>
-                    ) : (
-                      <g>
-                        <rect
-                          x={robot.position.x - 48}
-                          y={robot.position.y + 17}
-                          width="96"
-                          height="20"
-                          rx="3"
-                          fill="#060c18"
-                          stroke={strokeColor}
-                          strokeWidth="1"
-                        />
-                        <text
-                          x={robot.position.x}
-                          y={robot.position.y + 27}
-                          textAnchor="middle"
-                          fill="#f8fafc"
-                          fontSize="7.8"
-                          fontFamily="JetBrains Mono"
-                          fontWeight="bold"
-                        >
-                          {robot.name} • {Math.round(robot.battery)}%
-                        </text>
-                        <text
-                          x={robot.position.x}
-                          y={robot.position.y + 35}
-                          textAnchor="middle"
-                          fill="#38bdf8"
-                          fontSize="6.8"
-                          fontFamily="JetBrains Mono"
-                        >
-                          {robot.signalStrength}% RSSI • 0.4 m/s
-                        </text>
-                      </g>
+                        </g>
+                      ) : (
+                        <g className="pointer-events-none">
+                          <rect
+                            x={robot.position.x - 24}
+                            y={robot.position.y + 15}
+                            width="48"
+                            height="14"
+                            rx="2.5"
+                            fill="#060c18"
+                            stroke={strokeColor}
+                            strokeWidth="1"
+                          />
+                          <text
+                            x={robot.position.x}
+                            y={robot.position.y + 25}
+                            textAnchor="middle"
+                            fill="#e2e8f0"
+                            fontSize="8"
+                            fontFamily="JetBrains Mono"
+                            fontWeight="bold"
+                          >
+                            {shortName}
+                          </text>
+                        </g>
+                      )
                     )}
                   </g>
                 );

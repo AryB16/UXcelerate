@@ -15,7 +15,6 @@ import {
   Bot,
   Heart,
   Columns,
-  X,
   CheckCircle2,
 } from 'lucide-react';
 
@@ -252,14 +251,6 @@ const MissionControlDeck: React.FC = () => {
                 <span className="hidden xl:inline">Split</span>
               </button>
             </div>
-
-            <button
-              onClick={() => setIsRightPanelOpen(false)}
-              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-1"
-              title="Close Right Panel"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
           </div>
 
           {/* Panel Content Based on Selection */}
@@ -277,7 +268,7 @@ const MissionControlDeck: React.FC = () => {
 
           {rightPanelMode === 'logs' && (
             <div className="flex-1 min-h-0">
-              <TacticalLogFeed />
+              <TacticalLogFeed onClose={() => setIsRightPanelOpen(false)} />
             </div>
           )}
 
@@ -285,7 +276,7 @@ const MissionControlDeck: React.FC = () => {
             <div className="flex-1 min-h-0 flex flex-col gap-1.5">
               {/* Top Half: Survivor Medical Triage */}
               <div className="flex-1 min-h-0">
-                <SurvivorQueue />
+                <SurvivorQueue onClose={() => setIsRightPanelOpen(false)} />
               </div>
 
               {/* Distinct Physical & Visual Separator */}

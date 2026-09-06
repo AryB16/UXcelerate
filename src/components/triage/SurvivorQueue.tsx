@@ -77,7 +77,7 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
       </div>
 
       {/* Survivor List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2.5">
+      <div className="flex-1 overflow-y-auto p-2 space-y-2">
         {survivors.map((surv) => {
           const isSelected = selectedSurvivorId === surv.id;
           const badge = getTriageBadge(surv.triage);
@@ -87,14 +87,14 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
             <div
               key={surv.id}
               onClick={() => selectSurvivor(surv.id)}
-              className={`p-3 rounded-md border transition-all cursor-pointer ${
+              className={`p-2.5 rounded-md border transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-rose-950/30 border-rose-400 ring-1 ring-rose-400/40'
                   : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
               }`}
             >
               {/* Card Header: Label and Triage Badge */}
-              <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex items-start justify-between gap-2 mb-1.5">
                 <div>
                   <h3 className="text-xs font-bold text-slate-100 font-mono flex items-center gap-1.5">
                     <span>{surv.label}</span>
@@ -115,7 +115,7 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
               </div>
 
               {/* Vitals Telemetry Grid */}
-              <div className="grid grid-cols-3 gap-1.5 p-2 rounded bg-slate-950/80 border border-slate-800/80 text-[10px] font-mono mb-2">
+              <div className="grid grid-cols-3 gap-1 p-1.5 rounded bg-slate-950/80 border border-slate-800/80 text-[10px] font-mono mb-1.5">
                 <div>
                   <div className="text-slate-500 text-[9px]">HEART RATE</div>
                   <div className="font-bold text-rose-400 flex items-center gap-1">
@@ -140,77 +140,77 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
                 </div>
               </div>
 
-              {/* Acoustic & Thermal Details */}
-              <div className="text-[10px] font-mono text-slate-300 mb-2 leading-relaxed bg-slate-900/50 p-1.5 rounded border border-slate-800/60">
-                <p className="line-clamp-2">{surv.notes}</p>
-              </div>
+              {/* Acoustic & Thermal Details - plain 10px text with 1-line clamp */}
+              <p className="text-[10px] font-mono text-slate-400 truncate mb-2 leading-tight">
+                {surv.notes}
+              </p>
 
-              {/* Nearby hazards alert if any */}
-              {surv.hazardsNearby.length > 0 && (
-                <div className="flex items-center gap-1.5 text-[9px] font-mono text-amber-400 mb-2 bg-amber-950/20 px-2 py-1 rounded border border-amber-900/40">
-                  <AlertOctagon className="w-3 h-3 text-amber-400 shrink-0" />
-                  <span className="truncate">{surv.hazardsNearby[0]}</span>
+              {/* Dispatch Action & Hazard Status: Combined into single slim status bar when assigned */}
+              {isAssigned ? (
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/30 text-[10px] font-mono text-emerald-300 truncate">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span className="font-semibold">✓ {surv.assignedRobotId} En Route</span>
+                  {surv.hazardsNearby.length > 0 && (
+                    <>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-amber-400 truncate font-normal">
+                        {surv.hazardsNearby[0]} Nearby
+                      </span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="pt-1.5 border-t border-slate-800/80">
+                  {surv.hazardsNearby.length > 0 && (
+                    <div className="flex items-center gap-1 text-[9px] font-mono text-amber-400 mb-1 truncate">
+                      <AlertOctagon className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                      <span className="truncate">{surv.hazardsNearby[0]} Nearby</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 w-full">
+                    <select
+                      id={`assign-select-${surv.id}`}
+                      defaultValue="ROB-02"
+                      onClick={(e) => e.stopPropagation()}
+                      className="bg-slate-950 border border-rose-900/60 text-slate-200 text-[11px] rounded px-1.5 py-0.5 font-mono focus:outline-none focus:border-rose-500 max-w-[130px] truncate h-6"
+                    >
+                      {robots
+                        .filter(
+                          (r) =>
+                            r.payload.toLowerCase().includes('med') ||
+                            r.payload.toLowerCase().includes('oxygen') ||
+                            r.payload.toLowerCase().includes('o2') ||
+                            r.id === 'ROB-02' ||
+                            r.id === 'ROB-03'
+                        )
+                        .map((r) => {
+                          const isOffline = r.commsStatus === 'disconnected';
+                          const payloadShort = r.id === 'ROB-02' ? 'Med Kit' : 'Micro-O2';
+                          return (
+                            <option key={r.id} value={r.id} disabled={isOffline}>
+                              {r.name} ({payloadShort}){isOffline ? ' • OFFLINE' : ''}
+                            </option>
+                          );
+                        })}
+                    </select>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const selectEl = document.getElementById(
+                          `assign-select-${surv.id}`
+                        ) as HTMLSelectElement;
+                        const targetBot = selectEl ? selectEl.value : 'ROB-02';
+                        dispatchRobotToSurvivor(targetBot, surv.id);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-0.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-mono text-[11px] font-medium shadow transition-colors h-6"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>Dispatch</span>
+                    </button>
+                  </div>
                 </div>
               )}
-
-              {/* Dispatch Action: Only robots with Medical/Life-Support capabilities */}
-              <div className="pt-2 border-t border-slate-800">
-                {isAssigned ? (
-                  <div className="flex items-center gap-1.5 text-xs font-mono text-emerald-400">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>{surv.assignedRobotId} Assigned // Life Support En Route</span>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-[9px] font-mono text-rose-300/80 mb-1 flex items-center justify-between">
-                      <span>AUTHORIZED LIFE-SUPPORT PAYLOADS:</span>
-                      <span className="text-slate-400">MED KIT / O2 LINE</span>
-                    </div>
-                    <div className="flex items-center gap-1 w-full">
-                      <select
-                        id={`assign-select-${surv.id}`}
-                        defaultValue="ROB-02"
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-slate-950 border border-rose-900/60 text-slate-200 text-xs rounded px-2 py-1 font-mono focus:outline-none focus:border-rose-500 max-w-[145px] truncate"
-                      >
-                        {robots
-                          .filter(
-                            (r) =>
-                              r.payload.toLowerCase().includes('med') ||
-                              r.payload.toLowerCase().includes('oxygen') ||
-                              r.payload.toLowerCase().includes('o2') ||
-                              r.id === 'ROB-02' ||
-                              r.id === 'ROB-03'
-                          )
-                          .map((r) => {
-                            const isOffline = r.commsStatus === 'disconnected';
-                            const payloadShort = r.id === 'ROB-02' ? 'Med Kit' : 'Micro-O2';
-                            return (
-                              <option key={r.id} value={r.id} disabled={isOffline}>
-                                {r.name} ({payloadShort}){isOffline ? ' • OFFLINE' : ''}
-                              </option>
-                            );
-                          })}
-                      </select>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const selectEl = document.getElementById(
-                            `assign-select-${surv.id}`
-                          ) as HTMLSelectElement;
-                          const targetBot = selectEl ? selectEl.value : 'ROB-02';
-                          dispatchRobotToSurvivor(targetBot, surv.id);
-                        }}
-                        className="flex-1 flex items-center justify-center gap-1 px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-medium shadow transition-colors"
-                      >
-                        <Send className="w-3 h-3" />
-                        <span>Dispatch Life Support</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           );
         })}
