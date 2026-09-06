@@ -334,15 +334,29 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
               <circle cx="10" cy="10" r="1.5" fill="#ef4444" opacity="0.3" />
             </pattern>
 
-            {/* Fog of Uncertainty Hatch Pattern */}
+            {/* Epistemic Fog of Uncertainty Pattern: Dense diagonal caution hatching */}
             <pattern
-              id="cleanFogPattern"
-              width="16"
-              height="16"
+              id="fogOfUncertainty"
+              width="8"
+              height="8"
               patternTransform="rotate(45 0 0)"
               patternUnits="userSpaceOnUse"
             >
-              <line x1="0" y1="0" x2="0" y2="16" stroke="#334155" strokeWidth="2" opacity="0.45" />
+              <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(148, 163, 184, 0.15)" strokeWidth="1" />
+            </pattern>
+
+            {/* Industrial Red Chevron Hatch Pattern for Blocked Corridors */}
+            <pattern
+              id="redIndustrialChevron"
+              width="14"
+              height="14"
+              patternTransform="rotate(45 0 0)"
+              patternUnits="userSpaceOnUse"
+            >
+              <rect x="0" y="0" width="7" height="14" fill="rgba(239, 68, 68, 0.45)" />
+              <rect x="7" y="0" width="7" height="14" fill="rgba(30, 8, 13, 0.9)" />
+              <line x1="0" y1="0" x2="0" y2="14" stroke="#ef4444" strokeWidth="1.5" />
+              <line x1="7" y1="0" x2="7" y2="14" stroke="#991b1b" strokeWidth="1" />
             </pattern>
 
             {/* Subtle tactical grid pattern */}
@@ -368,7 +382,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <rect x="0" y="0" width="800" height="620" fill="url(#tacGrid)" />
 
             {/* ========================================================= */}
-            {/* 1. CLEAN ARCHITECTURAL ZONES (Minimalist & Uncluttered)   */}
+            {/* 1. ARCHITECTURAL ZONES & EPISTEMIC FOG OF UNCERTAINTY     */}
             {/* ========================================================= */}
             <g id="architectural-zones">
               {/* Outer Facility Boundary */}
@@ -383,29 +397,37 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 strokeWidth="1.5"
               />
 
-              {/* Sector B: Rubble Collapse Zone Subtle Tint (Top-Right) */}
+              {/* Sector B: Dense Fog of Uncertainty Caution Hatching (Top-Right Rubble Collapse) */}
               <rect
-                x="400"
-                y="30"
-                width="370"
-                height="280"
+                x="410"
+                y="40"
+                width="350"
+                height="260"
                 rx="8"
-                fill="rgba(239, 68, 68, 0.03)"
-                stroke="rgba(239, 68, 68, 0.15)"
+                fill="url(#fogOfUncertainty)"
+                stroke="rgba(239, 68, 68, 0.25)"
+                strokeWidth="1"
                 strokeDasharray="4,4"
               />
+              <text x="585" y="62" textAnchor="middle" fill="rgba(248, 113, 113, 0.45)" fontSize="8.5" fontFamily="JetBrains Mono" fontWeight="bold">
+                [⚠️ SECTOR B // UNINSPECTED VOID • AFTERSHOCK COLLAPSE]
+              </text>
 
-              {/* Sector C: Subterranean Void Tint (Bottom-Right) */}
+              {/* Sector C: Dense Fog of Uncertainty Caution Hatching (Bottom-Right Subterranean Metro Void) */}
               <rect
-                x="400"
-                y="310"
-                width="370"
-                height="280"
+                x="410"
+                y="320"
+                width="350"
+                height="260"
                 rx="8"
-                fill="rgba(245, 158, 11, 0.02)"
-                stroke="rgba(245, 158, 11, 0.12)"
+                fill="url(#fogOfUncertainty)"
+                stroke="rgba(245, 158, 11, 0.2)"
+                strokeWidth="1"
                 strokeDasharray="4,4"
               />
+              <text x="585" y="342" textAnchor="middle" fill="rgba(251, 191, 36, 0.4)" fontSize="8.5" fontFamily="JetBrains Mono" fontWeight="bold">
+                [⚠️ SECTOR C // SUBTERRANEAN METRO VOID • UNVERIFIED]
+              </text>
 
               {/* Sector D: Staging & HQ Tint (Bottom-Left) */}
               <rect
@@ -429,7 +451,64 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 ATRIUM
               </text>
 
-              {/* Sector Watermarks: Minimalist in simple mode vs Rich Structural Diagnostics in detailed mode */}
+              {/* ========================================================= */}
+              {/* FAINT STRUCTURAL CAD BLUEPRINT LINES BENEATH PATHS        */}
+              {/* ========================================================= */}
+              <g id="structural-cad-blueprint" opacity="0.85">
+                {/* Column Footprints Grid */}
+                {[
+                  { x: 120, y: 100 }, { x: 240, y: 100 }, { x: 360, y: 100 }, { x: 480, y: 100 }, { x: 600, y: 100 }, { x: 720, y: 100 },
+                  { x: 120, y: 200 }, { x: 240, y: 200 }, { x: 360, y: 200 }, { x: 480, y: 200, broken: true }, { x: 600, y: 200, broken: true }, { x: 720, y: 200 },
+                  { x: 120, y: 310 }, { x: 240, y: 310 }, { x: 360, y: 310 }, { x: 480, y: 310, broken: true }, { x: 600, y: 310 }, { x: 720, y: 310 },
+                  { x: 120, y: 430 }, { x: 240, y: 430 }, { x: 360, y: 430 }, { x: 480, y: 430, broken: true }, { x: 600, y: 430, broken: true }, { x: 720, y: 430 },
+                  { x: 120, y: 530 }, { x: 240, y: 530 }, { x: 360, y: 530 }, { x: 480, y: 530 }, { x: 600, y: 530 }, { x: 720, y: 530 },
+                ].map((col, idx) => (
+                  <g key={`cad-col-${idx}`}>
+                    <rect
+                      x={col.x - 5}
+                      y={col.y - 5}
+                      width="10"
+                      height="10"
+                      fill="none"
+                      stroke="rgba(100, 116, 139, 0.2)"
+                      strokeWidth="1"
+                      strokeDasharray={col.broken ? '2,2' : undefined}
+                    />
+                    <line x1={col.x - 5} y1={col.y - 5} x2={col.x + 5} y2={col.y + 5} stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.8" />
+                    <line x1={col.x + 5} y1={col.y - 5} x2={col.x - 5} y2={col.y + 5} stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.8" />
+                    {col.broken && (
+                      <text x={col.x + 8} y={col.y + 4} fill="rgba(248, 113, 113, 0.35)" fontSize="6" fontFamily="JetBrains Mono">
+                        SHEAR
+                      </text>
+                    )}
+                  </g>
+                ))}
+
+                {/* Elevator Shaft Rectangle Core with Cross Vectors */}
+                <g id="cad-elevator-shaft" transform="translate(425, 135)">
+                  <rect width="48" height="58" fill="rgba(15, 23, 42, 0.4)" stroke="rgba(100, 116, 139, 0.25)" strokeWidth="1.2" />
+                  <rect x="4" y="4" width="40" height="50" fill="none" stroke="rgba(100, 116, 139, 0.18)" strokeWidth="0.8" strokeDasharray="3,3" />
+                  <line x1="4" y1="4" x2="44" y2="54" stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.8" />
+                  <line x1="44" y1="4" x2="4" y2="54" stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.8" />
+                  <text x="24" y="-4" textAnchor="middle" fill="rgba(148, 163, 184, 0.35)" fontSize="6.5" fontFamily="JetBrains Mono">
+                    SHAFT #2 [COLLAPSED]
+                  </text>
+                </g>
+
+                {/* Collapsed CAD Structural Wall Vectors */}
+                <path
+                  d="M 50 100 L 380 100 M 50 200 L 220 200 M 260 200 L 380 200 M 120 40 L 120 290 M 240 40 L 240 290 M 50 430 L 380 430 M 420 100 L 750 100 M 600 40 L 600 290 M 420 430 L 750 430 M 50 530 L 750 530"
+                  fill="none"
+                  stroke="rgba(100, 116, 139, 0.2)"
+                  strokeWidth="1.2"
+                  strokeDasharray="4,4"
+                />
+                {/* Door Swings */}
+                <path d="M 220 200 A 40 40 0 0 1 260 200" fill="none" stroke="rgba(100, 116, 139, 0.18)" strokeWidth="0.8" strokeDasharray="2,2" />
+                <path d="M 120 200 A 30 30 0 0 1 120 230" fill="none" stroke="rgba(100, 116, 139, 0.18)" strokeWidth="0.8" strokeDasharray="2,2" />
+              </g>
+
+              {/* Sector Watermarks */}
               {detailMode === 'simple' ? (
                 <g id="simple-sector-marks">
                   <text x="50" y="55" fill="#38bdf8" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
@@ -458,10 +537,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
                   <g transform="translate(420, 56)">
                     <text fill="#f87171" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                      SECTOR B • MAIN COLLAPSE
+                      SECTOR B • MAIN TOWER COLLAPSE
                     </text>
-                    <text y="16" fill="#ef4444" fontSize="9.5" fontFamily="JetBrains Mono">
-                      Pancake Rubble // Unstable 68% • High Debris
+                    <text y="16" fill="#f87171" fontSize="9.5" fontFamily="JetBrains Mono">
+                      Floor Inversion // Unstable 68% • Aftershock Risk
                     </text>
                   </g>
 
@@ -487,7 +566,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             </g>
 
             {/* ========================================================= */}
-            {/* 2. ROUTES & CORRIDORS                                     */}
+            {/* 2. ROUTES & CORRIDORS (Tactical Dual-Line Conduits)       */}
             {/* ========================================================= */}
             {layers.routes && (
               <g id="routes-layer">
@@ -502,53 +581,95 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   const isNew = route.status === 'newly_discovered';
 
                   const strokeColor = isBlocked ? '#ef4444' : isHazardous ? '#f59e0b' : isNew ? '#10b981' : '#00e5ff';
-                  const strokeDash = isBlocked ? '6,4' : isNew ? '5,3' : undefined;
 
                   return (
                     <g key={route.id}>
+                      {/* Outer Conduit Rail (Width 8px, produces 1px parallel rails spaced 6px apart) */}
                       <path
                         d={pathD}
                         fill="none"
                         stroke={strokeColor}
-                        strokeWidth={detailMode === 'detailed' ? (isBlocked ? 2.5 : 3.5) : (isBlocked ? 2 : 2.5)}
-                        strokeDasharray={strokeDash}
+                        strokeWidth="8"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        opacity={isBlocked ? 0.7 : 0.85}
+                        opacity={isBlocked ? 0.95 : 0.85}
                       />
-                      {/* Badge: in simple mode only if blocked; in detailed mode show clearance tags */}
+
+                      {/* Inner Conduit Core Cutout: Red Industrial Chevron when Blocked, else Floor Dark */}
+                      <path
+                        d={pathD}
+                        fill="none"
+                        stroke={isBlocked ? 'url(#redIndustrialChevron)' : '#080e1b'}
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+
+                      {/* Directional Chevron Arrows along conduit segments (or Red Industrial X Barriers if Blocked) */}
+                      {route.points.map((p1, idx) => {
+                        if (idx >= route.points.length - 1) return null;
+                        const p2 = route.points[idx + 1];
+                        const segMidX = (p1.x + p2.x) / 2;
+                        const segMidY = (p1.y + p2.y) / 2;
+                        const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
+
+                        if (isBlocked) {
+                          return (
+                            <g key={`blocked-barr-${idx}`} transform={`translate(${segMidX}, ${segMidY}) rotate(${angle})`}>
+                              <line x1="-5" y1="-5" x2="5" y2="5" stroke="#fca5a5" strokeWidth="1.8" />
+                              <line x1="-5" y1="5" x2="5" y2="-5" stroke="#fca5a5" strokeWidth="1.8" />
+                            </g>
+                          );
+                        }
+
+                        return (
+                          <g key={`arrow-${idx}`} transform={`translate(${segMidX}, ${segMidY}) rotate(${angle})`}>
+                            <path
+                              d="M -3 -2.5 L 0 0 L -3 2.5"
+                              fill="none"
+                              stroke={strokeColor}
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              opacity="0.9"
+                            />
+                          </g>
+                        );
+                      })}
+
+                      {/* Tactical Conduit Callout Badge */}
                       {detailMode === 'simple' ? (
                         isBlocked && (
-                          <g transform={`translate(${midPoint.x - 32}, ${midPoint.y - 8})`}>
-                            <rect x="0" y="0" width="64" height="16" rx="3" fill="#2d0c13" stroke={strokeColor} strokeWidth="1" />
-                            <text x="32" y="11.5" textAnchor="middle" fill="#fca5a5" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
+                          <g transform={`translate(${midPoint.x - 40}, ${midPoint.y - 9})`}>
+                            <rect x="0" y="0" width="80" height="18" rx="3" fill="#2d0c13" stroke="#ef4444" strokeWidth="1.2" />
+                            <text x="40" y="12.5" textAnchor="middle" fill="#fca5a5" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
                               ⛔ BLOCKED
                             </text>
                           </g>
                         )
                       ) : (
                         (isBlocked || isNew || isHazardous) && (
-                          <g transform={`translate(${midPoint.x - 38}, ${midPoint.y - 9})`}>
+                          <g transform={`translate(${midPoint.x - 46}, ${midPoint.y - 10})`}>
                             <rect
                               x="0"
                               y="0"
-                              width="76"
-                              height="18"
+                              width="92"
+                              height="20"
                               rx="3"
                               fill={isBlocked ? '#2d0c13' : isHazardous ? '#2a1a06' : '#062e24'}
                               stroke={strokeColor}
-                              strokeWidth="1"
+                              strokeWidth="1.2"
                             />
                             <text
-                              x="38"
-                              y="13"
+                              x="46"
+                              y="13.5"
                               textAnchor="middle"
                               fill={isBlocked ? '#fca5a5' : isHazardous ? '#fde68a' : '#34d399'}
                               fontSize="8"
                               fontFamily="JetBrains Mono"
                               fontWeight="bold"
                             >
-                              {isBlocked ? '⛔ BLOCKED' : isHazardous ? '⚠️ TIGHT CRAWL' : '✨ NEW VOID'}
+                              {isBlocked ? '⛔ JOIST COLLAPSE' : isHazardous ? '⚠️ TIGHT CRAWL' : '✨ NEW VOID'}
                             </text>
                           </g>
                         )
@@ -862,8 +983,38 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       ❤️
                     </text>
 
-                    {/* Pill Badge: Simple vs Detailed */}
-                    {detailMode === 'simple' ? (
+                    {/* Pill Badge: Simple vs Detailed with Overlap Prevention */}
+                    {surv.id === 'SURV-03' ? (
+                      /* SURV-03: Floating to the right with 1px connector leader line */
+                      <g id="surv-03-callout">
+                        <polyline
+                          points={`${surv.location.x + 11},${surv.location.y} ${surv.location.x + 22},${surv.location.y} ${surv.location.x + 28},${surv.location.y + 4}`}
+                          fill="none"
+                          stroke="rgba(245, 158, 11, 0.45)"
+                          strokeWidth="1"
+                        />
+                        <circle cx={surv.location.x + 11} cy={surv.location.y} r="1.5" fill="#f59e0b" />
+                        
+                        {detailMode === 'simple' ? (
+                          <g transform={`translate(${surv.location.x + 28}, ${surv.location.y - 6})`}>
+                            <rect width="44" height="15" rx="2.5" fill="#0b0f19" stroke={strokeCol} strokeWidth="1" />
+                            <text x="22" y="10.5" textAnchor="middle" fill={textCol} fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
+                              {surv.id}
+                            </text>
+                          </g>
+                        ) : (
+                          <g transform={`translate(${surv.location.x + 28}, ${surv.location.y - 10})`}>
+                            <rect width="108" height="20" rx="3" fill="#0b0f19" stroke={strokeCol} strokeWidth="1" />
+                            <text x="54" y="10" textAnchor="middle" fill={textCol} fontSize="7.8" fontFamily="JetBrains Mono" fontWeight="bold">
+                              {surv.id} • HR:{surv.vitals.heartRate} | {surv.vitals.spO2}%
+                            </text>
+                            <text x="54" y="17" textAnchor="middle" fill="#94a3b8" fontSize="6.8" fontFamily="JetBrains Mono">
+                              {surv.location.depthMeters}m depth • {surv.triage.toUpperCase()}
+                            </text>
+                          </g>
+                        )}
+                      </g>
+                    ) : detailMode === 'simple' ? (
                       <g>
                         <rect
                           x={surv.location.x - 20}
@@ -996,6 +1147,28 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         />
                       )}
 
+                      {/* Faint Expanding Dashed Uncertainty Rings (25% opacity) */}
+                      <circle
+                        cx={robot.position.x}
+                        cy={robot.position.y}
+                        r="36"
+                        fill="rgba(244, 63, 94, 0.04)"
+                        stroke="#f43f5e"
+                        strokeWidth="1"
+                        strokeDasharray="2,2"
+                        opacity="0.6"
+                      />
+                      <circle
+                        cx={robot.position.x}
+                        cy={robot.position.y}
+                        r="52"
+                        fill="none"
+                        stroke="#f43f5e"
+                        strokeWidth="0.8"
+                        strokeDasharray="3,3"
+                        opacity="0.35"
+                      />
+
                       <circle
                         cx={robot.position.x}
                         cy={robot.position.y}
@@ -1099,6 +1272,66 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     }
                     onMouseLeave={() => setHoveredEntity(null)}
                   >
+                    {/* Drone Aerial RF Coverage Footprint (25% opacity boundary) */}
+                    {robot.type === 'aerial_drone' && (
+                      <g id="drone-rf-footprint">
+                        <circle
+                          cx={robot.position.x}
+                          cy={robot.position.y}
+                          r="72"
+                          fill="rgba(0, 240, 255, 0.03)"
+                          stroke="rgba(0, 240, 255, 0.28)"
+                          strokeWidth="1"
+                          strokeDasharray="4,4"
+                        />
+                        {/* Cardinal Crosshair Ticks */}
+                        <line x1={robot.position.x - 76} y1={robot.position.y} x2={robot.position.x - 68} y2={robot.position.y} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1" />
+                        <line x1={robot.position.x + 68} y1={robot.position.y} x2={robot.position.x + 76} y2={robot.position.y} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1" />
+                        <line x1={robot.position.x} y1={robot.position.y - 76} x2={robot.position.x} y2={robot.position.y - 68} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1" />
+                        <line x1={robot.position.x} y1={robot.position.y + 68} x2={robot.position.x} y2={robot.position.y + 76} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1" />
+                        <text x={robot.position.x} y={robot.position.y - 58} textAnchor="middle" fill="rgba(0, 240, 255, 0.4)" fontSize="6.5" fontFamily="JetBrains Mono">
+                          RF RELAY 96% // ALT 25m
+                        </text>
+                      </g>
+                    )}
+
+                    {/* 60-degree Directional LiDAR Arc along Heading Vector */}
+                    {(robot.type === 'heavy_quadruped' || robot.type === 'tracked_rover') && (
+                      (() => {
+                        const headingRad = (robot.heading * Math.PI) / 180;
+                        const arcRadius = 58;
+                        const startAngle = headingRad - Math.PI / 6;
+                        const endAngle = headingRad + Math.PI / 6;
+                        const x1 = robot.position.x + arcRadius * Math.cos(startAngle);
+                        const y1 = robot.position.y + arcRadius * Math.sin(startAngle);
+                        const x2 = robot.position.x + arcRadius * Math.cos(endAngle);
+                        const y2 = robot.position.y + arcRadius * Math.sin(endAngle);
+                        const conePath = `M ${robot.position.x} ${robot.position.y} L ${x1} ${y1} A ${arcRadius} ${arcRadius} 0 0 1 ${x2} ${y2} Z`;
+
+                        return (
+                          <g id={`lidar-cone-${robot.id}`}>
+                            <path
+                              d={conePath}
+                              fill="rgba(0, 240, 255, 0.07)"
+                              stroke="rgba(0, 240, 255, 0.35)"
+                              strokeWidth="1"
+                              strokeDasharray="3,2"
+                            />
+                            {/* Heading centerline tick */}
+                            <line
+                              x1={robot.position.x}
+                              y1={robot.position.y}
+                              x2={robot.position.x + (arcRadius + 6) * Math.cos(headingRad)}
+                              y2={robot.position.y + (arcRadius + 6) * Math.sin(headingRad)}
+                              stroke="rgba(0, 240, 255, 0.45)"
+                              strokeWidth="0.8"
+                              strokeDasharray="2,2"
+                            />
+                          </g>
+                        );
+                      })()
+                    )}
+
                     {isSelected && (
                       <circle
                         cx={robot.position.x}
@@ -1109,18 +1342,6 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         strokeWidth="1.5"
                         strokeDasharray="3,2"
                         className="animate-spin"
-                      />
-                    )}
-
-                    {/* Forward LiDAR fan in detailed mode */}
-                    {detailMode === 'detailed' && (
-                      <path
-                        d={`M ${robot.position.x} ${robot.position.y} L ${robot.position.x + 22} ${robot.position.y - 14} A 26 26 0 0 1 ${robot.position.x + 22} ${robot.position.y + 14} Z`}
-                        fill="rgba(0, 240, 255, 0.08)"
-                        stroke="#00f0ff"
-                        strokeWidth="0.6"
-                        strokeDasharray="2,2"
-                        opacity="0.6"
                       />
                     )}
 
@@ -1141,8 +1362,38 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       {getRobotEmoji(robot.type)}
                     </text>
 
-                    {/* Pill Label */}
-                    {detailMode === 'simple' ? (
+                    {/* Overlap Prevention: SkyEye offset to upper-left with 1px connector leader-line */}
+                    {robot.id === 'ROB-01' ? (
+                      <g id="skyeye-callout">
+                        {/* 1px Connector Leader Line */}
+                        <polyline
+                          points={`${robot.position.x - 9},${robot.position.y - 9} ${robot.position.x - 24},${robot.position.y - 20} ${robot.position.x - 38},${robot.position.y - 20}`}
+                          fill="none"
+                          stroke="rgba(0, 240, 255, 0.5)"
+                          strokeWidth="1"
+                        />
+                        <circle cx={robot.position.x - 9} cy={robot.position.y - 9} r="1.5" fill="#00f0ff" />
+
+                        {detailMode === 'simple' ? (
+                          <g transform={`translate(${robot.position.x - 98}, ${robot.position.y - 28})`}>
+                            <rect width="60" height="15" rx="2.5" fill="#060c18" stroke={strokeColor} strokeWidth="1" />
+                            <text x="30" y="10.5" textAnchor="middle" fill="#e2e8f0" fontSize="7.8" fontFamily="JetBrains Mono" fontWeight="bold">
+                              {shortName} {Math.round(robot.battery)}%
+                            </text>
+                          </g>
+                        ) : (
+                          <g transform={`translate(${robot.position.x - 134}, ${robot.position.y - 32})`}>
+                            <rect width="96" height="20" rx="3" fill="#060c18" stroke={strokeColor} strokeWidth="1" />
+                            <text x="48" y="10" textAnchor="middle" fill="#f8fafc" fontSize="7.8" fontFamily="JetBrains Mono" fontWeight="bold">
+                              {robot.name} • {Math.round(robot.battery)}%
+                            </text>
+                            <text x="48" y="17" textAnchor="middle" fill="#38bdf8" fontSize="6.8" fontFamily="JetBrains Mono">
+                              {robot.signalStrength}% RSSI • 2.4 m/s
+                            </text>
+                          </g>
+                        )}
+                      </g>
+                    ) : detailMode === 'simple' ? (
                       <g>
                         <rect
                           x={robot.position.x - 30}
