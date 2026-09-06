@@ -59,14 +59,13 @@ const MissionControlDeck: React.FC = () => {
     }
   };
 
-  // Ensure panels remain open and available during normal operation and tour
+  // Ensure panels remain open and fully visible during normal operation and tour
   useEffect(() => {
     if (!isTourOpen) return;
 
-    if (tourStep === 1) {
-      setIsLeftRosterOpen(true);
-    } else if (tourStep === 2) {
-      setIsRightPanelOpen(true);
+    setIsLeftRosterOpen(true);
+    setIsRightPanelOpen(true);
+    if (tourStep === 2) {
       setRightPanelMode('triage');
     }
   }, [isTourOpen, tourStep]);

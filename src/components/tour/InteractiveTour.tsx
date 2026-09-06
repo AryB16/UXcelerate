@@ -79,14 +79,10 @@ export const InteractiveTour: React.FC = () => {
   const current = tourSteps[tourStep] || tourSteps[0];
 
   return (
-    <div className="fixed inset-0 z-[100] pointer-events-none">
-      {/* Subtle non-blocking tactical vignette backdrop so the card stands out unmistakably */}
-      <div className="absolute inset-0 bg-black/40 pointer-events-none backdrop-blur-[1px] transition-opacity duration-300" />
-
-      {/* Tutorial Floating Card */}
-      <div
-        className={`pointer-events-auto fixed ${current.positionClasses} ${current.widthClass} max-w-[92vw] bg-[#090e1a]/98 backdrop-blur-md border-2 border-cyan-400/90 rounded-lg p-5 md:p-6 shadow-[0_0_50px_rgba(6,182,212,0.45)] animate-fade-in text-slate-100 font-sans z-[100]`}
-      >
+    <div
+      style={{ zIndex: 99999 }}
+      className={`pointer-events-auto fixed ${current.positionClasses} ${current.widthClass} max-w-[94vw] bg-[#090e1a]/98 border-2 border-cyan-400 rounded-xl p-5 md:p-6 shadow-[0_12px_45px_rgba(0,0,0,0.95),0_0_35px_rgba(6,182,212,0.45)] text-slate-100 font-sans`}
+    >
         {/* Directional Callout Banner */}
         <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md bg-cyan-950/90 border border-cyan-400/60 text-cyan-300 font-mono text-[11px] font-bold tracking-wider mb-3.5 shadow-inner">
           <span className="flex items-center gap-1.5 truncate">
@@ -183,6 +179,5 @@ export const InteractiveTour: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
