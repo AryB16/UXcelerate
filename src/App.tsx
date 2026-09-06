@@ -16,6 +16,7 @@ import {
   Heart,
   Columns,
   X,
+  CheckCircle2,
 } from 'lucide-react';
 
 const MissionControlDeck: React.FC = () => {
@@ -31,12 +32,18 @@ const MissionControlDeck: React.FC = () => {
     startTour,
     isTourOpen,
     tourStep,
+    reroutePrompt,
+    confirmReroute,
+    dismissReroute,
   } = useMission();
 
   const [rightPanelMode, setRightPanelMode] = useState<'triage' | 'hazards' | 'logs' | 'split'>('triage');
   const [isLeftRosterOpen, setIsLeftRosterOpen] = useState<boolean>(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
   const [mobileTab, setMobileTab] = useState<'map' | 'roster' | 'triage'>('map');
+  const [showEvaluatorBanner, setShowEvaluatorBanner] = useState<boolean>(() => {
+    return !localStorage.getItem('aegis_eval_banner_dismissed');
+  });
 
   const isMapExpanded = !isLeftRosterOpen && !isRightPanelOpen;
 
@@ -79,18 +86,6 @@ const MissionControlDeck: React.FC = () => {
     return 'filter blur-[5px] opacity-20 brightness-50 pointer-events-none transition-all duration-300';
   };
 
-  // Auto-launch guided tour on first visit after 1.2s
-  useEffect(() => {
-    const hasSeen = localStorage.getItem('aegis_tour_seen');
-    if (!hasSeen) {
-      const timer = setTimeout(() => {
-        startTour();
-        localStorage.setItem('aegis_tour_seen', 'true');
-      }, 1200);
-      return () => clearTimeout(timer);
-    }
-  }, [startTour]);
-
   // Global Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -131,6 +126,82 @@ const MissionControlDeck: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#05080f] text-slate-100 overflow-hidden font-sans select-none relative">
+      {/* Evaluator Welcome Banner (Dismissible, Non-Blocking) */}
+      {showEvaluatorBanner && !isTourOpen && (
+        <div className="bg-gradient-to-r from-cyan-950 via-[#091b30] to-cyan-950 border-b border-cyan-500/30 px-3 py-1.5 flex items-center justify-between z-50 text-xs font-mono backdrop-blur shrink-0 shadow-lg">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+            </span>
+            <span className="text-slate-200">
+              <strong className="text-cyan-400 font-bold">⚡ New Evaluator?</strong> Take the 30s Interactive Tour to explore multi-robot tele-ops, triage, and seismic aftershock mitigation:
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                startTour();
+                setShowEvaluatorBanner(false);
+                localStorage.setItem('aegis_eval_banner_dismissed', 'true');
+              }}
+              className="px-3 py-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded text-[11px] shadow-sm transition-all flex items-center gap-1"
+            >
+              <span>Take 30s Tour 🚀</span>
+            </button>
+            <button
+              onClick={() => {
+                setShowEvaluatorBanner(false);
+                localStorage.setItem('aegis_eval_banner_dismissed', 'true');
+              }}
+              className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition-colors"
+              title="Dismiss banner"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reactive Aftershock Reroute Decision Card */}
+      {reroutePrompt && reroutePrompt.isOpen && (
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 max-w-xl w-[92vw] bg-[#0c1424]/95 border-2 border-amber-500/80 rounded-xl p-4 shadow-[0_0_35px_rgba(245,158,11,0.35)] backdrop-blur animate-in fade-in slide-in-from-top duration-300">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 shrink-0 mt-0.5">
+              <AlertTriangle className="w-6 h-6 animate-pulse text-amber-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-bold text-sm text-amber-300 tracking-wide font-mono uppercase">
+                  {reroutePrompt.title}
+                </h3>
+                <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded">
+                  ACTION REQUIRED
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 font-mono mt-1 leading-relaxed">
+                {reroutePrompt.message}
+              </p>
+              <div className="flex items-center gap-2 mt-3 font-mono text-xs">
+                <button
+                  onClick={confirmReroute}
+                  className="flex-1 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-lg shadow-md transition-all flex items-center justify-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Confirm Reroute via Alpha-1</span>
+                </button>
+                <button
+                  onClick={dismissReroute}
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-700 transition-colors font-medium"
+                >
+                  Dismiss / Manual
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Mission Header */}
       <div className={getTourSpotlightStyle('header')}>
         <MissionHeader />

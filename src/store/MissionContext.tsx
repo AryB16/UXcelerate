@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Robot, Survivor, Hazard, SectorRoute, MeshRelayBeacon, Sector, TacticalLog, MissionOverview } from '../types';
+import { Robot, Survivor, Hazard, SectorRoute, MeshRelayBeacon, Sector, TacticalLog, MissionOverview, ReroutePromptState } from '../types';
 import {
   initialMissionOverview,
   initialSectors,
@@ -45,6 +45,7 @@ interface MissionContextType {
   isStoreAndForwardSyncing: boolean;
   isTourOpen: boolean;
   tourStep: number;
+  reroutePrompt: ReroutePromptState | null;
 
   // Actions
   selectRobot: (id: string | null) => void;
@@ -62,6 +63,8 @@ interface MissionContextType {
   nextTourStep: () => void;
   prevTourStep: () => void;
   endTour: () => void;
+  confirmReroute: () => void;
+  dismissReroute: () => void;
   
   // Disaster simulation triggers
   triggerAftershock: () => void;
@@ -111,6 +114,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isStoreAndForwardSyncing, setIsStoreAndForwardSyncing] = useState<boolean>(false);
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
   const [tourStep, setTourStep] = useState<number>(0);
+  const [reroutePrompt, setReroutePrompt] = useState<ReroutePromptState | null>(null);
 
   const addTacticalLog = useCallback((
     type: 'emergency' | 'warning' | 'info' | 'success',
@@ -270,6 +274,38 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsTourOpen(false);
   };
 
+  const confirmReroute = () => {
+    soundManager.playTacticalClick();
+    // Update RTE-01 to indicate confirmed active reroute
+    setRoutes((prev) =>
+      prev.map((r) =>
+        r.id === 'RTE-01'
+          ? {
+              ...r,
+              status: 'clear',
+              description: 'ACTIVE EVAC CORRIDOR: Rerouted rescue team and swarm safe transit confirmed via North Wing void.',
+            }
+          : r
+      )
+    );
+    setReroutePrompt(null);
+    addTacticalLog(
+      'success',
+      'AUTOPATH_REROUTE',
+      'RE-ROUTE CONFIRMED: Human rescue team & swarm diverted to Corridor Alpha-1. Hazard bypass established.'
+    );
+  };
+
+  const dismissReroute = () => {
+    soundManager.playTacticalClick();
+    setReroutePrompt(null);
+    addTacticalLog(
+      'warning',
+      'AUTOPATH_REROUTE',
+      'RE-ROUTE DEFERRED: Operator acknowledged Corridor Beta blockage. Manual squad navigation active.'
+    );
+  };
+
   // TRIGGER AFTERSHOCK SCENARIO
   const triggerAftershock = () => {
     soundManager.playEmergencyAlarm();
@@ -314,6 +350,15 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       'SEISMIC_ALERT',
       'SEISMIC EVENT DETECTED: Magnitude 5.2 Aftershock. Secondary collapse in Sector Beta. Auto-rerouting swarm!'
     );
+
+    // High-visibility reactive reroute prompt
+    setReroutePrompt({
+      isOpen: true,
+      blockedRouteId: 'RTE-02',
+      alternateRouteId: 'RTE-01',
+      title: '⚠️ CORRIDOR BETA BLOCKED BY JOIST COLLAPSE',
+      message: 'Secondary structural collapse rendered Corridor Beta impassable. Reroute human rescue squad & swarm via Corridor Alpha-1 (Safe Void)?',
+    });
   };
 
   // TRIGGER COMMS BLACKOUT SCENARIO
@@ -568,6 +613,10 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         toggleHazardStatus,
         setRobotTask,
         addTacticalLog,
+
+        reroutePrompt,
+        confirmReroute,
+        dismissReroute,
       }}
     >
       {children}

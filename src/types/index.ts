@@ -134,3 +134,11 @@ export interface MissionOverview {
   clearedRoutesCount: number;
   aftershockRiskLevel: 'LOW' | 'ELEVATED' | 'HIGH' | 'CRITICAL';
 }
+
+export interface ReroutePromptState {
+  isOpen: boolean;
+  blockedRouteId: string;
+  alternateRouteId: string;
+  title: string;
+  message: string;
+}

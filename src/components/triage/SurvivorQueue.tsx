@@ -153,44 +153,61 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
                 </div>
               )}
 
-              {/* Dispatch Action */}
-              <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
+              {/* Dispatch Action: Only robots with Medical/Life-Support capabilities */}
+              <div className="pt-2 border-t border-slate-800">
                 {isAssigned ? (
                   <div className="flex items-center gap-1.5 text-xs font-mono text-emerald-400">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>{surv.assignedRobotId} Assigned</span>
+                    <span>{surv.assignedRobotId} Assigned // Life Support En Route</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1 w-full">
-                    <select
-                      id={`assign-select-${surv.id}`}
-                      defaultValue="ROB-02"
-                      onClick={(e) => e.stopPropagation()}
-                      className="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1 font-mono focus:outline-none focus:border-cyan-500"
-                    >
-                      {robots
-                        .filter((r) => r.commsStatus !== 'disconnected')
-                        .map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.name} ({r.callsign})
-                          </option>
-                        ))}
-                    </select>
+                  <div>
+                    <div className="text-[9px] font-mono text-rose-300/80 mb-1 flex items-center justify-between">
+                      <span>AUTHORIZED LIFE-SUPPORT PAYLOADS:</span>
+                      <span className="text-slate-400">MED KIT / O2 LINE</span>
+                    </div>
+                    <div className="flex items-center gap-1 w-full">
+                      <select
+                        id={`assign-select-${surv.id}`}
+                        defaultValue="ROB-02"
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-slate-950 border border-rose-900/60 text-slate-200 text-xs rounded px-2 py-1 font-mono focus:outline-none focus:border-rose-500 max-w-[145px] truncate"
+                      >
+                        {robots
+                          .filter(
+                            (r) =>
+                              r.payload.toLowerCase().includes('med') ||
+                              r.payload.toLowerCase().includes('oxygen') ||
+                              r.payload.toLowerCase().includes('o2') ||
+                              r.id === 'ROB-02' ||
+                              r.id === 'ROB-03'
+                          )
+                          .map((r) => {
+                            const isOffline = r.commsStatus === 'disconnected';
+                            const payloadShort = r.id === 'ROB-02' ? 'Med Kit' : 'Micro-O2';
+                            return (
+                              <option key={r.id} value={r.id} disabled={isOffline}>
+                                {r.name} ({payloadShort}){isOffline ? ' • OFFLINE' : ''}
+                              </option>
+                            );
+                          })}
+                      </select>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const selectEl = document.getElementById(
-                          `assign-select-${surv.id}`
-                        ) as HTMLSelectElement;
-                        const targetBot = selectEl ? selectEl.value : 'ROB-02';
-                        dispatchRobotToSurvivor(targetBot, surv.id);
-                      }}
-                      className="flex-1 flex items-center justify-center gap-1 px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-medium shadow transition-colors"
-                    >
-                      <Send className="w-3 h-3" />
-                      <span>Dispatch Life Support</span>
-                    </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const selectEl = document.getElementById(
+                            `assign-select-${surv.id}`
+                          ) as HTMLSelectElement;
+                          const targetBot = selectEl ? selectEl.value : 'ROB-02';
+                          dispatchRobotToSurvivor(targetBot, surv.id);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1 px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-medium shadow transition-colors"
+                      >
+                        <Send className="w-3 h-3" />
+                        <span>Dispatch Life Support</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

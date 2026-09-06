@@ -6,20 +6,40 @@ class TacticalSoundManager {
     // Check localStorage preference
     const saved = localStorage.getItem('aegis_sound_muted');
     this.isMuted = saved === 'true';
+
+    // Autoplay guard: unlock AudioContext upon first user interaction
+    if (typeof window !== 'undefined') {
+      const unlockAudio = () => {
+        try {
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+          }
+        } catch {}
+      };
+      window.addEventListener('click', unlockAudio, { once: true, passive: true });
+      window.addEventListener('keydown', unlockAudio, { once: true, passive: true });
+      window.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+    }
   }
 
   private getContext(): AudioContext | null {
     if (this.isMuted) return null;
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (AudioCtx) {
-        this.ctx = new AudioCtx();
+    try {
+      if (!this.ctx && typeof window !== 'undefined') {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
       }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {
+          // Autoplay policy prevented resumption until user gesture; silently ignore
+        });
+      }
+      return this.ctx;
+    } catch {
+      return null;
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
-    return this.ctx;
   }
 
   public toggleMute(): boolean {
