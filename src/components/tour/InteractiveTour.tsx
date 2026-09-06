@@ -70,8 +70,8 @@ export const InteractiveTour: React.FC = () => {
       description:
         'This map combines old building blueprints with real-time drone scans. Hatched warning stripes mark unexplored danger zones where robots have not yet checked.',
       hint: 'Hover over or click any robot pin, survivor, or hazard on the map to see details.',
-      // Both panels closed — map is full width. Card centered on screen.
-      positionClasses: 'top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2',
+      // Both panels closed — map is full width. Card at top-center so the map is visible below.
+      positionClasses: 'top-20 left-1/2 -translate-x-1/2',
     },
     {
       step: 4,
@@ -82,8 +82,8 @@ export const InteractiveTour: React.FC = () => {
       description:
         'When concrete blocks radio signals, robots keep searching on their own and save data locally. Dropping a small relay restores full communication.',
       hint: 'Click "Eject Relay Beacon" or "Deploy RF Beacon" near Serpens to bring it back online.',
-      // Left panel is open. Card sits in the remaining center/right zone.
-      positionClasses: 'top-1/2 -translate-y-1/2 left-1/3',
+      // Left panel is open. Card at top of center zone so Serpens is visible on map below.
+      positionClasses: 'top-20 left-1/3',
     },
     {
       step: 5,
