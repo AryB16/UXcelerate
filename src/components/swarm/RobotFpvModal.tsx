@@ -18,6 +18,8 @@ export const RobotFpvModal: React.FC = () => {
     fpvRobotId,
     closeFpv,
     robots,
+    survivors,
+    hazards,
     deployBeaconAt,
     restoreComms,
     manualMoveRobot,
@@ -26,11 +28,17 @@ export const RobotFpvModal: React.FC = () => {
   const [activeFeed, setActiveFeed] = useState<'flir' | 'lidar' | 'optical' | 'spectrogram'>('flir');
   const [teleopHeading, setTeleopHeading] = useState<number>(180);
   const [gimbalPitch, setGimbalPitch] = useState<number>(-12);
-  const [camPanOffset, setCamPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [lastAction, setLastAction] = useState<string>('IDLE');
+  const [lastAction, setLastAction] = useState<string>('SYSTEM READY');
   const [isArmExtended, setIsArmExtended] = useState<boolean>(false);
 
   const robot = robots.find((r) => r.id === fpvRobotId);
+
+  // Sync teleopHeading with robot's initial heading on mount
+  useEffect(() => {
+    if (robot) {
+      setTeleopHeading(robot.heading);
+    }
+  }, [robot?.id]);
 
   // Keyboard shortcut listener for tele-op (WASD & Arrow keys)
   useEffect(() => {
@@ -43,33 +51,30 @@ export const RobotFpvModal: React.FC = () => {
         return;
       }
 
-      const moveDist = 8;
+      const moveStep = 10;
       if (key === 'w' || e.key === 'ArrowUp') {
         e.preventDefault();
         soundManager.playTacticalClick();
-        setGimbalPitch((p) => Math.min(30, p + 4));
-        setCamPanOffset((prev) => ({ x: prev.x, y: prev.y + 12 }));
-        setLastAction('DRIVE FORWARD');
+        setGimbalPitch((p) => Math.min(30, p + 3));
+        setLastAction('DRIVING FORWARD');
         const rad = (teleopHeading * Math.PI) / 180;
-        const dx = Math.sin(rad) * moveDist;
-        const dy = -Math.cos(rad) * moveDist;
+        const dx = Math.sin(rad) * moveStep;
+        const dy = -Math.cos(rad) * moveStep;
         manualMoveRobot(robot.id, dx, dy, teleopHeading);
       } else if (key === 's' || e.key === 'ArrowDown') {
         e.preventDefault();
         soundManager.playTacticalClick();
-        setGimbalPitch((p) => Math.max(-45, p - 4));
-        setCamPanOffset((prev) => ({ x: prev.x, y: prev.y - 12 }));
-        setLastAction('REVERSE');
+        setGimbalPitch((p) => Math.max(-45, p - 3));
+        setLastAction('REVERSING');
         const rad = (teleopHeading * Math.PI) / 180;
-        const dx = -Math.sin(rad) * moveDist;
-        const dy = Math.cos(rad) * moveDist;
+        const dx = -Math.sin(rad) * moveStep;
+        const dy = Math.cos(rad) * moveStep;
         manualMoveRobot(robot.id, dx, dy, teleopHeading);
       } else if (key === 'a' || e.key === 'ArrowLeft') {
         e.preventDefault();
         soundManager.playTacticalClick();
         const nextHdg = (teleopHeading - 15 + 360) % 360;
         setTeleopHeading(nextHdg);
-        setCamPanOffset((prev) => ({ x: prev.x - 14, y: prev.y }));
         setLastAction('YAW LEFT');
         manualMoveRobot(robot.id, 0, 0, nextHdg);
       } else if (key === 'd' || e.key === 'ArrowRight') {
@@ -77,7 +82,6 @@ export const RobotFpvModal: React.FC = () => {
         soundManager.playTacticalClick();
         const nextHdg = (teleopHeading + 15) % 360;
         setTeleopHeading(nextHdg);
-        setCamPanOffset((prev) => ({ x: prev.x + 14, y: prev.y }));
         setLastAction('YAW RIGHT');
         manualMoveRobot(robot.id, 0, 0, nextHdg);
       }
@@ -88,6 +92,18 @@ export const RobotFpvModal: React.FC = () => {
   }, [isFpvOpen, closeFpv, robot, teleopHeading, manualMoveRobot]);
 
   if (!isFpvOpen || !robot) return null;
+
+  const nearestSurvivor = survivors[0] || { id: 'SURV-01', label: 'Survivor #1', location: { x: 530, y: 160 } };
+  const distPx = Math.hypot(nearestSurvivor.location.x - robot.position.x, nearestSurvivor.location.y - robot.position.y);
+  const distMeters = (distPx * 0.15).toFixed(1);
+
+  const getCompassDirection = (deg: number) => {
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const index = Math.round(((deg % 360) / 45)) % 8;
+    return directions[index];
+  };
+
+  const thermalScale = Math.max(0.7, Math.min(1.8, 28 / Math.max(10, Number(distMeters))));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
@@ -237,13 +253,8 @@ export const RobotFpvModal: React.FC = () => {
               </div>
             )}
 
-            {/* Simulated Multispectral Visualizations */}
-            <div
-              className="w-full h-full relative flex items-center justify-center overflow-hidden rounded-md transition-transform duration-150 ease-out"
-              style={{
-                transform: `translate(${camPanOffset.x}px, ${camPanOffset.y}px) rotate(${(teleopHeading - 180) * 0.15}deg)`,
-              }}
-            >
+            {/* Simulated Multispectral Visualizations - Frame stays fixed */}
+            <div className="w-full h-full relative flex items-center justify-center overflow-hidden rounded-md bg-black">
               
               {/* FLIR THERMAL RADIOMETRIC VIEW (Real-World White-Hot / Ironbow) */}
               {activeFeed === 'flir' && (
@@ -252,13 +263,16 @@ export const RobotFpvModal: React.FC = () => {
                   <div className="absolute inset-6 border border-slate-700/50 rounded pointer-events-none" />
                   <div className="absolute top-10 left-12 w-64 h-32 border-b border-r border-slate-800 pointer-events-none" />
                   
-                  {/* Real Radiometric White-Hot Human Body Heat Signature */}
-                  <div className="relative flex items-center justify-center">
+                  {/* Real Radiometric White-Hot Human Body Heat Signature - scales with proximity */}
+                  <div
+                    className="relative flex items-center justify-center transition-transform duration-200"
+                    style={{ transform: `scale(${thermalScale})` }}
+                  >
                     <div className="w-36 h-36 rounded-full bg-amber-500/20 blur-2xl" />
                     <div className="w-24 h-24 rounded-full bg-amber-300/40 blur-xl" />
                     <div className="w-12 h-12 rounded-full bg-white/95 blur-xs animate-pulse" />
                     <div className="absolute -top-10 px-2.5 py-1 rounded bg-black/90 border border-amber-400 text-amber-300 text-[10px] font-mono tracking-wide">
-                      SPOT [37.1°C] // BIO-THERMAL SIGNATURE
+                      SPOT [37.1°C] // BIO-SIGNATURE ({distMeters}m)
                     </div>
                   </div>
 
@@ -298,7 +312,7 @@ export const RobotFpvModal: React.FC = () => {
                   <div className="absolute top-1/3 left-1/2 w-4 h-4 rounded-full bg-cyan-300 blur-[1px]" />
                   <div className="absolute bottom-1/3 right-1/3 w-5 h-5 rounded-full bg-cyan-400 blur-[1px]" />
                   <div className="absolute bottom-6 left-6 text-cyan-300 font-mono text-xs bg-black/80 px-2.5 py-1 rounded-sm border border-slate-800 backdrop-blur">
-                    OBSTACLE RADAR: FORWARD CLEARANCE 1.42m
+                    OBSTACLE RADAR: FORWARD CLEARANCE {Math.max(0.5, (Number(distMeters) * 0.35)).toFixed(2)}m
                   </div>
                 </div>
               )}
@@ -339,6 +353,94 @@ export const RobotFpvModal: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* Top Center Tactical Compass Azimuth HUD */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/85 border border-slate-700/80 px-4 py-1.5 rounded-md font-mono text-[11px] text-cyan-300 backdrop-blur shadow-lg z-20 pointer-events-none select-none">
+                <span className="font-bold tracking-wider text-slate-100">{teleopHeading}° {getCompassDirection(teleopHeading)}</span>
+                <span className="text-slate-600">|</span>
+                <span className="text-slate-300">TILT: {gimbalPitch}°</span>
+                <span className="text-slate-600">|</span>
+                <span className="text-rose-400 font-bold">BIO-PROX: {distMeters}m</span>
+              </div>
+
+              {/* Picture-in-Picture Tactical Overhead Mini-Map */}
+              <div className="absolute bottom-4 left-4 z-20 w-48 h-40 bg-[#060b14]/95 border border-cyan-500/60 rounded-md p-1.5 shadow-2xl backdrop-blur flex flex-col select-none pointer-events-none">
+                <div className="flex items-center justify-between text-[9px] font-mono text-cyan-300 font-bold border-b border-slate-800 pb-1 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                    <span>OVERHEAD PiP</span>
+                  </div>
+                  <span className="text-slate-400 font-normal">[{robot.position.x}, {robot.position.y}]</span>
+                </div>
+
+                <div className="flex-1 relative bg-[#03060c] rounded overflow-hidden border border-slate-800/80">
+                  <svg viewBox="0 0 800 640" className="w-full h-full">
+                    {/* Blueprint Sectors */}
+                    <rect x="40" y="40" width="340" height="260" fill="rgba(6, 182, 212, 0.05)" stroke="#334155" strokeWidth="2" strokeDasharray="4,4" />
+                    <rect x="420" y="40" width="340" height="260" fill="rgba(244, 63, 94, 0.05)" stroke="#334155" strokeWidth="2" strokeDasharray="4,4" />
+                    <rect x="420" y="340" width="340" height="280" fill="rgba(245, 158, 11, 0.05)" stroke="#334155" strokeWidth="2" strokeDasharray="4,4" />
+                    <rect x="40" y="340" width="340" height="280" fill="rgba(16, 185, 129, 0.05)" stroke="#334155" strokeWidth="2" strokeDasharray="4,4" />
+                    
+                    {/* Main Structural Corridors */}
+                    <line x1="260" y1="150" x2="450" y2="170" stroke="#475569" strokeWidth="4" />
+                    <line x1="450" y1="170" x2="530" y2="160" stroke="#475569" strokeWidth="4" strokeDasharray="4,4" />
+                    <line x1="450" y1="170" x2="450" y2="320" stroke="#475569" strokeWidth="4" />
+                    <line x1="450" y1="320" x2="590" y2="440" stroke="#475569" strokeWidth="4" />
+                    
+                    {/* Survivors Pins */}
+                    {survivors?.map((s) => (
+                      <circle key={s.id} cx={s.location.x} cy={s.location.y} r="10" fill="#f43f5e" opacity="0.9" />
+                    ))}
+
+                    {/* Hazards Pins */}
+                    {hazards?.map((h) => (
+                      <circle key={h.id} cx={h.location.x} cy={h.location.y} r="8" fill="#f59e0b" opacity="0.8" />
+                    ))}
+
+                    {/* Other Robots */}
+                    {robots
+                      .filter((r) => r.id !== robot.id)
+                      .map((r) => (
+                        <circle key={r.id} cx={r.position.x} cy={r.position.y} r="7" fill="#64748b" opacity="0.7" />
+                      ))}
+
+                    {/* Current Robot with Heading Cone */}
+                    {(() => {
+                      const rad = (teleopHeading * Math.PI) / 180;
+                      const coneRadius = 65;
+                      const angleSpan = Math.PI / 3.5;
+                      const x1 = robot.position.x + coneRadius * Math.sin(rad - angleSpan);
+                      const y1 = robot.position.y - coneRadius * Math.cos(rad - angleSpan);
+                      const x2 = robot.position.x + coneRadius * Math.sin(rad + angleSpan);
+                      const y2 = robot.position.y - coneRadius * Math.cos(rad + angleSpan);
+
+                      return (
+                        <g>
+                          {/* Dynamic Directional Vision Cone */}
+                          <path
+                            d={`M ${robot.position.x} ${robot.position.y} L ${x1} ${y1} A ${coneRadius} ${coneRadius} 0 0 1 ${x2} ${y2} Z`}
+                            fill="rgba(6, 182, 212, 0.35)"
+                            stroke="#06b6d4"
+                            strokeWidth="2"
+                          />
+                          {/* Center Heading Vector */}
+                          <line
+                            x1={robot.position.x}
+                            y1={robot.position.y}
+                            x2={robot.position.x + 40 * Math.sin(rad)}
+                            y2={robot.position.y - 40 * Math.cos(rad)}
+                            stroke="#22d3ee"
+                            strokeWidth="2.5"
+                          />
+                          {/* Robot Center Pin */}
+                          <circle cx={robot.position.x} cy={robot.position.y} r="12" fill="#0284c7" stroke="#38bdf8" strokeWidth="2" />
+                          <circle cx={robot.position.x} cy={robot.position.y} r="5" fill="#ffffff" />
+                        </g>
+                      );
+                    })()}
+                  </svg>
+                </div>
+              </div>
 
               {/* HUD Crosshairs Overlay */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
@@ -381,14 +483,13 @@ export const RobotFpvModal: React.FC = () => {
                 <button
                   onClick={() => {
                     soundManager.playTacticalClick();
-                    setGimbalPitch((p) => Math.min(30, p + 4));
-                    setCamPanOffset((prev) => ({ x: prev.x, y: prev.y + 12 }));
-                    setLastAction('DRIVE FORWARD');
+                    setGimbalPitch((p) => Math.min(30, p + 3));
+                    setLastAction('DRIVING FORWARD');
                     const rad = (teleopHeading * Math.PI) / 180;
-                    manualMoveRobot(robot.id, Math.sin(rad) * 8, -Math.cos(rad) * 8, teleopHeading);
+                    manualMoveRobot(robot.id, Math.sin(rad) * 10, -Math.cos(rad) * 10, teleopHeading);
                   }}
                   className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 active:scale-95 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-all shadow"
-                  title="Move Forward (W / Up)"
+                  title="Drive Forward (W / Up)"
                 >
                   W
                 </button>
@@ -398,7 +499,6 @@ export const RobotFpvModal: React.FC = () => {
                       soundManager.playTacticalClick();
                       const nextHdg = (teleopHeading - 15 + 360) % 360;
                       setTeleopHeading(nextHdg);
-                      setCamPanOffset((prev) => ({ x: prev.x - 14, y: prev.y }));
                       setLastAction('YAW LEFT');
                       manualMoveRobot(robot.id, 0, 0, nextHdg);
                     }}
@@ -411,7 +511,6 @@ export const RobotFpvModal: React.FC = () => {
                     onClick={() => {
                       soundManager.playTacticalClick();
                       setGimbalPitch(0);
-                      setCamPanOffset({ x: 0, y: 0 });
                       setLastAction('GIMBAL CENTERED');
                     }}
                     className="w-12 h-10 rounded bg-slate-900 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-[10px] active:scale-95 transition-all"
@@ -424,7 +523,6 @@ export const RobotFpvModal: React.FC = () => {
                       soundManager.playTacticalClick();
                       const nextHdg = (teleopHeading + 15) % 360;
                       setTeleopHeading(nextHdg);
-                      setCamPanOffset((prev) => ({ x: prev.x + 14, y: prev.y }));
                       setLastAction('YAW RIGHT');
                       manualMoveRobot(robot.id, 0, 0, nextHdg);
                     }}
@@ -437,11 +535,10 @@ export const RobotFpvModal: React.FC = () => {
                 <button
                   onClick={() => {
                     soundManager.playTacticalClick();
-                    setGimbalPitch((p) => Math.max(-45, p - 4));
-                    setCamPanOffset((prev) => ({ x: prev.x, y: prev.y - 12 }));
-                    setLastAction('REVERSE');
+                    setGimbalPitch((p) => Math.max(-45, p - 3));
+                    setLastAction('REVERSING');
                     const rad = (teleopHeading * Math.PI) / 180;
-                    manualMoveRobot(robot.id, -Math.sin(rad) * 8, Math.cos(rad) * 8, teleopHeading);
+                    manualMoveRobot(robot.id, -Math.sin(rad) * 10, Math.cos(rad) * 10, teleopHeading);
                   }}
                   className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 active:scale-95 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-all shadow"
                   title="Reverse (S / Down)"
@@ -450,8 +547,19 @@ export const RobotFpvModal: React.FC = () => {
                 </button>
               </div>
 
-              <div className="mt-2 text-[9px] text-slate-400 text-center">
-                COORD: [{robot.position.x}, {robot.position.y}] • TILT: {gimbalPitch}°
+              <div className="mt-2 p-2 rounded bg-slate-950 border border-slate-800 space-y-1 text-[10px]">
+                <div className="flex justify-between text-slate-400">
+                  <span>POSITION:</span>
+                  <span className="text-cyan-300 font-bold">X: {robot.position.x} • Y: {robot.position.y}</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>HEADING:</span>
+                  <span className="text-white font-bold">{teleopHeading}° ({getCompassDirection(teleopHeading)})</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>TARGET DIST:</span>
+                  <span className="text-rose-400 font-bold">{distMeters}m</span>
+                </div>
               </div>
             </div>
 
