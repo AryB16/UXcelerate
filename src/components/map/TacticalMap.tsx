@@ -1522,13 +1522,20 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   <strong className="text-amber-400">Entrapment:</strong> Depth {selectedSurvivor.location.depthMeters}m • {selectedSurvivor.notes}
                 </div>
 
-                <button
-                  onClick={() => dispatchRobotToSurvivor('ROB-02', selectedSurvivor.id)}
-                  className="w-full py-1.5 px-3 rounded-md bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Dispatch Vulcan-X Life Support</span>
-                </button>
+                {selectedSurvivor.assignedRobotId ? (
+                  <div className="w-full py-2 px-3 rounded-md bg-emerald-950/80 border border-emerald-600 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span>✓ {selectedSurvivor.assignedRobotId} En Route (Life Support Deployed)</span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => dispatchRobotToSurvivor('ROB-02', selectedSurvivor.id)}
+                    className="w-full py-2 px-3 rounded-md bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Dispatch Vulcan-X Life Support</span>
+                  </button>
+                )}
               </div>
             )}
 

@@ -74,6 +74,7 @@ interface MissionContextType {
   discoverNewSurvivor: () => void;
   deployBeaconAt: (x: number, y: number, label?: string) => void;
   dispatchRobotToSurvivor: (robotId: string, survivorId: string) => void;
+  manualMoveRobot: (robotId: string, dx: number, dy: number, newHeading?: number) => void;
   toggleHazardStatus: (hazardId: string) => void;
   setRobotTask: (robotId: string, task: string) => void;
   addTacticalLog: (type: 'emergency' | 'warning' | 'info' | 'success', source: string, message: string, relatedId?: string) => void;
@@ -545,29 +546,95 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const dispatchRobotToSurvivor = (robotId: string, survivorId: string) => {
-    soundManager.playTacticalClick();
+    soundManager.playSonarPing();
+
+    const targetSurvivor = survivors.find((s) => s.id === survivorId);
+    const targetRobot = robots.find((r) => r.id === robotId);
+    const robotName = targetRobot?.name || robotId;
+    const survLabel = targetSurvivor?.label || survivorId;
 
     setSurvivors((prev) =>
       prev.map((s) => (s.id === survivorId ? { ...s, assignedRobotId: robotId } : s))
     );
 
+    // Update robot status immediately to dispatched
     setRobots((prev) =>
       prev.map((r) =>
         r.id === robotId
           ? {
               ...r,
               status: 'triage_standby',
-              currentTask: `DISPATCHED: Delivering life support payload to ${survivorId}`,
+              currentTask: `DISPATCHED: En route with life-support payload to ${survLabel}`,
             }
           : r
       )
     );
 
     addTacticalLog(
-      'info',
-      'DISPATCH',
-      `DISPATCH ORDER: ${robotId} assigned to ${survivorId}. Life-support payload delivery in progress.`,
+      'success',
+      'C2_DISPATCH',
+      `DISPATCH ORDER CONFIRMED: ${robotName} deployed to ${survLabel}. Delivering emergency life-support payload.`,
       survivorId
+    );
+
+    // Animate robot approaching survivor on the map in smooth incremental steps
+    if (targetSurvivor) {
+      let step = 0;
+      const totalSteps = 16;
+      const moveInterval = setInterval(() => {
+        step += 1;
+        setRobots((prev) =>
+          prev.map((r) => {
+            if (r.id !== robotId) return r;
+            const curX = r.position.x;
+            const curY = r.position.y;
+            const destX = targetSurvivor.location.x + (Math.random() * 20 - 10);
+            const destY = targetSurvivor.location.y + (Math.random() * 20 - 10);
+            const newX = curX + (destX - curX) * 0.18;
+            const newY = curY + (destY - curY) * 0.18;
+            const angleDeg = Math.round((Math.atan2(destY - curY, destX - curX) * 180) / Math.PI);
+            return {
+              ...r,
+              heading: (angleDeg + 360) % 360,
+              position: {
+                ...r.position,
+                x: Math.round(newX),
+                y: Math.round(newY),
+              },
+            };
+          })
+        );
+
+        if (step >= totalSteps) {
+          clearInterval(moveInterval);
+          addTacticalLog(
+            'success',
+            'TRIAGE_ARRIVAL',
+            `${robotName} arrived on-site at ${survLabel}. Life-support line attached. Vitals stabilized.`,
+            survivorId
+          );
+        }
+      }, 250);
+    }
+  };
+
+  const manualMoveRobot = (robotId: string, dx: number, dy: number, newHeading?: number) => {
+    setRobots((prev) =>
+      prev.map((r) => {
+        if (r.id !== robotId) return r;
+        const nextX = Math.max(40, Math.min(760, r.position.x + dx));
+        const nextY = Math.max(40, Math.min(620, r.position.y + dy));
+        return {
+          ...r,
+          position: {
+            ...r.position,
+            x: Math.round(nextX),
+            y: Math.round(nextY),
+          },
+          heading: newHeading !== undefined ? newHeading : r.heading,
+          battery: Math.max(1, r.battery - 0.05),
+        };
+      })
     );
   };
 
@@ -641,6 +708,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         discoverNewSurvivor,
         deployBeaconAt,
         dispatchRobotToSurvivor,
+        manualMoveRobot,
         toggleHazardStatus,
         setRobotTask,
         addTacticalLog,

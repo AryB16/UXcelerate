@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useMission } from '../../store/MissionContext';
 import { Survivor, TriageCategory } from '../../types';
 import {
@@ -21,6 +21,8 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
     selectSurvivor,
     dispatchRobotToSurvivor,
   } = useMission();
+
+  const [selectedBots, setSelectedBots] = useState<Record<string, string>>({});
 
   const totalSurv = Math.max(1, survivors.length);
   const immediateCount = survivors.filter((s) => s.triage === 'immediate').length;
@@ -148,8 +150,12 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
               ) : (
                 <div className="flex items-center gap-1.5">
                   <select
-                    id={`assign-select-${surv.id}`}
-                    defaultValue="ROB-02"
+                    value={selectedBots[surv.id] || 'ROB-02'}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      const val = e.target.value;
+                      setSelectedBots((prev) => ({ ...prev, [surv.id]: val }));
+                    }}
                     onClick={(e) => e.stopPropagation()}
                     className="bg-[#080d1a] border border-slate-700 text-slate-300 text-xs rounded-sm px-2 h-7 font-mono focus:outline-none focus:border-cyan-500 max-w-[125px] shrink-0"
                   >
@@ -171,13 +177,10 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      const selectEl = document.getElementById(
-                        `assign-select-${surv.id}`
-                      ) as HTMLSelectElement;
-                      const targetBot = selectEl ? selectEl.value : 'ROB-02';
+                      const targetBot = selectedBots[surv.id] || 'ROB-02';
                       dispatchRobotToSurvivor(targetBot, surv.id);
                     }}
-                    className="h-7 px-3 text-xs font-mono font-medium rounded-sm bg-slate-800 hover:bg-rose-700 text-white border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
+                    className="h-7 px-3 text-xs font-mono font-medium rounded-sm bg-rose-600 hover:bg-rose-500 active:scale-95 text-white border border-rose-500 transition-all flex items-center justify-center gap-1.5 shadow"
                   >
                     <Send className="w-3 h-3" />
                     <span>🚨 Dispatch</span>

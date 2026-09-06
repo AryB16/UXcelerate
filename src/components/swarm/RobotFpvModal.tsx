@@ -20,42 +20,72 @@ export const RobotFpvModal: React.FC = () => {
     robots,
     deployBeaconAt,
     restoreComms,
+    manualMoveRobot,
   } = useMission();
 
   const [activeFeed, setActiveFeed] = useState<'flir' | 'lidar' | 'optical' | 'spectrogram'>('flir');
   const [teleopHeading, setTeleopHeading] = useState<number>(180);
   const [gimbalPitch, setGimbalPitch] = useState<number>(-12);
+  const [camPanOffset, setCamPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [lastAction, setLastAction] = useState<string>('IDLE');
   const [isArmExtended, setIsArmExtended] = useState<boolean>(false);
 
   const robot = robots.find((r) => r.id === fpvRobotId);
 
-  // Keyboard shortcut listener for tele-op
+  // Keyboard shortcut listener for tele-op (WASD & Arrow keys)
   useEffect(() => {
-    if (!isFpvOpen) return;
+    if (!isFpvOpen || !robot) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeFpv();
-      if (e.key === 'w' || e.key === 'ArrowUp') {
-        soundManager.playTacticalClick();
-        setGimbalPitch((p) => Math.min(30, p + 5));
+      const key = e.key.toLowerCase();
+      if (e.key === 'Escape') {
+        closeFpv();
+        return;
       }
-      if (e.key === 's' || e.key === 'ArrowDown') {
+
+      const moveDist = 8;
+      if (key === 'w' || e.key === 'ArrowUp') {
+        e.preventDefault();
         soundManager.playTacticalClick();
-        setGimbalPitch((p) => Math.max(-45, p - 5));
-      }
-      if (e.key === 'a' || e.key === 'ArrowLeft') {
+        setGimbalPitch((p) => Math.min(30, p + 4));
+        setCamPanOffset((prev) => ({ x: prev.x, y: prev.y + 12 }));
+        setLastAction('DRIVE FORWARD');
+        const rad = (teleopHeading * Math.PI) / 180;
+        const dx = Math.sin(rad) * moveDist;
+        const dy = -Math.cos(rad) * moveDist;
+        manualMoveRobot(robot.id, dx, dy, teleopHeading);
+      } else if (key === 's' || e.key === 'ArrowDown') {
+        e.preventDefault();
         soundManager.playTacticalClick();
-        setTeleopHeading((h) => (h - 10 + 360) % 360);
-      }
-      if (e.key === 'd' || e.key === 'ArrowRight') {
+        setGimbalPitch((p) => Math.max(-45, p - 4));
+        setCamPanOffset((prev) => ({ x: prev.x, y: prev.y - 12 }));
+        setLastAction('REVERSE');
+        const rad = (teleopHeading * Math.PI) / 180;
+        const dx = -Math.sin(rad) * moveDist;
+        const dy = Math.cos(rad) * moveDist;
+        manualMoveRobot(robot.id, dx, dy, teleopHeading);
+      } else if (key === 'a' || e.key === 'ArrowLeft') {
+        e.preventDefault();
         soundManager.playTacticalClick();
-        setTeleopHeading((h) => (h + 10) % 360);
+        const nextHdg = (teleopHeading - 15 + 360) % 360;
+        setTeleopHeading(nextHdg);
+        setCamPanOffset((prev) => ({ x: prev.x - 14, y: prev.y }));
+        setLastAction('YAW LEFT');
+        manualMoveRobot(robot.id, 0, 0, nextHdg);
+      } else if (key === 'd' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        soundManager.playTacticalClick();
+        const nextHdg = (teleopHeading + 15) % 360;
+        setTeleopHeading(nextHdg);
+        setCamPanOffset((prev) => ({ x: prev.x + 14, y: prev.y }));
+        setLastAction('YAW RIGHT');
+        manualMoveRobot(robot.id, 0, 0, nextHdg);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFpvOpen, closeFpv]);
+  }, [isFpvOpen, closeFpv, robot, teleopHeading, manualMoveRobot]);
 
   if (!isFpvOpen || !robot) return null;
 
@@ -208,7 +238,12 @@ export const RobotFpvModal: React.FC = () => {
             )}
 
             {/* Simulated Multispectral Visualizations */}
-            <div className="w-full h-full relative flex items-center justify-center overflow-hidden rounded-md">
+            <div
+              className="w-full h-full relative flex items-center justify-center overflow-hidden rounded-md transition-transform duration-150 ease-out"
+              style={{
+                transform: `translate(${camPanOffset.x}px, ${camPanOffset.y}px) rotate(${(teleopHeading - 180) * 0.15}deg)`,
+              }}
+            >
               
               {/* FLIR THERMAL RADIOMETRIC VIEW (Real-World White-Hot / Ironbow) */}
               {activeFeed === 'flir' && (
@@ -336,13 +371,24 @@ export const RobotFpvModal: React.FC = () => {
                 <span className="text-[10px] text-cyan-400">[WASD KEYS]</span>
               </div>
 
+              {/* Status pill of last action */}
+              <div className="flex items-center justify-between px-2 py-1 mb-2 rounded bg-slate-950 border border-slate-800 text-[10px]">
+                <span className="text-slate-400">TELE-OP STATUS:</span>
+                <span className="text-cyan-300 font-bold tracking-wider">{lastAction}</span>
+              </div>
+
               <div className="flex flex-col items-center gap-1.5 my-2">
                 <button
                   onClick={() => {
                     soundManager.playTacticalClick();
-                    setGimbalPitch((p) => Math.min(30, p + 5));
+                    setGimbalPitch((p) => Math.min(30, p + 4));
+                    setCamPanOffset((prev) => ({ x: prev.x, y: prev.y + 12 }));
+                    setLastAction('DRIVE FORWARD');
+                    const rad = (teleopHeading * Math.PI) / 180;
+                    manualMoveRobot(robot.id, Math.sin(rad) * 8, -Math.cos(rad) * 8, teleopHeading);
                   }}
-                  className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-colors"
+                  className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 active:scale-95 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-all shadow"
+                  title="Move Forward (W / Up)"
                 >
                   W
                 </button>
@@ -350,9 +396,14 @@ export const RobotFpvModal: React.FC = () => {
                   <button
                     onClick={() => {
                       soundManager.playTacticalClick();
-                      setTeleopHeading((h) => (h - 10 + 360) % 360);
+                      const nextHdg = (teleopHeading - 15 + 360) % 360;
+                      setTeleopHeading(nextHdg);
+                      setCamPanOffset((prev) => ({ x: prev.x - 14, y: prev.y }));
+                      setLastAction('YAW LEFT');
+                      manualMoveRobot(robot.id, 0, 0, nextHdg);
                     }}
-                    className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-colors"
+                    className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 active:scale-95 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-all shadow"
+                    title="Turn Left (A / Left)"
                   >
                     A
                   </button>
@@ -360,8 +411,10 @@ export const RobotFpvModal: React.FC = () => {
                     onClick={() => {
                       soundManager.playTacticalClick();
                       setGimbalPitch(0);
+                      setCamPanOffset({ x: 0, y: 0 });
+                      setLastAction('GIMBAL CENTERED');
                     }}
-                    className="w-12 h-10 rounded bg-slate-900 border border-slate-700 text-slate-400 flex items-center justify-center text-[10px]"
+                    className="w-12 h-10 rounded bg-slate-900 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-[10px] active:scale-95 transition-all"
                     title="Center Gimbal"
                   >
                     CTR
@@ -369,9 +422,14 @@ export const RobotFpvModal: React.FC = () => {
                   <button
                     onClick={() => {
                       soundManager.playTacticalClick();
-                      setTeleopHeading((h) => (h + 10) % 360);
+                      const nextHdg = (teleopHeading + 15) % 360;
+                      setTeleopHeading(nextHdg);
+                      setCamPanOffset((prev) => ({ x: prev.x + 14, y: prev.y }));
+                      setLastAction('YAW RIGHT');
+                      manualMoveRobot(robot.id, 0, 0, nextHdg);
                     }}
-                    className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-colors"
+                    className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 active:scale-95 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-all shadow"
+                    title="Turn Right (D / Right)"
                   >
                     D
                   </button>
@@ -379,12 +437,21 @@ export const RobotFpvModal: React.FC = () => {
                 <button
                   onClick={() => {
                     soundManager.playTacticalClick();
-                    setGimbalPitch((p) => Math.max(-45, p - 5));
+                    setGimbalPitch((p) => Math.max(-45, p - 4));
+                    setCamPanOffset((prev) => ({ x: prev.x, y: prev.y - 12 }));
+                    setLastAction('REVERSE');
+                    const rad = (teleopHeading * Math.PI) / 180;
+                    manualMoveRobot(robot.id, -Math.sin(rad) * 8, Math.cos(rad) * 8, teleopHeading);
                   }}
-                  className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-colors"
+                  className="w-12 h-10 rounded bg-slate-800 hover:bg-cyan-600 active:scale-95 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center font-bold transition-all shadow"
+                  title="Reverse (S / Down)"
                 >
                   S
                 </button>
+              </div>
+
+              <div className="mt-2 text-[9px] text-slate-400 text-center">
+                COORD: [{robot.position.x}, {robot.position.y}] • TILT: {gimbalPitch}°
               </div>
             </div>
 
