@@ -41,7 +41,7 @@ export const MissionHeader: React.FC = () => {
       <div className="h-6 bg-[#090d14] border-b border-amber-500/20 px-3 flex items-center justify-between text-[10px] font-mono shrink-0 overflow-x-auto no-scrollbar">
         <div className="flex items-center gap-2 text-amber-400/90 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-          <span className="font-bold tracking-wider">[EVALUATOR TEST BENCH // LIVE SCENARIO INJECTORS]</span>
+          <span className="font-bold tracking-wider">[TEST SCENARIO CONTROLS]</span>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
@@ -56,40 +56,40 @@ export const MissionHeader: React.FC = () => {
 
           <button
             onClick={() => triggerCommsDrop()}
-            title="Simulate RF Mesh Disconnect & Store-and-Forward"
+            title="Disconnect Radio Signal (Test Offline Mode)"
             className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-transparent hover:bg-slate-800 text-rose-400/90 border border-slate-800 text-[10px] transition-colors"
           >
             <WifiOff className="w-2.5 h-2.5 text-rose-400" />
-            <span>Sever RF Mesh</span>
+            <span>Cut Signal</span>
           </button>
 
           <button
             onClick={discoverNewSurvivor}
-            title="Simulate Biosignal Detection"
+            title="Find a New Survivor"
             className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-transparent hover:bg-slate-800 text-emerald-400/90 border border-slate-800 text-[10px] transition-colors"
           >
             <Zap className="w-2.5 h-2.5 text-emerald-400" />
-            <span>+Discover Survivor</span>
+            <span>+Find Survivor</span>
           </button>
 
           <span className="text-slate-700 px-0.5">|</span>
 
           <button
             onClick={startTour}
-            title="Start 30-Second Guided Walkthrough"
+            title="Start quick guided tutorial"
             className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-transparent hover:bg-slate-800 text-cyan-300 border border-slate-800 text-[10px] transition-colors"
           >
             <Sparkles className="w-2.5 h-2.5 text-cyan-400 animate-spin" />
-            <span>Tour (45s)</span>
+            <span>Quick Tour</span>
           </button>
 
           <button
             onClick={() => setIsCaseStudyOpen(true)}
-            title="Open Complete UX Design Case Study"
+            title="Open Design Case Study"
             className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-transparent hover:bg-slate-800 text-cyan-300 border border-slate-800 text-[10px] transition-colors"
           >
             <BookOpen className="w-2.5 h-2.5" />
-            <span>UX Case Study</span>
+            <span>Case Study</span>
           </button>
         </div>
       </div>

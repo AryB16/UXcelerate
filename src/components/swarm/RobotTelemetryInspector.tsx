@@ -150,29 +150,29 @@ export const RobotTelemetryInspector: React.FC = () => {
         <button
           onClick={() => openFpv(selectedRobot.id)}
           className="flex-1 h-7 flex items-center justify-center gap-1.5 px-2 rounded-sm bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-[11px] font-bold shadow transition-colors"
-          title={`Launch Direct FPV Cockpit for ${selectedRobot.name}`}
+          title={`Watch live camera for ${selectedRobot.name}`}
         >
           <Eye className="w-3.5 h-3.5" />
-          <span>🎮 Launch FPV Cockpit</span>
+          <span>Live Camera</span>
         </button>
 
         {isDisconnected ? (
           <button
             onClick={() => restoreComms(selectedRobot.id)}
             className="flex-1 h-7 flex items-center justify-center gap-1 px-2 rounded-sm bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[11px] font-bold shadow transition-colors"
-            title="Sync buffered telemetry packets"
+            title="Reconnect robot and download saved data"
           >
             <RotateCw className="w-3.5 h-3.5" />
-            <span>Sync Comms</span>
+            <span>Reconnect</span>
           </button>
         ) : (
           <button
             onClick={() => deployBeaconAt(selectedRobot.position.x, selectedRobot.position.y, `Relay by ${selectedRobot.name}`)}
             className="flex-1 h-7 flex items-center justify-center gap-1 px-2 rounded-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-mono text-[11px] font-medium transition-colors"
-            title="Deploy Breadcrumb Mesh Beacon"
+            title="Drop a signal booster here"
           >
             <Radio className="w-3.5 h-3.5 text-emerald-400" />
-            <span>📡 Eject Relay Beacon</span>
+            <span>Drop Signal Relay</span>
           </button>
         )}
       </div>
