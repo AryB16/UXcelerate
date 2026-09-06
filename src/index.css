@@ -165,35 +165,49 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   cursor: pointer;
   user-select: none;
   position: relative;
+  width: 90px;
+  margin-left: -45px;
+  margin-top: -15px;
+}
+
+.marker-badge-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
 }
 
 .marker-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  background-color: #082f49;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background-color: #071927;
   border: 1.5px solid #38bdf8;
   color: #38bdf8;
-  font-weight: bold;
+  font-weight: 800;
   font-size: 11px;
   font-family: 'JetBrains Mono', monospace;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
-  transition: all 0.2s ease;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6), inset 0 0 6px rgba(56, 189, 248, 0.2);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
 }
 
 .tactical-leaflet-marker:hover .marker-badge,
 .tactical-leaflet-marker.selected .marker-badge {
-  transform: scale(1.15);
+  transform: scale(1.18);
   background-color: #0284c7;
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.9);
+  border-color: #ffffff;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.95), 0 0 30px rgba(56, 189, 248, 0.5);
 }
 
 .tactical-leaflet-marker.ghost .marker-badge {
@@ -201,52 +215,114 @@
   border-color: #f43f5e;
   background-color: #4c0519;
   color: #fda4af;
-  box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.6);
 }
 
 .marker-badge.survivor-badge {
-  background-color: #450a0a;
+  background-color: #3f0708;
   border-color: #ef4444;
   color: #fca5a5;
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.7);
 }
 
 .tactical-leaflet-marker.survivor:hover .marker-badge,
 .tactical-leaflet-marker.survivor.selected .marker-badge {
   background-color: #dc2626;
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(239, 68, 68, 0.95);
+  border-color: #fecaca;
+  box-shadow: 0 0 22px rgba(239, 68, 68, 0.95);
 }
 
 .marker-badge.hazard-badge {
-  background-color: #451a03;
+  background-color: #3b1404;
   border-color: #f59e0b;
   color: #fcd34d;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.7);
 }
 
 .marker-badge.beacon-badge {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   font-size: 9px;
-  background-color: #064e3b;
+  background-color: #063c2c;
   border-color: #10b981;
   color: #6ee7b7;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.tactical-bot-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: 1.5px solid #38bdf8;
+  opacity: 0.7;
+  animation: tactical-radar-pulse 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tactical-leaflet-marker.ghost .tactical-bot-pulse {
+  border-color: #f43f5e;
+  animation-duration: 1.4s;
+}
+
+.tactical-surv-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: 1.5px solid #ef4444;
+  opacity: 0.75;
+  animation: tactical-radar-pulse 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes tactical-radar-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
 }
 
 .marker-callsign {
-  font-size: 8px;
+  display: inline-block;
+  max-width: 86px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-size: 8.5px;
   font-family: 'JetBrains Mono', monospace;
-  font-weight: bold;
-  color: #7dd3fc;
-  background: rgba(8, 16, 30, 0.85);
-  padding: 1px 3px;
-  border-radius: 2px;
-  margin-top: 2px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #bae6fd;
+  background: rgba(4, 10, 20, 0.92);
+  padding: 1.5px 4px;
+  border-radius: 3px;
+  margin-top: 3px;
   white-space: nowrap;
   pointer-events: none;
-  border: 0.5px solid rgba(56, 189, 248, 0.3);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
+}
+
+.tactical-leaflet-marker.selected .marker-callsign {
+  color: #ffffff;
+  background: rgba(2, 132, 199, 0.95);
+  border-color: #ffffff;
 }
 
 .leaflet-tooltip {

@@ -240,17 +240,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
       const markerHtml = `
         <div class="tactical-leaflet-marker ${isGhost ? 'ghost' : ''} ${isSelected ? 'selected' : ''}">
-          <div class="marker-badge">${callsignShort}</div>
+          <div class="marker-badge-container">
+            <div class="marker-badge">${callsignShort}</div>
+            <div class="tactical-bot-pulse"></div>
+          </div>
           <div class="marker-callsign">${robot.callsign}</div>
-          <div class="tactical-bot-pulse"></div>
         </div>
       `;
 
       const icon = L.divIcon({
         className: 'tactical-div-icon',
         html: markerHtml,
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
       });
 
       const marker = L.marker([lat, lng], { icon });
@@ -269,7 +271,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           <div style="color: #94a3b8;">Battery: ${Math.round(robot.battery)}% | Signal: ${robot.signalStrength}%</div>
           <div style="color: #e2e8f0;">${robot.currentTask}</div>
         </div>
-      `, { offset: [0, -15], direction: 'top' });
+      `, { offset: [0, -20], direction: 'top' });
 
       markersLayerGroupRef.current?.addLayer(marker);
     });
@@ -283,17 +285,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
         const markerHtml = `
           <div class="tactical-leaflet-marker survivor ${isSelected ? 'selected' : ''}">
-            <div class="marker-badge survivor-badge">♥</div>
-            <div class="marker-callsign" style="color: #f87171;">${survivor.label}</div>
-            <div class="tactical-surv-pulse"></div>
+            <div class="marker-badge-container">
+              <div class="marker-badge survivor-badge">♥</div>
+              <div class="tactical-surv-pulse"></div>
+            </div>
+            <div class="marker-callsign" style="color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">${survivor.label.split(' ')[0]}</div>
           </div>
         `;
 
         const icon = L.divIcon({
           className: 'tactical-div-icon',
           html: markerHtml,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
+          iconSize: [0, 0],
+          iconAnchor: [0, 0],
         });
 
         const marker = L.marker([lat, lng], { icon });
@@ -312,7 +316,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <div style="color: #cbd5e1;">${survivor.notes}</div>
             ${isAssigned ? '<div style="color: #34d399; font-weight: bold;">✓ Vulcan-X Dispatched</div>' : '<div style="color: #fb7185;">● Pending Dispatch</div>'}
           </div>
-        `, { offset: [0, -15], direction: 'top' });
+        `, { offset: [0, -20], direction: 'top' });
 
         markersLayerGroupRef.current?.addLayer(marker);
       });
@@ -327,16 +331,18 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
         const markerHtml = `
           <div class="tactical-leaflet-marker hazard ${isSelected ? 'selected' : ''}">
-            <div class="marker-badge hazard-badge">${isBio ? '☣' : '!'}</div>
-            <div class="marker-callsign" style="color: #fbbf24;">${hazard.type.replace('_', ' ').toUpperCase()}</div>
+            <div class="marker-badge-container">
+              <div class="marker-badge hazard-badge">${isBio ? '☣' : '!'}</div>
+            </div>
+            <div class="marker-callsign" style="color: #fde68a; border-color: rgba(245, 158, 11, 0.4);">${hazard.id}</div>
           </div>
         `;
 
         const icon = L.divIcon({
           className: 'tactical-div-icon',
           html: markerHtml,
-          iconSize: [34, 34],
-          iconAnchor: [17, 17],
+          iconSize: [0, 0],
+          iconAnchor: [0, 0],
         });
 
         const marker = L.marker([lat, lng], { icon });
@@ -354,7 +360,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <div style="color: #fde68a;">${hazard.readout}</div>
             <div style="color: #94a3b8;">Perimeter: ${hazard.location.radius}m | Sector: ${hazard.location.sector}</div>
           </div>
-        `, { offset: [0, -15], direction: 'top' });
+        `, { offset: [0, -20], direction: 'top' });
 
         markersLayerGroupRef.current?.addLayer(marker);
       });
@@ -365,19 +371,22 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
       const [lat, lng] = svgToGeo(beacon.x, beacon.y);
       const markerHtml = `
         <div class="tactical-leaflet-marker beacon">
-          <div class="marker-badge beacon-badge">RF</div>
+          <div class="marker-badge-container">
+            <div class="marker-badge beacon-badge">RF</div>
+          </div>
+          <div class="marker-callsign" style="color: #6ee7b7; border-color: rgba(16, 185, 129, 0.4); font-size: 8px;">${beacon.id}</div>
         </div>
       `;
       const icon = L.divIcon({
         className: 'tactical-div-icon',
         html: markerHtml,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
       });
 
       const marker = L.marker([lat, lng], { icon });
       marker.bindTooltip(`<div style="font-family: monospace; font-size: 11px;">MESH RELAY // ${beacon.id} (${beacon.batteryHours}h BAT)</div>`, {
-        offset: [0, -10],
+        offset: [0, -15],
         direction: 'top',
       });
       markersLayerGroupRef.current?.addLayer(marker);
@@ -426,14 +435,18 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
   const getRobotEmoji = (type: string) => {
     switch (type) {
-      case 'snake':
-        return '🐍';
-      case 'quadruped':
-        return '🐕';
-      case 'drone':
+      case 'aerial_drone':
         return '🛸';
-      case 'crawler':
+      case 'heavy_quadruped':
+        return '🐕';
+      case 'snake_crawler':
+        return '🐍';
+      case 'tracked_rover':
         return '🚜';
+      case 'wall_climber':
+        return '🦎';
+      case 'amphibious':
+        return '🌊';
       default:
         return '🤖';
     }

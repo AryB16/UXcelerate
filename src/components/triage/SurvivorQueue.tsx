@@ -148,7 +148,7 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
                   <span className="font-medium">✓ {surv.assignedRobotId} En Route</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   <select
                     value={selectedBots[surv.id] || 'ROB-02'}
                     onChange={(e) => {
@@ -157,7 +157,7 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
                       setSelectedBots((prev) => ({ ...prev, [surv.id]: val }));
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-[#080d1a] border border-slate-700 text-slate-300 text-xs rounded-sm px-2 h-7 font-mono focus:outline-none focus:border-cyan-500 max-w-[125px] shrink-0"
+                    className="flex-1 min-w-[100px] bg-[#080d1a] border border-slate-700 text-slate-300 text-xs rounded-sm px-2 h-7 font-mono focus:outline-none focus:border-cyan-500"
                   >
                     {robots
                       .filter(
@@ -180,10 +180,10 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
                       const targetBot = selectedBots[surv.id] || 'ROB-02';
                       dispatchRobotToSurvivor(targetBot, surv.id);
                     }}
-                    className="h-7 px-3 text-xs font-mono font-medium rounded-sm bg-rose-600 hover:bg-rose-500 active:scale-95 text-white border border-rose-500 transition-all flex items-center justify-center gap-1.5 shadow"
+                    className="h-7 px-2.5 text-xs font-mono font-medium rounded-sm bg-rose-600 hover:bg-rose-500 active:scale-95 text-white border border-rose-500 transition-all flex items-center justify-center gap-1 shadow shrink-0"
                   >
                     <Send className="w-3 h-3" />
-                    <span>🚨 Dispatch</span>
+                    <span>Dispatch</span>
                   </button>
                 </div>
               )}
