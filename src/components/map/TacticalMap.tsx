@@ -30,10 +30,11 @@ interface TacticalMapProps {
 const CENTER_LAT = 25.1288;
 const CENTER_LNG = 55.4186;
 
-const BOUNDS_NORTH = 25.1330;
-const BOUNDS_SOUTH = 25.1240;
-const BOUNDS_WEST = 55.4120;
-const BOUNDS_EAST = 55.4250;
+// Expanded DIAC / BITS Pilani Dubai Campus Sector 4
+const BOUNDS_NORTH = 25.1360;
+const BOUNDS_SOUTH = 25.1210;
+const BOUNDS_WEST = 55.4080;
+const BOUNDS_EAST = 55.4290;
 
 // Converts SVG coords [0..800, 0..620] into geographic [Lat, Lng] within DIAC sector
 const svgToGeo = (x: number, y: number): [number, number] => {
@@ -71,7 +72,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   } = useMission();
 
   // Local state
-  const [mapMode, setMapMode] = useState<'carto' | 'satellite'>('carto');
+  const [mapMode, setMapMode] = useState<'dark' | 'satellite'>('dark');
   const [filterSurvivors, setFilterSurvivors] = useState<boolean>(true);
   const [filterHazards, setFilterHazards] = useState<boolean>(true);
   const [filterRoutes, setFilterRoutes] = useState<boolean>(true);
@@ -80,7 +81,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   // References
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const tileLayerRef = useRef<L.Layer | null>(null);
   const markersLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const routesLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const perimeterLayerRef = useRef<L.Rectangle | null>(null);
@@ -99,13 +100,21 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         maxZoom: 19,
       });
 
-      // CartoDB Dark Matter tile layer
-      const darkTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        subdomains: ['a', 'b', 'c', 'd'],
-      }).addTo(map);
+      // High-Contrast Dark Tactical Basemap (Esri Dark Gray Canvas - No API Key Required)
+      const baseTile = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: '' }
+      );
 
-      tileLayerRef.current = darkTile;
+      // Reference labels overlay on top of base
+      const refLabels = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: '' }
+      );
+
+      const initialGroup = L.layerGroup([baseTile, refLabels]).addTo(map);
+      baseTile.bringToBack();
+      tileLayerRef.current = initialGroup;
 
       // Disaster Zone Perimeter (Red Dashed Box)
       const disasterBounds: L.LatLngBoundsExpression = [
@@ -153,23 +162,29 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
       mapInstanceRef.current.removeLayer(tileLayerRef.current);
     }
 
-    let url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-    let subdomains: string[] | string = ['a', 'b', 'c', 'd'];
-
     if (mapMode === 'satellite') {
-      // High-res Esri World Imagery
-      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      subdomains = [];
+      // Ultra-crisp Satellite Imagery
+      const satTile = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: '' }
+      );
+      const group = L.layerGroup([satTile]).addTo(mapInstanceRef.current);
+      satTile.bringToBack();
+      tileLayerRef.current = group;
+    } else {
+      // Tactical Dark Canvas (Esri Base + Reference Labels)
+      const baseTile = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: '' }
+      );
+      const refLabels = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: '' }
+      );
+      const group = L.layerGroup([baseTile, refLabels]).addTo(mapInstanceRef.current);
+      baseTile.bringToBack();
+      tileLayerRef.current = group;
     }
-
-    const nextTile = L.tileLayer(url, {
-      maxZoom: 19,
-      subdomains,
-    }).addTo(mapInstanceRef.current);
-
-    // Keep tiles under overlays
-    nextTile.bringToBack();
-    tileLayerRef.current = nextTile;
   }, [mapMode]);
 
   // Invalidate map size when expanded or container dimensions change
@@ -449,10 +464,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <button
               onClick={() => {
                 soundManager.playTacticalClick();
-                setMapMode('carto');
+                setMapMode('dark');
               }}
               className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
-                mapMode === 'carto'
+                mapMode === 'dark'
                   ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
