@@ -9,6 +9,7 @@ import { TacticalLogFeed } from './components/triage/TacticalLogFeed';
 import { RobotFpvModal } from './components/swarm/RobotFpvModal';
 import { CaseStudyModal } from './components/case-study/CaseStudyModal';
 import { InteractiveTour } from './components/tour/InteractiveTour';
+import { WelcomeModal } from './components/tour/WelcomeModal';
 import {
   AlertTriangle,
   Terminal,
@@ -58,7 +59,7 @@ const MissionControlDeck: React.FC = () => {
     if (isTourOpen) {
       setIsLeftRosterOpen(true);
       setIsRightPanelOpen(true);
-      if (tourStep === 3) {
+      if (tourStep === 4) {
         setRightPanelMode('triage');
       }
     }
@@ -69,14 +70,14 @@ const MissionControlDeck: React.FC = () => {
     if (!isTourOpen) return '';
 
     const isTarget =
-      (tourStep === 0 && section === 'center') ||
+      (tourStep === 0 && section === 'header') ||
       (tourStep === 1 && section === 'left') ||
       (tourStep === 2 && section === 'center') ||
-      (tourStep === 3 && section === 'right') ||
-      (tourStep === 4 && section === 'header');
+      (tourStep === 3 && (section === 'left' || section === 'center')) ||
+      (tourStep === 4 && section === 'right');
 
     if (isTarget) {
-      return 'relative z-20 ring-1 ring-cyan-400 shadow-2xl rounded-md pointer-events-auto filter-none opacity-100 transition-all duration-300 bg-[#060a12]';
+      return 'relative z-20 ring-1 ring-cyan-400 shadow-2xl rounded-md pointer-events-auto filter-none opacity-100 transition-all duration-300 bg-[#131822]';
     }
 
     return 'filter blur-[5px] opacity-20 brightness-50 pointer-events-none transition-all duration-300';
@@ -121,7 +122,7 @@ const MissionControlDeck: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#05080f] text-slate-100 overflow-hidden font-sans select-none relative">
+    <div className="flex flex-col h-screen w-screen bg-[#0d1117] text-slate-100 overflow-hidden font-sans select-none relative">
       {/* Reactive Aftershock Reroute Decision Card */}
       {reroutePrompt && reroutePrompt.isOpen && (
         <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 max-w-xl w-[92vw] bg-[#0c1424]/95 border border-amber-500/80 rounded-md p-4 shadow-2xl backdrop-blur animate-in fade-in slide-in-from-top duration-300">
@@ -376,6 +377,7 @@ const MissionControlDeck: React.FC = () => {
       </footer>
 
       {/* Modals & Interactive Tour */}
+      <WelcomeModal />
       <RobotFpvModal />
       <CaseStudyModal />
       <InteractiveTour />

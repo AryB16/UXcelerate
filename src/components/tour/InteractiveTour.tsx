@@ -39,63 +39,58 @@ export const InteractiveTour: React.FC = () => {
   const tourSteps = [
     {
       step: 1,
-      badge: 'EPISTEMIC DISASTER MAP',
-      icon: <MapPin className="w-5 h-5 text-cyan-400" />,
-      title: '3-Layer Epistemic Disaster Map',
-      directionalNotice: '👈 THE CENTER MAP IS FULLY VISIBLE',
+      badge: 'TEST BENCH & SIMULATORS',
+      icon: <Sparkles className="w-5 h-5 text-amber-400" />,
+      title: 'Evaluator Test Bench & Live Injectors',
+      directionalNotice: '👆 LOOK AT THE TOP 24PX EVALUATOR TOOLBAR',
       description:
-        'Pre-quake blueprints are obsolete. AEGIS fuses pre-CAD ghost grids with real-time LiDAR SLAM scans and an amber Staleness Warning for areas at risk of aftershock collapse.',
-      hint: 'Notice the diagonal hatching over unexplored voids—preventing rescue squads from assuming void safety.',
-      // Dock on the right so Center Map is 100% unobstructed
-      positionClasses: 'top-20 right-4 md:right-8',
+        'Designed specifically for evaluators. With 1 click, you can trigger a 5.2M seismic aftershock, sever RF mesh links into ghost mode, or inject acoustic biosignal survivor detections.',
+      hint: 'Try clicking "Simulate Aftershock" to watch the automatic autopath corridor rerouting in real time.',
+      positionClasses: 'top-20 left-1/2 -translate-x-1/2',
     },
     {
       step: 2,
-      badge: 'RESILIENT COMMS // GHOST MODE',
-      icon: <Radio className="w-5 h-5 text-rose-400" />,
-      title: 'Ghost Mode & Dead Reckoning',
-      directionalNotice: '👈 LOOK AT SERPENS-3 ON THE FAR LEFT',
+      badge: 'SWARM ROSTER & TELEMETRY',
+      icon: <Eye className="w-5 h-5 text-cyan-400" />,
+      title: 'Swarm Fleet & Live Sensor Inspector',
+      directionalNotice: '👈 THE LEFT PANEL SHOWS ROSTER + TELEMETRY',
       description:
-        'Concrete rubble blocks radio signals. When Serpens-3 dives into basements, it never vanishes. AEGIS pins its last confirmed position, draws its dead-reckoning trajectory, and buffers telemetry offline.',
-      hint: 'Look at Serpens-3 on the left: "42 PKTS BUFFERED". It continues exploring autonomously while disconnected.',
-      // Dock on the right so Left Roster is 100% unobstructed
+        'A single operator supervises 6 heterogeneous units. Selecting any robot reveals its live sub-sensor readings (LiDAR SLAM, Thermal emissivity, Gas PPM, Geophone) and its packet routing tree back to base.',
+      hint: 'Click on K9-TITAN or AERO-SCOUT to observe live sensor updates in the bottom inspector.',
       positionClasses: 'top-20 right-4 md:right-8',
     },
     {
       step: 3,
-      badge: 'BREADCRUMB RF RELAYS',
-      icon: <Radio className="w-5 h-5 text-emerald-400" />,
-      title: 'Breadcrumb RF Mesh Relays',
-      directionalNotice: '👉 CENTER MAP & BEACON TOOLS ARE FULLY VISIBLE',
+      badge: 'EPISTEMIC DISASTER MAP',
+      icon: <MapPin className="w-5 h-5 text-cyan-400" />,
+      title: 'Epistemic Map & Fog of Uncertainty',
+      directionalNotice: '👈 THE CENTER GIS MAP IS FULLY VISIBLE',
       description:
-        'Bridge communication dead zones with one click. Click "Deploy RF Beacon" at the top of the map and click near an isolated robot to restore mesh connection and flush all buffered data.',
-      hint: 'Green rings show active RF mesh coverage zones from deployed repeater beacons.',
-      // Dock on the left so Center Map is 100% unobstructed
-      positionClasses: 'top-20 left-4 md:left-8',
+        'AEGIS fuses pre-disaster CAD blueprint vectors with live LiDAR SLAM and epistemic caution hatching over unexplored rubble voids, preventing squads from presuming void safety.',
+      hint: 'Notice military UTM coordinate rulers along borders and the 50m tactical scale bar.',
+      positionClasses: 'top-20 right-4 md:right-8',
     },
     {
       step: 4,
-      badge: 'START TRIAGE QUEUE',
-      icon: <Heart className="w-5 h-5 text-rose-400" />,
-      title: 'START Protocol & Life Support',
-      directionalNotice: '👉 LOOK AT THE SURVIVOR QUEUE ON THE FAR RIGHT',
+      badge: 'RESILIENT GHOST COMMS',
+      icon: <Radio className="w-5 h-5 text-rose-400" />,
+      title: 'Ghost Mode & Store-and-Forward Mesh',
+      directionalNotice: '👈 NOTICE SERPENS-3 DISCONNECTED BELOW RUBBLE',
       description:
-        'Prioritize victims objectively. Discovered survivors are classified Immediate (Red), Delayed (Yellow), or Minor (Green) using acoustic void tapping (180 Hz) and thermal body heat.',
-      hint: 'Click "Dispatch Life Support" on any survivor card to route Vulcan-X or Serpens-3 with oxygen lines.',
-      // Dock on the left so Right Queue is 100% unobstructed
+        'When thick concrete cuts RF carrier signals, Serpens-3 engages autonomous dead reckoning and buffers 42 packets in local NVRAM. Deploying a breadcrumb relay beacon instantly restores uplink.',
+      hint: 'Click "Eject Relay Beacon" or "Deploy RF Beacon" near Serpens-3 to trigger instant packet flush.',
       positionClasses: 'top-20 left-4 md:left-8',
     },
     {
       step: 5,
-      badge: 'SHARED AUTONOMY & SCENARIOS',
-      icon: <Eye className="w-5 h-5 text-cyan-400" />,
-      title: 'Multispectral FPV & Testing Controls',
-      directionalNotice: '👆 LOOK AT THE TOP CONTROLS & SIMULATION TRIGGERS',
+      badge: 'START TRIAGE & DISPATCH',
+      icon: <Heart className="w-5 h-5 text-rose-400" />,
+      title: 'Objective START Triage & Life Support',
+      directionalNotice: '👉 THE RIGHT QUEUE SHOWS TRIAGE OBJECTIVES',
       description:
-        'Double-click any robot anytime to take manual FPV control with FLIR Thermal (37.1°C) and 3D LiDAR. Test real crisis events anytime using the Aftershock, Drop RF, and +Survivor buttons in the top bar.',
-      hint: 'Click "UX Case Study" in the top bar anytime to inspect the complete 5-chapter design research paper.',
-      // Dock in the center below the header so Top Header is 100% unobstructed
-      positionClasses: 'top-24 left-1/2 -translate-x-1/2',
+        'Discovered survivors are classified by priority (Red Immediate, Yellow Delayed, Green Minor). Incident Commanders can assign medical quads or micro-oxygen lines with a single click.',
+      hint: 'Notice the proportional START spectrum bar and corridor survey metrics anchored at the bottom.',
+      positionClasses: 'top-20 left-4 md:left-8',
     },
   ];
 

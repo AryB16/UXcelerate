@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
+import { RobotTelemetryInspector } from './RobotTelemetryInspector';
 
 interface RobotRosterProps {
   onClose?: () => void;
@@ -161,12 +162,12 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
               onClick={() => handleSelectRobot(bot.id)}
               className={`rounded-sm border transition-all duration-150 cursor-pointer ${
                 isSelected
-                  ? 'bg-slate-900/95 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/30'
-                  : 'bg-[#0b101b] border-slate-800/90 hover:border-slate-700 hover:bg-slate-900/60'
+                  ? 'bg-slate-800/80 border-cyan-500/70 shadow-md ring-1 ring-cyan-500/40'
+                  : 'bg-[#0e1320] border-slate-800/90 hover:border-slate-700 hover:bg-slate-900/60'
               }`}
             >
-              {/* Unit Row: 48px standard collapsed row */}
-              <div className="flex items-center justify-between px-2.5 py-2 h-12">
+              {/* Unit Row: 46px standard collapsed row */}
+              <div className="flex items-center justify-between px-2 py-1.5 h-11">
                 {/* Left: Type icon + Callsign */}
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-base shrink-0">{getRobotIcon(bot.type)}</span>
@@ -181,13 +182,13 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
                 </div>
 
                 {/* Center: 1-word status chip + 3px micro-battery bar */}
-                <div className="flex flex-col items-center gap-1 shrink-0 w-24">
+                <div className="flex flex-col items-center gap-1 shrink-0 w-20">
                   <span
-                    className={`text-[9px] font-mono font-semibold px-2 py-0.5 rounded-sm border ${statusChip.bg}`}
+                    className={`text-[8.5px] font-mono font-semibold px-1.5 py-0.2 rounded-sm border ${statusChip.bg}`}
                   >
                     {statusChip.label}
                   </span>
-                  <div className="w-16 bg-slate-800 rounded-full h-[3px] overflow-hidden">
+                  <div className="w-14 bg-slate-800 rounded-full h-[3px] overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${
                         bot.battery < 25
@@ -202,71 +203,33 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
                 </div>
 
                 {/* Right: Connection status indicator dot */}
-                <div className="flex items-center justify-end w-6 shrink-0">
+                <div className="flex items-center justify-end w-5 shrink-0">
                   {isDisconnected ? (
                     <span
-                      className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse ring-2 ring-rose-500/30"
+                      className="w-2 h-2 rounded-full bg-rose-500 animate-pulse ring-2 ring-rose-500/30"
                       title="Ghost: Comms Severed"
                     />
                   ) : isDegraded ? (
                     <span
-                      className="w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-amber-400/30"
+                      className="w-2 h-2 rounded-full bg-amber-400 ring-2 ring-amber-400/30"
                       title="Degraded Mesh RSSI"
                     />
                   ) : (
                     <span
-                      className="w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-emerald-400/30"
+                      className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-400/30"
                       title="Online Mesh Active"
                     />
                   )}
                 </div>
               </div>
-
-              {/* Accordion on Selection: Smooth expansion with high-contrast action buttons */}
-              {isSelected && (
-                <div className="px-2 pb-2 pt-1 border-t border-slate-800 flex items-center gap-1.5 animate-in fade-in duration-150">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openFpv(bot.id);
-                    }}
-                    className="flex-1 h-7 flex items-center justify-center gap-1.5 px-2 rounded-sm bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-mono text-[11px] font-bold shadow transition-colors"
-                    title={`Open FPV Cockpit for ${bot.name}`}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>🎮 TAKE MANUAL FPV</span>
-                  </button>
-
-                  {isDisconnected ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        restoreComms(bot.id);
-                      }}
-                      className="flex-1 h-7 flex items-center justify-center gap-1 px-2 rounded-sm bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-[11px] font-bold shadow transition-colors"
-                      title="Sync buffered telemetry packets"
-                    >
-                      <RotateCw className="w-3.5 h-3.5" />
-                      <span>SYNC COMMS</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deployBeaconAt(bot.position.x, bot.position.y, `Relay by ${bot.name}`);
-                      }}
-                      className="flex-1 h-7 flex items-center justify-center gap-1 px-2 rounded-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-mono text-[11px] font-medium transition-colors"
-                      title="Deploy Breadcrumb Mesh Beacon"
-                    >
-                      <Radio className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>📡 DEPLOY RELAY</span>
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
+      </div>
+
+      {/* Bottom Section: Live Unit Telemetry & Comms Inspector (50% Split) */}
+      <div className="h-[48%] shrink-0 min-h-0">
+        <RobotTelemetryInspector />
       </div>
     </div>
   );

@@ -377,9 +377,48 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
             
-            {/* Deep Obsidian Background & Tactical Grid */}
-            <rect x="0" y="0" width="800" height="620" fill="#060a12" />
-            <rect x="0" y="0" width="800" height="620" fill="url(#tacGrid)" />
+            {/* Tactical C2 Graphite Background & Grid */}
+            <rect x="0" y="0" width="800" height="620" fill="#0d1117" />
+            <rect x="0" y="0" width="800" height="620" fill="url(#tacGrid)" opacity="0.65" />
+
+            {/* Military UTM Coordinate Ticks along Top and Left Borders */}
+            <g id="utm-rulers" className="pointer-events-none select-none" opacity="0.7">
+              {/* Top X-Axis Ticks */}
+              {[
+                { x: 50, val: '+45.100' },
+                { x: 150, val: '+45.102' },
+                { x: 250, val: '+45.104' },
+                { x: 350, val: '+45.106' },
+                { x: 450, val: '+45.108' },
+                { x: 550, val: '+45.110' },
+                { x: 650, val: '+45.112' },
+                { x: 750, val: '+45.114' },
+              ].map((tick) => (
+                <g key={`x-tick-${tick.x}`}>
+                  <line x1={tick.x} y1={24} x2={tick.x} y2={30} stroke="#334155" strokeWidth="1" />
+                  <text x={tick.x} y={20} textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="JetBrains Mono">
+                    {tick.val}
+                  </text>
+                </g>
+              ))}
+
+              {/* Left Y-Axis Ticks */}
+              {[
+                { y: 50, val: '+09.200' },
+                { y: 150, val: '+09.202' },
+                { y: 250, val: '+09.204' },
+                { y: 350, val: '+09.206' },
+                { y: 450, val: '+09.208' },
+                { y: 550, val: '+09.210' },
+              ].map((tick) => (
+                <g key={`y-tick-${tick.y}`}>
+                  <line x1={24} y1={tick.y} x2={30} y2={tick.y} stroke="#334155" strokeWidth="1" />
+                  <text x={20} y={tick.y + 2.5} textAnchor="end" fill="#64748b" fontSize="7.5" fontFamily="JetBrains Mono">
+                    {tick.val}
+                  </text>
+                </g>
+              ))}
+            </g>
 
             {/* ========================================================= */}
             {/* 1. ARCHITECTURAL ZONES & EPISTEMIC FOG OF UNCERTAINTY     */}
@@ -391,8 +430,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 y="30"
                 width="740"
                 height="560"
-                rx="12"
-                fill="#080e1b"
+                rx="8"
+                fill="#131822"
                 stroke="#1e293b"
                 strokeWidth="1.5"
               />
@@ -403,9 +442,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 y="40"
                 width="350"
                 height="260"
-                rx="8"
+                rx="6"
                 fill="url(#fogOfUncertainty)"
-                stroke="rgba(239, 68, 68, 0.25)"
+                stroke="rgba(225, 29, 72, 0.25)"
                 strokeWidth="1"
                 strokeDasharray="4,4"
               />
@@ -413,18 +452,18 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 <text
                   x="510"
                   y="60"
-                  fill="#64748b"
+                  fill="#94a3b8"
                   fontSize="10"
                   fontFamily="JetBrains Mono"
                   fontWeight="bold"
                   letterSpacing="0.5"
                 >
-                  SEC B // MAIN TOWER
+                  [ SEC B // MAIN TOWER COLLAPSE ]
                 </text>
                 <text
                   x="510"
                   y="74"
-                  fill="rgba(245, 158, 11, 0.5)"
+                  fill="rgba(217, 119, 6, 0.6)"
                   fontSize="8"
                   fontFamily="JetBrains Mono"
                   letterSpacing="0.8"
@@ -439,9 +478,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 y="320"
                 width="350"
                 height="260"
-                rx="8"
+                rx="6"
                 fill="url(#fogOfUncertainty)"
-                stroke="rgba(245, 158, 11, 0.2)"
+                stroke="rgba(217, 119, 6, 0.25)"
                 strokeWidth="1"
                 strokeDasharray="4,4"
               />
@@ -449,23 +488,33 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 <text
                   x="510"
                   y="360"
-                  fill="#64748b"
+                  fill="#94a3b8"
                   fontSize="10"
                   fontFamily="JetBrains Mono"
                   fontWeight="bold"
                   letterSpacing="0.5"
                 >
-                  SEC C // BASEMENT &amp; METRO
+                  [ SEC C // BASEMENT &amp; METRO VOID ]
                 </text>
                 <text
                   x="510"
                   y="374"
-                  fill="rgba(245, 158, 11, 0.5)"
+                  fill="rgba(217, 119, 6, 0.6)"
                   fontSize="8"
                   fontFamily="JetBrains Mono"
                   letterSpacing="0.8"
                 >
                   [!] SUBTERRANEAN METRO VOID • UNVERIFIED
+                </text>
+              </g>
+
+              {/* 50-Meter GIS Scale Bar Indicator in Bottom-Left */}
+              <g id="gis-scale-indicator" transform="translate(45, 570)" className="pointer-events-none select-none">
+                <line x1="0" y1="0" x2="60" y2="0" stroke="#64748b" strokeWidth="1.5" />
+                <line x1="0" y1="-3" x2="0" y2="3" stroke="#64748b" strokeWidth="1.5" />
+                <line x1="60" y1="-3" x2="60" y2="3" stroke="#64748b" strokeWidth="1.5" />
+                <text x="30" y="-4" textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="JetBrains Mono">
+                  |---- 50m ----|
                 </text>
               </g>
 

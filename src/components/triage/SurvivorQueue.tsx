@@ -22,6 +22,11 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
     dispatchRobotToSurvivor,
   } = useMission();
 
+  const totalSurv = Math.max(1, survivors.length);
+  const immediateCount = survivors.filter((s) => s.triage === 'immediate').length;
+  const delayedCount = survivors.filter((s) => s.triage === 'delayed').length;
+  const minorCount = survivors.filter((s) => s.triage === 'minor' || s.triage === 'expectant').length;
+
   const getTriageTheme = (triage: TriageCategory) => {
     switch (triage) {
       case 'immediate':
@@ -182,6 +187,44 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
             </div>
           );
         })}
+      </div>
+
+      {/* Bottom Anchor: Triage Statistics & Extraction Corridor Bar */}
+      <div className="p-2.5 bg-[#090d16] border-t border-slate-800 text-[10px] font-mono shrink-0 select-none">
+        <div className="flex items-center justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">
+          <span>TRIAGE RATIO // START SPECTRUM</span>
+          <span className="text-slate-300">
+            {immediateCount} RED • {delayedCount} YEL • {minorCount} GRN
+          </span>
+        </div>
+
+        {/* Proportional Visual START Bar */}
+        <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden flex gap-0.5 mb-2">
+          <div
+            className="h-full bg-rose-500 transition-all duration-300"
+            style={{ width: `${(immediateCount / totalSurv) * 100}%` }}
+            title={`Immediate (Red): ${immediateCount}`}
+          />
+          <div
+            className="h-full bg-amber-400 transition-all duration-300"
+            style={{ width: `${(delayedCount / totalSurv) * 100}%` }}
+            title={`Delayed (Yellow): ${delayedCount}`}
+          />
+          <div
+            className="h-full bg-emerald-500 transition-all duration-300"
+            style={{ width: `${(minorCount / totalSurv) * 100}%` }}
+            title={`Minor (Green): ${minorCount}`}
+          />
+        </div>
+
+        {/* Quick Corridor Clearance Tally */}
+        <div className="flex items-center justify-between text-[9px] text-slate-400 pt-1 border-t border-slate-800/80">
+          <span className="text-slate-300 font-semibold">4 Corridors Surveyed</span>
+          <span>•</span>
+          <span className="text-emerald-400 font-medium">1 Cleared for Stretchers</span>
+          <span>•</span>
+          <span className="text-rose-400 font-medium">1 Blocked</span>
+        </div>
       </div>
     </div>
   );
