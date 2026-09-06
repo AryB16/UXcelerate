@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useMission } from '../../store/MissionContext';
 import {
   Layers,
@@ -12,6 +12,7 @@ import {
   Minimize2,
   X,
   Send,
+  AlertTriangle,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 
@@ -25,6 +26,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   onToggleExpand,
 }) => {
   const {
+    overview,
     sectors,
     robots,
     survivors,
@@ -61,6 +63,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     subtitle: string;
     badge?: string;
   } | null>(null);
+
+  // Seismic camera shake effect when an aftershock strikes
+  const [isShaking, setIsShaking] = useState<boolean>(false);
+  const prevAftershockLevelRef = useRef(overview.aftershockRiskLevel);
+
+  useEffect(() => {
+    if (overview.aftershockRiskLevel === 'CRITICAL' && prevAftershockLevelRef.current !== 'CRITICAL') {
+      setIsShaking(true);
+      const timer = setTimeout(() => setIsShaking(false), 850);
+      return () => clearTimeout(timer);
+    }
+    prevAftershockLevelRef.current = overview.aftershockRiskLevel;
+  }, [overview.aftershockRiskLevel]);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -238,9 +253,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         </div>
       )}
 
+      {/* Aftershock Alert Banner */}
+      {overview.aftershockRiskLevel === 'CRITICAL' && (
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-rose-950/95 border-2 border-rose-500 text-rose-200 text-xs font-mono font-bold rounded-full shadow-[0_0_30px_rgba(244,63,94,0.6)] flex items-center gap-2 animate-pulse">
+          <AlertTriangle className="w-4 h-4 text-rose-400" />
+          <span>⚠️ 5.2M AFTERSHOCK REGISTERED // SECONDARY COLLAPSE IN SECTOR BETA // REROUTING</span>
+        </div>
+      )}
+
       {/* Main Map Canvas */}
       <div
         className={`relative flex-1 w-full h-full overflow-hidden select-none ${
+          isShaking ? 'seismic-shake' : ''
+        } ${
           isDeployMode ? 'cursor-crosshair' : isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         onMouseDown={handleMouseDown}
@@ -474,63 +499,72 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             {/* ========================================================= */}
             {/* 2. ROUTES & CORRIDORS (Safe vs Blocked paths)             */}
             {/* ========================================================= */}
+            {/* ========================================================= */}
+            {/* 2. ROUTES & CORRIDORS (Safe vs Blocked paths)             */}
+            {/* ========================================================= */}
             {layers.routes && (
               <g id="routes-layer">
-                {/* Safe Corridor Alpha (Staging to ER) */}
-                <path
-                  d="M 120 400 L 120 305 L 290 305 L 290 190"
-                  fill="none"
-                  stroke="#00e5ff"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity="0.85"
-                />
-                <rect x="130" y="293" width="90" height="18" rx="4" fill="#071b28" stroke="#00e5ff" strokeWidth="1" />
-                <text x="175" y="306" textAnchor="middle" fill="#38bdf8" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                  🟢 SAFE ROUTE
-                </text>
+                {routes.map((route) => {
+                  const pathD = route.points.reduce((acc, pt, idx) => {
+                    return idx === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`;
+                  }, '');
 
-                {/* Hazardous Crawlway to Survivor #1 */}
-                <path
-                  d="M 290 190 L 420 190 L 480 175 L 535 140"
-                  fill="none"
-                  stroke="#f59e0b"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity="0.8"
-                />
+                  const midPoint = route.points[Math.floor(route.points.length / 2)] || route.points[0];
+                  const isBlocked = route.status === 'blocked';
+                  const isHazardous = route.status === 'hazardous';
+                  const isNew = route.status === 'newly_discovered';
 
-                {/* Blocked Atrium Corridor (Pancake Collapse) */}
-                <path
-                  d="M 430 250 L 520 250 L 580 250"
-                  fill="none"
-                  stroke="#ef4444"
-                  strokeWidth="3.5"
-                  strokeDasharray="6,4"
-                  strokeLinecap="round"
-                  opacity="0.9"
-                />
-                <rect x="475" y="240" width="85" height="18" rx="4" fill="#2d0c13" stroke="#ef4444" strokeWidth="1.5" />
-                <text x="517" y="253" textAnchor="middle" fill="#fca5a5" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                  ⛔ BLOCKED
-                </text>
+                  let strokeColor = '#00e5ff';
+                  let strokeDash = undefined;
+                  if (isBlocked) {
+                    strokeColor = '#ef4444';
+                    strokeDash = '6,4';
+                  } else if (isHazardous) {
+                    strokeColor = '#f59e0b';
+                  } else if (isNew) {
+                    strokeColor = '#10b981';
+                    strokeDash = '5,3';
+                  }
 
-                {/* Discovered Subterranean Crawlway (Snakebot) */}
-                <path
-                  d="M 480 340 L 530 400 L 630 460"
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="3"
-                  strokeDasharray="5,3"
-                  strokeLinecap="round"
-                  opacity="0.85"
-                />
-                <rect x="525" y="390" width="85" height="18" rx="4" fill="#062e24" stroke="#10b981" strokeWidth="1" />
-                <text x="567" y="403" textAnchor="middle" fill="#34d399" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                  ✨ NEW VOID
-                </text>
+                  return (
+                    <g key={route.id} className="cursor-pointer">
+                      <path
+                        d={pathD}
+                        fill="none"
+                        stroke={strokeColor}
+                        strokeWidth={isBlocked ? 3.5 : 4}
+                        strokeDasharray={strokeDash}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        opacity={0.85}
+                      />
+                      {/* Route Badge at Midpoint */}
+                      <g transform={`translate(${midPoint.x - 45}, ${midPoint.y - 10})`}>
+                        <rect
+                          x="0"
+                          y="0"
+                          width="90"
+                          height="18"
+                          rx="4"
+                          fill={isBlocked ? '#2d0c13' : isHazardous ? '#261706' : isNew ? '#062e24' : '#071b28'}
+                          stroke={strokeColor}
+                          strokeWidth="1.2"
+                        />
+                        <text
+                          x="45"
+                          y="13"
+                          textAnchor="middle"
+                          fill={isBlocked ? '#fca5a5' : isHazardous ? '#fde68a' : isNew ? '#34d399' : '#38bdf8'}
+                          fontSize="9"
+                          fontFamily="JetBrains Mono"
+                          fontWeight="bold"
+                        >
+                          {isBlocked ? '⛔ BLOCKED' : isHazardous ? '⚠️ HAZARDOUS' : isNew ? '✨ NEW VOID' : '🟢 SAFE ROUTE'}
+                        </text>
+                      </g>
+                    </g>
+                  );
+                })}
               </g>
             )}
 
@@ -539,9 +573,53 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             {/* ========================================================= */}
             {layers.mesh && (
               <g id="mesh-layer">
-                {/* Mesh Link Lines */}
-                <line x1="200" y1="200" x2="440" y2="260" stroke="#10b981" strokeWidth="1.8" strokeDasharray="4,4" opacity="0.5" />
-                <line x1="440" y1="260" x2="520" y2="380" stroke="#10b981" strokeWidth="1.8" strokeDasharray="4,4" opacity="0.5" />
+                {/* Mesh Link Lines between Beacons */}
+                {beacons.map((bcn, idx) => {
+                  if (idx === 0) return null;
+                  const prevBcn = beacons[idx - 1];
+                  return (
+                    <line
+                      key={`bcn-link-${bcn.id}-${prevBcn.id}`}
+                      x1={bcn.x}
+                      y1={bcn.y}
+                      x2={prevBcn.x}
+                      y2={prevBcn.y}
+                      stroke="#10b981"
+                      strokeWidth="1.8"
+                      strokeDasharray="4,4"
+                      opacity="0.5"
+                    />
+                  );
+                })}
+
+                {/* Mesh Link Lines from Connected Robots to Nearest Beacon */}
+                {robots
+                  .filter((r) => r.commsStatus === 'connected')
+                  .map((r) => {
+                    let closest = beacons[0];
+                    let minDist = 99999;
+                    beacons.forEach((b) => {
+                      const d = Math.hypot(b.x - r.position.x, b.y - r.position.y);
+                      if (d < minDist) {
+                        minDist = d;
+                        closest = b;
+                      }
+                    });
+                    if (!closest || minDist > 280) return null;
+                    return (
+                      <line
+                        key={`robot-mesh-${r.id}`}
+                        x1={r.position.x}
+                        y1={r.position.y}
+                        x2={closest.x}
+                        y2={closest.y}
+                        stroke="#00f0ff"
+                        strokeWidth="1.2"
+                        strokeDasharray="3,3"
+                        opacity="0.35"
+                      />
+                    );
+                  })}
 
                 {/* RF Mesh Coverage Radii */}
                 {beacons.map((bcn) => (
@@ -587,413 +665,396 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             )}
 
             {/* ========================================================= */}
-            {/* 4. HAZARDS (Methane leak, 18° tilt, electrical)          */}
+            {/* 4. HAZARDS (Dynamic list with aftershock reaction)        */}
             {/* ========================================================= */}
             {layers.hazards && (
               <g id="hazards-layer">
-                {/* HAZ-01: Methane Gas Leak in Sector Beta */}
-                <g
-                  className="cursor-pointer"
-                  onClick={() => selectHazard('HAZ-01')}
-                  onMouseEnter={() =>
-                    setHoveredEntity({
-                      type: 'hazard',
-                      id: 'HAZ-01',
-                      x: 580,
-                      y: 220,
-                      title: 'Methane Gas Rupture (CH4)',
-                      subtitle: '520 PPM • Lower Explosive Limit Alert',
-                      badge: 'CRITICAL HAZARD',
-                    })
-                  }
-                  onMouseLeave={() => setHoveredEntity(null)}
-                >
-                  <circle cx="580" cy="220" r="45" fill="rgba(239, 68, 68, 0.12)" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4,4" />
-                  <circle cx="580" cy="220" r="14" fill="#1e101a" stroke="#ef4444" strokeWidth="2" />
-                  <text x="580" y="224.5" textAnchor="middle" fontSize="13" fill="#ffffff">☣</text>
-                  
-                  {/* Clean pill label below */}
-                  <rect x="525" y="238" width="110" height="18" rx="4" fill="#1c0a10" stroke="#ef4444" strokeWidth="1" />
-                  <text x="580" y="251" textAnchor="middle" fill="#fca5a5" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                    ☣ CH4 GAS 520 PPM
-                  </text>
-                </g>
+                {hazards.map((haz) => {
+                  const isSelected = selectedHazardId === haz.id;
+                  const isGas = haz.type === 'gas_leak';
+                  const isStructural = haz.type === 'structural_collapse';
 
-                {/* HAZ-02: Structural Column Shear in Sector Gamma */}
-                <g
-                  className="cursor-pointer"
-                  onClick={() => selectHazard('HAZ-02')}
-                  onMouseEnter={() =>
-                    setHoveredEntity({
-                      type: 'hazard',
-                      id: 'HAZ-02',
-                      x: 600,
-                      y: 365,
-                      title: 'Bearing Column Shear Rupture',
-                      subtitle: '18.4° Deflection Tilt • 92% Yield Stress',
-                      badge: 'COLLAPSE RISK',
-                    })
-                  }
-                  onMouseLeave={() => setHoveredEntity(null)}
-                >
-                  <circle cx="600" cy="365" r="40" fill="rgba(245, 158, 11, 0.12)" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4,4" />
-                  <circle cx="600" cy="365" r="14" fill="#1a1409" stroke="#f59e0b" strokeWidth="2" />
-                  <text x="600" y="369.5" textAnchor="middle" fontSize="13" fill="#ffffff">⚠</text>
-                  
-                  {/* Clean pill label above */}
-                  <rect x="545" y="335" width="110" height="18" rx="4" fill="#1a1206" stroke="#f59e0b" strokeWidth="1" />
-                  <text x="600" y="348" textAnchor="middle" fill="#fde68a" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                    ⚠ 18° COLUMN TILT
-                  </text>
-                </g>
+                  const strokeCol = isGas ? '#ef4444' : isStructural ? '#f59e0b' : '#eab308';
+                  const fillCol = isGas
+                    ? 'rgba(239, 68, 68, 0.14)'
+                    : isStructural
+                    ? 'rgba(245, 158, 11, 0.14)'
+                    : 'rgba(234, 179, 8, 0.12)';
+                  const iconChar = isGas ? '☣' : isStructural ? '⚠' : '⚡';
 
-                {/* HAZ-03: Substation Transformer in Sector Beta */}
-                <g
-                  className="cursor-pointer"
-                  onClick={() => selectHazard('HAZ-03')}
-                  onMouseEnter={() =>
-                    setHoveredEntity({
-                      type: 'hazard',
-                      id: 'HAZ-03',
-                      x: 735,
-                      y: 255,
-                      title: 'Substation Transformer Feeder Short',
-                      subtitle: '480V Arc Flash Hazard • Water Intrusion',
-                      badge: 'ELECTRICAL',
-                    })
-                  }
-                  onMouseLeave={() => setHoveredEntity(null)}
-                >
-                  <circle cx="735" cy="255" r="28" fill="rgba(245, 158, 11, 0.1)" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4,4" />
-                  <circle cx="735" cy="255" r="13" fill="#1a1409" stroke="#f59e0b" strokeWidth="1.8" />
-                  <text x="735" y="259" textAnchor="middle" fontSize="11" fill="#ffffff">⚡</text>
-                </g>
+                  return (
+                    <g
+                      key={haz.id}
+                      className="cursor-pointer"
+                      onClick={() => selectHazard(haz.id)}
+                      onMouseEnter={() =>
+                        setHoveredEntity({
+                          type: 'hazard',
+                          id: haz.id,
+                          x: haz.location.x,
+                          y: haz.location.y,
+                          title: haz.title,
+                          subtitle: haz.readout,
+                          badge: `${haz.severity.toUpperCase()} HAZARD`,
+                        })
+                      }
+                      onMouseLeave={() => setHoveredEntity(null)}
+                    >
+                      <circle
+                        cx={haz.location.x}
+                        cy={haz.location.y}
+                        r={Math.min(haz.location.radius, 48)}
+                        fill={fillCol}
+                        stroke={strokeCol}
+                        strokeWidth="1.5"
+                        strokeDasharray="4,4"
+                      />
+                      <circle
+                        cx={haz.location.x}
+                        cy={haz.location.y}
+                        r="14"
+                        fill="#1a0f16"
+                        stroke={strokeCol}
+                        strokeWidth={isSelected ? '3' : '2'}
+                      />
+                      <text
+                        x={haz.location.x}
+                        y={haz.location.y + 4.5}
+                        textAnchor="middle"
+                        fontSize="13"
+                        fill="#ffffff"
+                      >
+                        {iconChar}
+                      </text>
+
+                      {/* Clean Pill Label Below */}
+                      <rect
+                        x={haz.location.x - 55}
+                        y={haz.location.y + 18}
+                        width="110"
+                        height="18"
+                        rx="4"
+                        fill="#1c0a12"
+                        stroke={strokeCol}
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={haz.location.x}
+                        y={haz.location.y + 31}
+                        textAnchor="middle"
+                        fill={isGas ? '#fca5a5' : '#fde68a'}
+                        fontSize="9"
+                        fontFamily="JetBrains Mono"
+                        fontWeight="bold"
+                      >
+                        {iconChar} {haz.title.split(' ')[0]} {haz.severity === 'critical' ? '[CRITICAL]' : ''}
+                      </text>
+                    </g>
+                  );
+                })}
               </g>
             )}
 
             {/* ========================================================= */}
-            {/* 5. SURVIVORS (Pulsing beacons & clear triage tags)        */}
+            {/* 5. SURVIVORS (Pulsing beacons & START triage badges)       */}
             {/* ========================================================= */}
             <g id="survivors-layer">
-              {/* SURV-01: Adult Male in Sector Beta (Trapped in Rubble) */}
-              <g
-                className="cursor-pointer"
-                onClick={() => {
-                  selectSurvivor('SURV-01');
-                  soundManager.playSonarPing();
-                }}
-                onMouseEnter={() =>
-                  setHoveredEntity({
-                    type: 'survivor',
-                    id: 'SURV-01',
-                    x: 535,
-                    y: 140,
-                    title: 'Survivor #1 (Adult Male)',
-                    subtitle: 'HR: 118 BPM • SpO2: 91% • Depth: 2.1m (Pinned)',
-                    badge: 'RED // IMMEDIATE',
-                  })
-                }
-                onMouseLeave={() => setHoveredEntity(null)}
-              >
-                {/* Soft pulse wave */}
-                <circle cx="535" cy="140" r="24" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.4" className="animate-ping" />
-                {/* Pin Body */}
-                <circle
-                  cx="535"
-                  cy="140"
-                  r="15"
-                  fill="#1c0c14"
-                  stroke="#ef4444"
-                  strokeWidth={selectedSurvivorId === 'SURV-01' ? '3.5' : '2'}
-                  filter="url(#redGlow)"
-                />
-                <text x="535" y="145" textAnchor="middle" fontSize="13">❤️</text>
-                
-                {/* Clean pill label above (zero collision!) */}
-                <rect x="475" y="108" width="120" height="20" rx="4" fill="#200a12" stroke="#ef4444" strokeWidth="1.2" />
-                <text x="535" y="122" textAnchor="middle" fill="#fca5a5" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                  ❤️ S-1 [CRITICAL]
-                </text>
-              </g>
+              {survivors.map((surv) => {
+                const isSelected = selectedSurvivorId === surv.id;
+                const isCrit = surv.triage === 'immediate';
+                const isDelayed = surv.triage === 'delayed';
 
-              {/* SURV-02: Child in Sector Gamma (Subterranean Shaft) */}
-              <g
-                className="cursor-pointer"
-                onClick={() => {
-                  selectSurvivor('SURV-02');
-                  soundManager.playSonarPing();
-                }}
-                onMouseEnter={() =>
-                  setHoveredEntity({
-                    type: 'survivor',
-                    id: 'SURV-02',
-                    x: 650,
-                    y: 410,
-                    title: 'Survivor #2 (Child)',
-                    subtitle: 'HR: 132 BPM • SpO2: 94% • Depth: 4.8m (Void)',
-                    badge: 'RED // IMMEDIATE',
-                  })
-                }
-                onMouseLeave={() => setHoveredEntity(null)}
-              >
-                <circle cx="650" cy="410" r="24" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.4" className="animate-ping" />
-                <circle
-                  cx="650"
-                  cy="410"
-                  r="15"
-                  fill="#1c0c14"
-                  stroke="#ef4444"
-                  strokeWidth={selectedSurvivorId === 'SURV-02' ? '3.5' : '2'}
-                  filter="url(#redGlow)"
-                />
-                <text x="650" y="415" textAnchor="middle" fontSize="13">❤️</text>
+                const strokeCol = isCrit ? '#ef4444' : isDelayed ? '#f59e0b' : '#10b981';
+                const fillCol = isCrit ? '#1c0c14' : isDelayed ? '#1c1608' : '#06221c';
+                const textCol = isCrit ? '#fca5a5' : isDelayed ? '#fde68a' : '#6ee7b7';
+                const heartEmoji = isCrit ? '❤️' : isDelayed ? '💛' : '💚';
+                const tagText = isCrit ? 'CRITICAL' : isDelayed ? 'DELAYED' : 'MINOR';
 
-                {/* Clean pill label above */}
-                <rect x="590" y="378" width="120" height="20" rx="4" fill="#200a12" stroke="#ef4444" strokeWidth="1.2" />
-                <text x="650" y="392" textAnchor="middle" fill="#fca5a5" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                  ❤️ S-2 [CRITICAL]
-                </text>
-              </g>
+                return (
+                  <g
+                    key={surv.id}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      selectSurvivor(surv.id);
+                      soundManager.playSonarPing();
+                    }}
+                    onMouseEnter={() =>
+                      setHoveredEntity({
+                        type: 'survivor',
+                        id: surv.id,
+                        x: surv.location.x,
+                        y: surv.location.y,
+                        title: surv.label,
+                        subtitle: `HR: ${surv.vitals.heartRate} BPM • SpO2: ${surv.vitals.spO2}% • Depth: ${surv.location.depthMeters}m`,
+                        badge: `${surv.triage.toUpperCase()} // ${tagText}`,
+                      })
+                    }
+                    onMouseLeave={() => setHoveredEntity(null)}
+                  >
+                    {/* Soft pulse wave for immediate critical survivors */}
+                    {isCrit && (
+                      <circle
+                        cx={surv.location.x}
+                        cy={surv.location.y}
+                        r="24"
+                        fill="none"
+                        stroke="#ef4444"
+                        strokeWidth="2"
+                        opacity="0.4"
+                        className="animate-ping"
+                      />
+                    )}
 
-              {/* SURV-04: Confined crawlway survivor */}
-              <g
-                className="cursor-pointer"
-                onClick={() => {
-                  selectSurvivor('SURV-04');
-                  soundManager.playSonarPing();
-                }}
-                onMouseEnter={() =>
-                  setHoveredEntity({
-                    type: 'survivor',
-                    id: 'SURV-04',
-                    x: 715,
-                    y: 165,
-                    title: 'Survivor #4 (Adult Female)',
-                    subtitle: 'HR: 72 BPM • SpO2: 96% • Stable Void Pocket',
-                    badge: 'GREEN // MINOR',
-                  })
-                }
-                onMouseLeave={() => setHoveredEntity(null)}
-              >
-                <circle
-                  cx="715"
-                  cy="165"
-                  r="14"
-                  fill="#06221c"
-                  stroke="#10b981"
-                  strokeWidth={selectedSurvivorId === 'SURV-04' ? '3' : '1.8'}
-                />
-                <text x="715" y="170" textAnchor="middle" fontSize="12">💚</text>
-                
-                {/* Clean pill label above */}
-                <rect x="665" y="135" width="100" height="18" rx="4" fill="#071e19" stroke="#10b981" strokeWidth="1" />
-                <text x="715" y="148" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                  💚 S-4 [MINOR]
-                </text>
-              </g>
+                    {/* Pin Body */}
+                    <circle
+                      cx={surv.location.x}
+                      cy={surv.location.y}
+                      r="15"
+                      fill={fillCol}
+                      stroke={strokeCol}
+                      strokeWidth={isSelected ? '3.5' : '2'}
+                      filter={isCrit ? 'url(#redGlow)' : undefined}
+                    />
+                    <text
+                      x={surv.location.x}
+                      y={surv.location.y + 5}
+                      textAnchor="middle"
+                      fontSize="13"
+                    >
+                      {heartEmoji}
+                    </text>
+
+                    {/* Clean Pill Label Above */}
+                    <rect
+                      x={surv.location.x - 55}
+                      y={surv.location.y - 32}
+                      width="110"
+                      height="19"
+                      rx="4"
+                      fill={isCrit ? '#200a12' : isDelayed ? '#1f1307' : '#071e19'}
+                      stroke={strokeCol}
+                      strokeWidth="1.2"
+                    />
+                    <text
+                      x={surv.location.x}
+                      y={surv.location.y - 19}
+                      textAnchor="middle"
+                      fill={textCol}
+                      fontSize="9.5"
+                      fontFamily="JetBrains Mono"
+                      fontWeight="bold"
+                    >
+                      {heartEmoji} {surv.id} [{tagText}]
+                    </text>
+                  </g>
+                );
+              })}
             </g>
 
             {/* ========================================================= */}
-            {/* 6. ROBOTS & GHOST MODE (Clean pins with no clutter)       */}
+            {/* 6. ROBOTS & GHOST MESH (Reactive live positions & states) */}
             {/* ========================================================= */}
             <g id="robots-layer">
-              
-              {/* ROB-01: SkyEye-1 (Aerial Drone over Sector Alpha) */}
-              <g
-                className="cursor-pointer"
-                onClick={() => selectRobot('ROB-01')}
-                onDoubleClick={() => openFpv('ROB-01')}
-                onMouseEnter={() =>
-                  setHoveredEntity({
-                    type: 'robot',
-                    id: 'ROB-01',
-                    x: 260,
-                    y: 140,
-                    title: 'SkyEye-1 (AERO-SCOUT)',
-                    subtitle: 'Battery: 82% • Signal: 96% • Aerial LiDAR Survey',
-                    badge: 'CONNECTED',
-                  })
+              {robots.map((robot) => {
+                const isSelected = selectedRobotId === robot.id;
+                const isDisconnected = robot.commsStatus === 'disconnected';
+                const isDegraded = robot.commsStatus === 'degraded';
+
+                if (isDisconnected) {
+                  // GHOST MODE: Last known position pin + trajectory vector + ghost pin
+                  const lkp = robot.lastKnownPosition || {
+                    x: robot.position.x - 30,
+                    y: robot.position.y - 30,
+                  };
+                  const minutesLost = Math.max(1, Math.round(robot.lastContactSecondsAgo / 60));
+
+                  return (
+                    <g
+                      key={robot.id}
+                      className="cursor-pointer"
+                      onClick={() => selectRobot(robot.id)}
+                      onDoubleClick={() => openFpv(robot.id)}
+                      onMouseEnter={() =>
+                        setHoveredEntity({
+                          type: 'robot',
+                          id: robot.id,
+                          x: robot.position.x,
+                          y: robot.position.y,
+                          title: `${robot.name} (${robot.callsign})`,
+                          subtitle: `GHOST MODE // Lost ${minutesLost}m ago • ${robot.storeAndForwardBacklog} Pkts Buffered Offline`,
+                          badge: 'LOST SIGNAL // GHOST',
+                        })
+                      }
+                      onMouseLeave={() => setHoveredEntity(null)}
+                    >
+                      {/* Last Known Position Pin */}
+                      <circle cx={lkp.x} cy={lkp.y} r="5" fill="#f43f5e" />
+                      <text x={lkp.x - 10} y={lkp.y - 8} fill="#f43f5e" fontSize="9" fontFamily="JetBrains Mono">
+                        Last Contact
+                      </text>
+
+                      {/* Projected Dead Reckoning Trajectory Vector */}
+                      <line
+                        x1={lkp.x}
+                        y1={lkp.y}
+                        x2={robot.position.x}
+                        y2={robot.position.y}
+                        stroke="#f43f5e"
+                        strokeWidth="2.5"
+                        strokeDasharray="5,3"
+                      />
+
+                      {/* Expanding Uncertainty Ellipse */}
+                      <ellipse
+                        cx={robot.position.x}
+                        cy={robot.position.y}
+                        rx={Math.min(45, 20 + Math.round(robot.lastContactSecondsAgo / 15))}
+                        ry={Math.min(35, 15 + Math.round(robot.lastContactSecondsAgo / 20))}
+                        fill="rgba(244, 63, 94, 0.08)"
+                        stroke="#f43f5e"
+                        strokeWidth="1"
+                        strokeDasharray="3,3"
+                      />
+
+                      {/* Ghost Robot Pin */}
+                      {isSelected && (
+                        <circle
+                          cx={robot.position.x}
+                          cy={robot.position.y}
+                          r="23"
+                          fill="none"
+                          stroke="#f43f5e"
+                          strokeWidth="1.5"
+                          strokeDasharray="4,2"
+                          className="animate-spin"
+                        />
+                      )}
+                      <circle
+                        cx={robot.position.x}
+                        cy={robot.position.y}
+                        r="16"
+                        fill="#200d18"
+                        stroke="#f43f5e"
+                        strokeWidth={isSelected ? '3' : '2'}
+                      />
+                      <text
+                        x={robot.position.x}
+                        y={robot.position.y + 5}
+                        textAnchor="middle"
+                        fontSize="13"
+                      >
+                        👻
+                      </text>
+
+                      {/* High-Visibility Ghost Badge Below */}
+                      <rect
+                        x={robot.position.x - 65}
+                        y={robot.position.y + 22}
+                        width="130"
+                        height="20"
+                        rx="4"
+                        fill="#200b14"
+                        stroke="#f43f5e"
+                        strokeWidth="1.2"
+                      />
+                      <text
+                        x={robot.position.x}
+                        y={robot.position.y + 36}
+                        textAnchor="middle"
+                        fill="#fca5a5"
+                        fontSize="10"
+                        fontFamily="JetBrains Mono"
+                        fontWeight="bold"
+                      >
+                        {robot.callsign} ⚠️ LOST ({minutesLost}m)
+                      </text>
+                    </g>
+                  );
                 }
-                onMouseLeave={() => setHoveredEntity(null)}
-              >
-                {selectedRobotId === 'ROB-01' && (
-                  <circle cx="260" cy="140" r="22" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
-                )}
-                <circle cx="260" cy="140" r="16" fill="#071b28" stroke="#00f0ff" strokeWidth={selectedRobotId === 'ROB-01' ? '3' : '2'} />
-                <text x="260" y="145" textAnchor="middle" fontSize="13">🛸</text>
-                
-                {/* Clean Pill Label Below */}
-                <rect x="210" y="162" width="100" height="20" rx="4" fill="#071220" stroke="#00f0ff" strokeWidth="1" />
-                <text x="260" y="176" textAnchor="middle" fill="#ffffff" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                  ROB-01 SkyEye
-                </text>
-              </g>
 
-              {/* ROB-02: Vulcan-X (Heavy Quadruped searching Sector Beta rubble) */}
-              <g
-                className="cursor-pointer"
-                onClick={() => selectRobot('ROB-02')}
-                onDoubleClick={() => openFpv('ROB-02')}
-                onMouseEnter={() =>
-                  setHoveredEntity({
-                    type: 'robot',
-                    id: 'ROB-02',
-                    x: 480,
-                    y: 175,
-                    title: 'Vulcan-X (K9-TITAN)',
-                    subtitle: 'Battery: 69% • Signal: 78% • Acoustic Geophone Sweep',
-                    badge: 'CONNECTED',
-                  })
-                }
-                onMouseLeave={() => setHoveredEntity(null)}
-              >
-                {selectedRobotId === 'ROB-02' && (
-                  <circle cx="480" cy="175" r="22" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
-                )}
-                <circle cx="480" cy="175" r="16" fill="#071b28" stroke="#00f0ff" strokeWidth={selectedRobotId === 'ROB-02' ? '3' : '2'} />
-                <text x="480" y="180" textAnchor="middle" fontSize="13">🐕</text>
-                
-                {/* Clean Pill Label Below */}
-                <rect x="430" y="198" width="100" height="20" rx="4" fill="#071220" stroke="#00f0ff" strokeWidth="1" />
-                <text x="480" y="212" textAnchor="middle" fill="#ffffff" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                  ROB-02 Vulcan
-                </text>
-              </g>
+                // CONNECTED OR DEGRADED ROBOT
+                const strokeColor = isDegraded ? '#f59e0b' : '#00f0ff';
+                const bgBadgeColor = isDegraded ? '#191307' : '#071220';
+                const textBadgeColor = isDegraded ? '#fde68a' : '#ffffff';
 
-              {/* ROB-03: Serpens-3 (Snake Crawler // GHOST MODE SHOWCASE) */}
-              {/* Concrete blocks radio: pins last known spot + draws dead reckoning vector */}
-              <g
-                className="cursor-pointer"
-                onClick={() => selectRobot('ROB-03')}
-                onDoubleClick={() => openFpv('ROB-03')}
-                onMouseEnter={() =>
-                  setHoveredEntity({
-                    type: 'robot',
-                    id: 'ROB-03',
-                    x: 630,
-                    y: 470,
-                    title: 'Serpens-3 (VOID-SNAKE)',
-                    subtitle: 'GHOST MODE // Lost 5m ago • 42 Pkts Buffered Offline',
-                    badge: 'LOST SIGNAL',
-                  })
-                }
-                onMouseLeave={() => setHoveredEntity(null)}
-              >
-                {/* Last Known Position Pin (590, 430) */}
-                <circle cx="590" cy="430" r="5" fill="#f43f5e" />
-                <text x="580" y="420" fill="#f43f5e" fontSize="9" fontFamily="JetBrains Mono">Last Contact</text>
+                return (
+                  <g
+                    key={robot.id}
+                    className="cursor-pointer"
+                    onClick={() => selectRobot(robot.id)}
+                    onDoubleClick={() => openFpv(robot.id)}
+                    onMouseEnter={() =>
+                      setHoveredEntity({
+                        type: 'robot',
+                        id: robot.id,
+                        x: robot.position.x,
+                        y: robot.position.y,
+                        title: `${robot.name} (${robot.callsign})`,
+                        subtitle: `Battery: ${Math.round(robot.battery)}% • Signal: ${robot.signalStrength}% • ${robot.currentTask}`,
+                        badge: isDegraded ? 'DEGRADED RSSI' : 'CONNECTED MESH',
+                      })
+                    }
+                    onMouseLeave={() => setHoveredEntity(null)}
+                  >
+                    {/* Selection Ring */}
+                    {isSelected && (
+                      <circle
+                        cx={robot.position.x}
+                        cy={robot.position.y}
+                        r="22"
+                        fill="none"
+                        stroke={strokeColor}
+                        strokeWidth="1.5"
+                        strokeDasharray="4,2"
+                        className="animate-spin"
+                      />
+                    )}
 
-                {/* Projected Dead Reckoning Trajectory Vector to (630, 470) */}
-                <line x1="590" y1="430" x2="630" y2="470" stroke="#f43f5e" strokeWidth="2.5" strokeDasharray="5,3" />
-                
-                {/* Estimated Robot Position */}
-                {selectedRobotId === 'ROB-03' && (
-                  <circle cx="630" cy="470" r="23" fill="none" stroke="#f43f5e" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
-                )}
-                <circle cx="630" cy="470" r="16" fill="#200d18" stroke="#f43f5e" strokeWidth={selectedRobotId === 'ROB-03' ? '3' : '2'} />
-                <text x="630" y="475" textAnchor="middle" fontSize="13">👻</text>
+                    {/* Robot Pin Body */}
+                    <circle
+                      cx={robot.position.x}
+                      cy={robot.position.y}
+                      r="16"
+                      fill="#071b28"
+                      stroke={strokeColor}
+                      strokeWidth={isSelected ? '3' : '2'}
+                    />
+                    <text
+                      x={robot.position.x}
+                      y={robot.position.y + 5}
+                      textAnchor="middle"
+                      fontSize="13"
+                    >
+                      {getRobotEmoji(robot.type)}
+                    </text>
 
-                {/* High-Visibility Ghost Badge Below */}
-                <rect x="565" y="493" width="130" height="20" rx="4" fill="#200b14" stroke="#f43f5e" strokeWidth="1.2" />
-                <text x="630" y="507" textAnchor="middle" fill="#fca5a5" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                  Serpens-3 ⚠️ LOST (5m)
-                </text>
-              </g>
-
-              {/* ROB-04: Titan-2 (Tracked Rover Mast Anchor at 440, 310) */}
-              <g
-                className="cursor-pointer"
-                onClick={() => selectRobot('ROB-04')}
-                onDoubleClick={() => openFpv('ROB-04')}
-                onMouseEnter={() =>
-                  setHoveredEntity({
-                    type: 'robot',
-                    id: 'ROB-04',
-                    x: 440,
-                    y: 310,
-                    title: 'Titan-2 (SHORE-ROVER)',
-                    subtitle: 'Battery: 88% • Signal: 91% • High-Gain RF Mast Bridge',
-                    badge: 'CONNECTED',
-                  })
-                }
-                onMouseLeave={() => setHoveredEntity(null)}
-              >
-                {selectedRobotId === 'ROB-04' && (
-                  <circle cx="440" cy="310" r="22" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
-                )}
-                <circle cx="440" cy="310" r="16" fill="#071b28" stroke="#00f0ff" strokeWidth={selectedRobotId === 'ROB-04' ? '3' : '2'} />
-                <text x="440" y="315" textAnchor="middle" fontSize="13">🚜</text>
-                
-                {/* Clean Pill Label Below */}
-                <rect x="395" y="333" width="90" height="20" rx="4" fill="#071220" stroke="#00f0ff" strokeWidth="1" />
-                <text x="440" y="347" textAnchor="middle" fill="#ffffff" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                  ROB-04 Titan
-                </text>
-              </g>
-
-              {/* ROB-05: Gecko-04 (Wall Climber at 675, 215) */}
-              <g
-                className="cursor-pointer"
-                onClick={() => selectRobot('ROB-05')}
-                onDoubleClick={() => openFpv('ROB-05')}
-                onMouseEnter={() =>
-                  setHoveredEntity({
-                    type: 'robot',
-                    id: 'ROB-05',
-                    x: 675,
-                    y: 215,
-                    title: 'Gecko-04 (WALL-CRAWL)',
-                    subtitle: 'Battery: 48% • Signal: 44% (Degraded) • Vertical Shear Wall Scan',
-                    badge: 'DEGRADED',
-                  })
-                }
-                onMouseLeave={() => setHoveredEntity(null)}
-              >
-                {selectedRobotId === 'ROB-05' && (
-                  <circle cx="675" cy="215" r="22" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
-                )}
-                <circle cx="675" cy="215" r="16" fill="#1c1609" stroke="#f59e0b" strokeWidth={selectedRobotId === 'ROB-05' ? '3' : '2'} />
-                <text x="675" y="220" textAnchor="middle" fontSize="13">🦎</text>
-
-                {/* Clean Pill Label Below */}
-                <rect x="630" y="238" width="90" height="20" rx="4" fill="#191307" stroke="#f59e0b" strokeWidth="1" />
-                <text x="675" y="252" textAnchor="middle" fill="#fde68a" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                  ROB-05 Gecko
-                </text>
-              </g>
-
-              {/* ROB-06: Aqua-1 (Amphibious Sump Rover at 210, 480) */}
-              <g
-                className="cursor-pointer"
-                onClick={() => selectRobot('ROB-06')}
-                onDoubleClick={() => openFpv('ROB-06')}
-                onMouseEnter={() =>
-                  setHoveredEntity({
-                    type: 'robot',
-                    id: 'ROB-06',
-                    x: 210,
-                    y: 480,
-                    title: 'Aqua-1 (SUMP-PROBE)',
-                    subtitle: 'Battery: 76% • Signal: 72% • Basement Water Runoff Inspection',
-                    badge: 'CONNECTED',
-                  })
-                }
-                onMouseLeave={() => setHoveredEntity(null)}
-              >
-                {selectedRobotId === 'ROB-06' && (
-                  <circle cx="210" cy="480" r="22" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
-                )}
-                <circle cx="210" cy="480" r="16" fill="#071b28" stroke="#00f0ff" strokeWidth={selectedRobotId === 'ROB-06' ? '3' : '2'} />
-                <text x="210" y="485" textAnchor="middle" fontSize="13">🌊</text>
-
-                {/* Clean Pill Label Below */}
-                <rect x="165" y="503" width="90" height="20" rx="4" fill="#071220" stroke="#00f0ff" strokeWidth="1" />
-                <text x="210" y="517" textAnchor="middle" fill="#ffffff" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                  ROB-06 Aqua
-                </text>
-              </g>
-
+                    {/* Clean Pill Label Below */}
+                    <rect
+                      x={robot.position.x - 52}
+                      y={robot.position.y + 22}
+                      width="104"
+                      height="20"
+                      rx="4"
+                      fill={bgBadgeColor}
+                      stroke={strokeColor}
+                      strokeWidth="1"
+                    />
+                    <text
+                      x={robot.position.x}
+                      y={robot.position.y + 36}
+                      textAnchor="middle"
+                      fill={textBadgeColor}
+                      fontSize="10"
+                      fontFamily="JetBrains Mono"
+                      fontWeight="bold"
+                    >
+                      {robot.callsign} {Math.round(robot.battery)}%
+                    </text>
+                  </g>
+                );
+              })}
             </g>
+
 
             {/* ========================================================= */}
             {/* 7. SLEEK ON-DEMAND HOVER TOOLTIP                          */}

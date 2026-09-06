@@ -32,6 +32,7 @@ const MissionControlDeck: React.FC = () => {
   const [rightPanelTab, setRightPanelTab] = useState<'survivors' | 'hazards' | 'logs'>('survivors');
   const [isLeftRosterOpen, setIsLeftRosterOpen] = useState<boolean>(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
+  const [mobileTab, setMobileTab] = useState<'map' | 'roster' | 'triage'>('map');
 
   const isMapExpanded = !isLeftRosterOpen && !isRightPanelOpen;
 
@@ -132,14 +133,20 @@ const MissionControlDeck: React.FC = () => {
       <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-2 p-2 min-h-0 overflow-hidden">
         
         {/* LEFT COLUMN: Swarm Tele-Ops Roster */}
-        {isLeftRosterOpen && (
-          <div className={`hidden md:flex md:col-span-3 h-full min-h-0 ${getTourSpotlightStyle('left')}`}>
-            <RobotRoster onClose={() => setIsLeftRosterOpen(false)} />
-          </div>
-        )}
+        <div
+          className={`${
+            mobileTab === 'roster' ? 'flex' : 'hidden'
+          } ${isLeftRosterOpen ? 'md:flex md:col-span-3' : 'md:hidden'} h-full min-h-0 ${getTourSpotlightStyle('left')}`}
+        >
+          <RobotRoster onClose={() => setIsLeftRosterOpen(false)} />
+        </div>
 
         {/* CENTER COLUMN: Tactical Disaster Map */}
-        <div className={`col-span-1 ${getCenterColSpan()} h-full min-h-0 flex flex-col ${getTourSpotlightStyle('center')}`}>
+        <div
+          className={`${
+            mobileTab === 'map' ? 'flex' : 'hidden'
+          } md:flex col-span-1 ${getCenterColSpan()} h-full min-h-0 flex-col ${getTourSpotlightStyle('center')}`}
+        >
           <TacticalMap
             isExpanded={isMapExpanded}
             onToggleExpand={toggleMapExpanded}
@@ -147,61 +154,61 @@ const MissionControlDeck: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN: Triage, Hazards & Incident Log */}
-        {isRightPanelOpen && (
-          <div className={`hidden md:flex md:col-span-3 h-full min-h-0 flex-col gap-2 ${getTourSpotlightStyle('right')}`}>
-            
-            {/* Top Half: Survivor Triage Queue */}
-            <div className="flex-1 min-h-0">
-              <SurvivorQueue onClose={() => setIsRightPanelOpen(false)} />
-            </div>
-
-            {/* Bottom Half: Switcher between Hazards/Corridors and Incident Log */}
-            <div className="flex-1 min-h-0 flex flex-col">
-              <div className="flex items-center gap-1 mb-1 font-mono text-[10px] bg-slate-900/60 p-1 rounded border border-slate-800">
-                <button
-                  onClick={() => setRightPanelTab('survivors')}
-                  className={`flex-1 py-1 rounded transition-colors flex items-center justify-center gap-1 ${
-                    rightPanelTab === 'survivors'
-                      ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <AlertTriangle className="w-3 h-3" />
-                  <span>Hazards & Paths</span>
-                </button>
-
-                <button
-                  onClick={() => setRightPanelTab('logs')}
-                  className={`flex-1 py-1 rounded transition-colors flex items-center justify-center gap-1 ${
-                    rightPanelTab === 'logs'
-                      ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Terminal className="w-3 h-3" />
-                  <span>Live Event Log</span>
-                </button>
-              </div>
-
-              <div className="flex-1 min-h-0">
-                {rightPanelTab === 'survivors' ? (
-                  <HazardAndRoutePanel />
-                ) : (
-                  <TacticalLogFeed />
-                )}
-              </div>
-            </div>
-
+        <div
+          className={`${
+            mobileTab === 'triage' ? 'flex' : 'hidden'
+          } ${isRightPanelOpen ? 'md:flex md:col-span-3' : 'md:hidden'} h-full min-h-0 flex-col gap-2 ${getTourSpotlightStyle('right')}`}
+        >
+          {/* Top Half: Survivor Triage Queue */}
+          <div className="flex-1 min-h-0">
+            <SurvivorQueue onClose={() => setIsRightPanelOpen(false)} />
           </div>
-        )}
+
+          {/* Bottom Half: Switcher between Hazards/Corridors and Incident Log */}
+          <div className="flex-1 min-h-0 flex flex-col">
+            <div className="flex items-center gap-1 mb-1 font-mono text-[10px] bg-slate-900/60 p-1 rounded border border-slate-800">
+              <button
+                onClick={() => setRightPanelTab('survivors')}
+                className={`flex-1 py-1 rounded transition-colors flex items-center justify-center gap-1 ${
+                  rightPanelTab === 'survivors'
+                    ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <AlertTriangle className="w-3 h-3" />
+                <span>Hazards & Paths</span>
+              </button>
+
+              <button
+                onClick={() => setRightPanelTab('logs')}
+                className={`flex-1 py-1 rounded transition-colors flex items-center justify-center gap-1 ${
+                  rightPanelTab === 'logs'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Terminal className="w-3 h-3" />
+                <span>Live Event Log</span>
+              </button>
+            </div>
+
+            <div className="flex-1 min-h-0">
+              {rightPanelTab === 'survivors' ? (
+                <HazardAndRoutePanel />
+              ) : (
+                <TacticalLogFeed />
+              )}
+            </div>
+          </div>
+        </div>
 
       </main>
 
-      {/* Floating Buttons to Re-Open Panels when Closed */}
+      {/* Floating Buttons to Re-Open Panels when Closed on Desktop */}
       {!isLeftRosterOpen && (
         <button
           onClick={() => setIsLeftRosterOpen(true)}
-          className="fixed bottom-9 left-3 z-30 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07101e]/95 border border-cyan-400 text-cyan-300 hover:text-white hover:bg-cyan-950 font-mono text-xs shadow-2xl backdrop-blur transition-all"
+          className="hidden md:flex fixed bottom-9 left-3 z-30 items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07101e]/95 border border-cyan-400 text-cyan-300 hover:text-white hover:bg-cyan-950 font-mono text-xs shadow-2xl backdrop-blur transition-all"
           title="Open Swarm Tele-Ops Roster"
         >
           <Bot className="w-3.5 h-3.5 text-cyan-400" />
@@ -212,13 +219,52 @@ const MissionControlDeck: React.FC = () => {
       {!isRightPanelOpen && (
         <button
           onClick={() => setIsRightPanelOpen(true)}
-          className="fixed bottom-9 right-3 z-30 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#180a15]/95 border border-rose-500 text-rose-300 hover:text-white hover:bg-rose-950 font-mono text-xs shadow-2xl backdrop-blur transition-all"
+          className="hidden md:flex fixed bottom-9 right-3 z-30 items-center gap-2 px-3 py-1.5 rounded-lg bg-[#180a15]/95 border border-rose-500 text-rose-300 hover:text-white hover:bg-rose-950 font-mono text-xs shadow-2xl backdrop-blur transition-all"
           title="Open Survivor Triage & Incident Log"
         >
           <Heart className="w-3.5 h-3.5 text-rose-400" />
           <span className="font-bold">Triage & Logs ({survivors.length})</span>
         </button>
       )}
+
+      {/* Responsive Mobile Bottom Navigation Bar (< md) */}
+      <nav className="flex md:hidden items-center justify-around bg-[#060a12] border-t border-slate-800 py-2 px-2 text-xs font-mono select-none z-30 shrink-0">
+        <button
+          onClick={() => setMobileTab('map')}
+          className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors ${
+            mobileTab === 'map'
+              ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <span className="text-sm">🗺️</span>
+          <span className="text-[10px]">Map</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab('roster')}
+          className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors ${
+            mobileTab === 'roster'
+              ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <span className="text-sm">🤖</span>
+          <span className="text-[10px]">Swarm ({robots.length})</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab('triage')}
+          className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors ${
+            mobileTab === 'triage'
+              ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <span className="text-sm">❤️</span>
+          <span className="text-[10px]">Triage ({survivors.length})</span>
+        </button>
+      </nav>
 
       {/* Floating Keyboard Shortcuts Hint at Bottom Bar */}
       <footer className={`hidden lg:flex items-center justify-between px-4 py-1 bg-slate-950 border-t border-slate-900 text-[10px] font-mono text-slate-500 ${getTourSpotlightStyle('footer')}`}>
