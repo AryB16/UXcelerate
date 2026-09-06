@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/AryB16/UXcelerate/issues"
   },
-  "homepage": "https://github.com/AryB16/UXcelerate#readme",
+  "homepage": "https://uxcelerate.vercel.app/",
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "lucide-react": "^1.41.0",

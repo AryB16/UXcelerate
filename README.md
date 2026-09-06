@@ -2,7 +2,7 @@
 > **Adaptive Earthquake Ground & Infrastructure Swarm — Urban Search & Rescue**  
 > *Engineered for UXcelerate! — Online UI/UX Competition (IEI BPDC)*
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Online%20Mission%20Control-00f0ff?style=for-the-badge&logo=vercel)](https://AryB16.github.io/UXcelerate/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Online%20Mission%20Control-00f0ff?style=for-the-badge&logo=vercel)](https://uxcelerate.vercel.app/)
 [![React 19](https://img.shields.io/badge/React-19.2-61dafb?style=for-the-badge&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.x-38bdf8?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com)
@@ -12,7 +12,7 @@
 ---
 
 ## 🚀 Live Interactive Demo
-👉 **[Launch AEGIS-USAR Mission Control](https://AryB16.github.io/UXcelerate/)**  
+👉 **[Launch AEGIS-USAR Mission Control](https://uxcelerate.vercel.app/)**  
 *(Double-click any robot to enter FPV Tele-Op mode; click "UX Case Study" in the top bar to view full design research)*
 
 ---

@@ -4,7 +4,7 @@
 *Official Submission for UXcelerate! — Online UI/UX Competition (IEI BPDC)*  
 **Author:** Aryesh Biswas  
 **Date:** September 2026  
-**Live Demo:** [https://AryB16.github.io/UXcelerate/](https://AryB16.github.io/UXcelerate/)  
+**Live Demo:** [https://uxcelerate.vercel.app/](https://uxcelerate.vercel.app/)  
 **Repository:** [https://github.com/AryB16/UXcelerate](https://github.com/AryB16/UXcelerate)
 
 ---
