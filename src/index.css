@@ -436,6 +436,16 @@
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* High-Altitude Satellite Recon: suppress low-altitude ground vectors & labels to prevent Leaflet zoom stretch artifacts */
+.flyin-high-altitude .leaflet-overlay-pane,
+.flyin-high-altitude .leaflet-marker-pane,
+.flyin-high-altitude .tactical-perimeter-label-icon,
+.flyin-high-altitude .map-floating-control {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Cinematic Recon Fly-In Overlay */
 .cinematic-recon-hud {
   position: absolute;

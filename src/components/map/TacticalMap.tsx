@@ -610,7 +610,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     <div
       data-tour="tactical-map"
       className={`relative flex flex-col w-full h-full bg-[#050914] text-slate-100 overflow-hidden font-sans ${
-        ''
+        flyinStage === 'dubai' || flyinStage === 'diac' ? 'flyin-high-altitude' : ''
       }`}
     >
       {/* Top Tactical Map C2 Header */}
@@ -801,7 +801,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         )}
 
         {/* Top-Left Floating Filter Buttons */}
-        <div className="absolute top-3 left-3 z-30 flex items-center gap-1.5 bg-[#08101e]/90 p-1 rounded-md border border-cyan-500/30 backdrop-blur shadow-lg font-mono text-[10px]">
+        <div className="map-floating-control absolute top-3 left-3 z-30 flex items-center gap-1.5 bg-[#08101e]/90 p-1 rounded-md border border-cyan-500/30 backdrop-blur shadow-lg font-mono text-[10px]">
           <button
             onClick={() => {
               soundManager.playTacticalClick();
@@ -851,7 +851,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         </div>
 
         {/* Top-Right Tactical Zoom & Recenter Controls */}
-        <div className="absolute top-3 right-3 z-30 flex flex-col gap-1 bg-[#08101e]/90 p-1 rounded-md border border-cyan-500/30 backdrop-blur shadow-lg font-mono">
+        <div className="map-floating-control absolute top-3 right-3 z-30 flex flex-col gap-1 bg-[#08101e]/90 p-1 rounded-md border border-cyan-500/30 backdrop-blur shadow-lg font-mono">
           <button
             onClick={handleZoomIn}
             className="w-7 h-7 rounded flex items-center justify-center bg-slate-800 hover:bg-cyan-900/60 text-cyan-300 border border-slate-700 hover:border-cyan-500 transition-colors"
@@ -1064,7 +1064,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         )}
 
         {/* DOCKED TACTICAL MAP LEGEND HUD STRIP */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 hidden md:flex items-center justify-between px-3 py-1 bg-[#050914]/90 border-t border-slate-800/90 text-[9px] font-mono text-slate-400 select-none backdrop-blur-sm">
+        <div className="map-floating-control absolute bottom-0 left-0 right-0 z-20 hidden md:flex items-center justify-between px-3 py-1 bg-[#050914]/90 border-t border-slate-800/90 text-[9px] font-mono text-slate-400 select-none backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <span className="text-slate-500 font-bold uppercase tracking-wider">GIS SYMBOLOGY // INSARAG</span>
             <span className="text-slate-700">|</span>
