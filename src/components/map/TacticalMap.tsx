@@ -107,8 +107,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
-        center: [CENTER_LAT, CENTER_LNG],
-        zoom: 17,
+        center: [25.1950, 55.3000],
+        zoom: 10,
         zoomControl: false,
         attributionControl: false,
         minZoom: 10,
@@ -172,6 +172,30 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
       });
 
       mapInstanceRef.current = map;
+
+      // Automatically launch the cinematic satellite fly-in on site refresh
+      const t1 = setTimeout(() => {
+        setFlyinStage('diac');
+        setTargetAlt(7200);
+        setOpticalZoom('8.5x RECON');
+        soundManager.playTacticalClick();
+        map.flyTo([25.1275, 55.4080], 13.8, { duration: 2.2, easeLinearity: 0.2 });
+      }, 1600);
+
+      const t2 = setTimeout(() => {
+        setFlyinStage('bpdc');
+        setTargetAlt(320);
+        setOpticalZoom('32.0x FLIR');
+        soundManager.playTargetLock();
+        map.flyTo([CENTER_LAT, CENTER_LNG], 17.0, { duration: 2.5, easeLinearity: 0.25 });
+      }, 4000);
+
+      const t3 = setTimeout(() => {
+        setFlyinStage('idle');
+        soundManager.playSonarPing();
+      }, 7200);
+
+      flyinTimeoutsRef.current.push(t1, t2, t3);
     }
 
     return () => {
@@ -547,18 +571,6 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [flyinStage]);
-
-  // Trigger once on initial session load
-  useEffect(() => {
-    const hasSeen = sessionStorage.getItem('aegis_bpdc_flyin_seen');
-    if (!hasSeen && mapInstanceRef.current) {
-      sessionStorage.setItem('aegis_bpdc_flyin_seen', 'true');
-      const timer = setTimeout(() => {
-        runCinematicFlyIn();
-      }, 700);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
 
   return (
