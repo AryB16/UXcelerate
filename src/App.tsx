@@ -199,11 +199,19 @@ const MissionControlDeck: React.FC = () => {
         
         {/* LEFT COLUMN: Swarm Tele-Ops Roster */}
         <div
-          className={`${
+          className={`relative ${
             mobileTab === 'roster' ? 'flex' : 'hidden'
           } ${isLeftRosterOpen ? 'md:flex md:col-span-3' : 'md:hidden'} h-full min-h-0 ${getTourSpotlightStyle('left')}`}
         >
           <RobotRoster onClose={() => setIsLeftRosterOpen(false)} />
+          {/* Collapse tab on the right (map-facing) edge */}
+          <button
+            onClick={() => setIsLeftRosterOpen(false)}
+            title="Collapse Robots panel"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -right-3 z-20 flex-col items-center justify-center w-3 h-16 bg-slate-800 hover:bg-cyan-900/80 border border-slate-700 hover:border-cyan-500/60 rounded-r-md text-slate-400 hover:text-cyan-300 transition-all shadow-md"
+          >
+            <ChevronLeft className="w-2.5 h-2.5" />
+          </button>
         </div>
 
         {/* CENTER COLUMN: Tactical Disaster Map */}
@@ -220,10 +228,18 @@ const MissionControlDeck: React.FC = () => {
 
         {/* RIGHT COLUMN: Dedicated Triage, Hazards & Incident Log */}
         <div
-          className={`${
+          className={`relative ${
             mobileTab === 'triage' ? 'flex' : 'hidden'
           } ${isRightPanelOpen ? 'md:flex md:col-span-3' : 'md:hidden'} h-full min-h-0 flex-col gap-1.5 ${getTourSpotlightStyle('right')}`}
         >
+          {/* Collapse tab on the left (map-facing) edge */}
+          <button
+            onClick={() => setIsRightPanelOpen(false)}
+            title="Collapse Survivors panel"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-3 z-20 flex-col items-center justify-center w-3 h-16 bg-slate-800 hover:bg-rose-900/80 border border-slate-700 hover:border-rose-500/60 rounded-l-md text-slate-400 hover:text-rose-300 transition-all shadow-md"
+          >
+            <ChevronRight className="w-2.5 h-2.5" />
+          </button>
           {/* Top-Level Panel Switcher: Distinct Separation of Triage vs Hazards vs Logs */}
           <div className="flex items-center justify-between p-1 bg-[#090e1a] border border-slate-800 rounded-md shadow-md shrink-0">
             <div className="flex items-center gap-1 flex-1 font-mono text-[10px]">
