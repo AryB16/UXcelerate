@@ -70,18 +70,18 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
         <div className="flex items-center gap-1.5">
           <Heart className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-100 tactical-font">
-            Survivor Triage Queue ({survivors.length})
+            Survivors ({survivors.length})
           </h2>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-300 border border-slate-700 hidden sm:inline-block">
-            START PROTOCOL
+            RESCUE QUEUE
           </span>
           {onClose && (
             <button
               onClick={onClose}
               className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              title="Close Triage Panel"
+              title="Close Survivors Menu"
             >
               <X className="w-3.5 h-3.5" />
             </button>

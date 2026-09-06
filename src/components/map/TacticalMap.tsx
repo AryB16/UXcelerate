@@ -2,16 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMission } from '../../store/MissionContext';
 import {
   Layers,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
   Radio,
   Eye,
   Signal,
+  Send,
   Maximize2,
   Minimize2,
   X,
-  Send,
   AlertTriangle,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
@@ -78,26 +75,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     prevAftershockLevelRef.current = overview.aftershockRiskLevel;
   }, [overview.aftershockRiskLevel]);
 
-  // Detail mode: 'simple' (minimalist uncluttered overview) or 'detailed' (deep mission telemetry)
+  // Detail mode: always simple by default for a clean, non-cluttered map
   const [detailMode, setDetailMode] = useState<'simple' | 'detailed'>('simple');
-
-  // When map expands, automatically provide full details!
-  // When map is restored to 3-column deck, return to simplified mode for a clean overview.
-  useEffect(() => {
-    if (isExpanded) {
-      setDetailMode('detailed');
-    } else {
-      setDetailMode('simple');
-    }
-  }, [isExpanded]);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
-  const handleZoomIn = () => setZoom((z) => Math.min(2.4, z + 0.15));
-  const handleZoomOut = () => setZoom((z) => Math.max(0.75, z - 0.15));
-  const handleReset = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+  // Wheel zoom handler: smoothly zooms in/out with trackpad/mouse scroll wheel
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    setZoom((prevZoom) => {
+      const nextZoom = Math.min(3.0, Math.max(0.7, prevZoom * zoomFactor));
+      return nextZoom;
+    });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -206,22 +196,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           </button>
         </div>
 
-        {/* Right: Actions, Expand & Zoom */}
+        {/* Right: Actions & Expand */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Detail Mode Pill (Compact & non-intrusive) */}
-          <button
-            onClick={() => setDetailMode((m) => (m === 'simple' ? 'detailed' : 'simple'))}
-            className={`px-2 py-1 rounded-md text-xs font-mono transition-all flex items-center gap-1.5 border ${
-              detailMode === 'detailed'
-                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 font-bold'
-                : 'bg-slate-800/60 text-slate-400 border-slate-700 hover:text-slate-200'
-            }`}
-            title={detailMode === 'detailed' ? 'Switch to Simplified Overview' : 'Switch to Deep Telemetry Mode'}
-          >
-            <Eye className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden xl:inline">{detailMode === 'detailed' ? 'Deep' : 'Simple'}</span>
-          </button>
-
           {/* Deploy Relay Button */}
           <button
             onClick={() => setIsDeployMode(!isDeployMode)}
@@ -230,10 +206,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 ? 'bg-cyan-400 text-slate-950 border-cyan-300 animate-pulse'
                 : 'bg-slate-800/80 text-cyan-300 border-slate-700 hover:bg-slate-700'
             }`}
-            title="Deploy RF Relay Beacon"
+            title="Drop a signal relay on the map"
           >
             <Radio className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{isDeployMode ? 'Click Map' : 'Deploy Relay'}</span>
+            <span className="hidden sm:inline">{isDeployMode ? 'Click Map' : 'Drop Relay'}</span>
             <span className="sm:hidden">Relay</span>
           </button>
 
@@ -242,46 +218,21 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <button
               onClick={onToggleExpand}
               className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono bg-slate-800/80 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors"
-              title={isExpanded ? 'Restore 3-Column Deck (M)' : 'Maximize Map Full Width (M)'}
+              title={isExpanded ? 'Restore side menus' : 'Full Screen Map'}
             >
               {isExpanded ? (
                 <>
                   <Minimize2 className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="hidden sm:inline">3-Deck</span>
+                  <span className="hidden sm:inline">Split View</span>
                 </>
               ) : (
                 <>
                   <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="hidden sm:inline">Expand</span>
+                  <span className="hidden sm:inline">Full Map</span>
                 </>
               )}
             </button>
           )}
-
-          {/* Zoom controls */}
-          <div className="flex items-center bg-slate-800/80 rounded-md border border-slate-700 p-0.5">
-            <button
-              onClick={handleZoomIn}
-              className="p-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
-              title="Zoom In"
-            >
-              <ZoomIn className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={handleZoomOut}
-              className="p-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
-              title="Zoom Out"
-            >
-              <ZoomOut className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={handleReset}
-              className="p-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
-              title="Reset View"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -289,7 +240,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
       {isDeployMode && (
         <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-cyan-950/95 border-2 border-cyan-400 text-cyan-200 text-xs font-mono font-bold rounded-full shadow-2xl flex items-center gap-2 animate-bounce">
           <Radio className="w-4 h-4 text-cyan-400 animate-spin" />
-          <span>Click anywhere on the map to deploy an RF Breadcrumb Relay Beacon</span>
+          <span>Click anywhere on the map to drop a signal relay</span>
         </div>
       )}
 
@@ -297,17 +248,18 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
       {overview.aftershockRiskLevel === 'CRITICAL' && (
         <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-rose-950/95 border border-rose-500 text-rose-200 text-xs font-mono font-bold rounded-md shadow-lg flex items-center gap-2 animate-pulse">
           <AlertTriangle className="w-4 h-4 text-rose-400" />
-          <span>⚠️ 5.2M AFTERSHOCK REGISTERED // SECONDARY COLLAPSE IN SECTOR BETA // REROUTING</span>
+          <span>⚠️ Earthquake detected — recalculating safe routes</span>
         </div>
       )}
 
-      {/* Main Map Canvas */}
+      {/* Main Map Canvas with scroll-wheel zoom */}
       <div
         className={`relative flex-1 w-full h-full overflow-hidden select-none ${
           isShaking ? 'seismic-shake' : ''
         } ${
           isDeployMode ? 'cursor-crosshair' : isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
+        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

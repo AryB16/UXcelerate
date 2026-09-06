@@ -128,27 +128,27 @@ export const MissionHeader: React.FC = () => {
 
         {/* Center: Standardized Mission Vital Telemetry Cards */}
         <div className="hidden lg:flex items-center gap-2 shrink-0">
-          {/* Card 1: Golden Window */}
+          {/* Card 1: Time Remaining */}
           <div className="bg-[#0b101b] border border-slate-800 rounded-sm px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5">
             <Clock className="w-4 h-4 text-amber-400 shrink-0" />
             <div className="min-w-0">
-              <div className="text-[9px] uppercase text-slate-400 font-mono tracking-wider leading-none">Golden Window</div>
+              <div className="text-[9px] uppercase text-slate-400 font-mono tracking-wider leading-none">Time Left</div>
               <div className="text-xs font-mono font-bold text-amber-400 leading-tight mt-0.5 truncate">
-                67h 41m rem
+                67h 41m left
               </div>
             </div>
           </div>
 
-          {/* Card 2: Seismic Risk */}
+          {/* Card 2: Earthquake Risk */}
           <div className={`bg-[#0b101b] border border-slate-800 rounded-sm px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5 ${
             overview.aftershockRiskLevel === 'CRITICAL' ? 'border-rose-500/50 bg-rose-950/20' : ''
           }`}>
             <Activity className={`w-4 h-4 shrink-0 ${overview.aftershockRiskLevel === 'CRITICAL' ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`} />
             <div className="min-w-0">
-              <div className="text-[9px] uppercase text-slate-400 font-mono tracking-wider leading-none">Seismic Risk</div>
+              <div className="text-[9px] uppercase text-slate-400 font-mono tracking-wider leading-none">Quake Risk</div>
               <div className="text-xs font-mono font-bold leading-tight mt-0.5 flex items-center gap-1.5 truncate">
                 <span className={overview.aftershockRiskLevel === 'CRITICAL' ? 'text-rose-400' : 'text-slate-200'}>
-                  {overview.aftershockRiskLevel}
+                  {overview.aftershockRiskLevel === 'CRITICAL' ? 'DANGER' : 'ELEVATED'}
                 </span>
                 {overview.aftershockRiskLevel === 'CRITICAL' && (
                   <span className="text-[8px] bg-rose-500/20 text-rose-300 px-1 py-0.2 rounded border border-rose-500/30">ALERT</span>
@@ -157,7 +157,7 @@ export const MissionHeader: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 3: Mesh RF */}
+          {/* Card 3: Radio Signal */}
           <div className="bg-[#0b101b] border border-slate-800 rounded-sm px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5">
             {overview.overallMeshIntegrity > 70 ? (
               <Wifi className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -165,7 +165,7 @@ export const MissionHeader: React.FC = () => {
               <WifiOff className="w-4 h-4 text-rose-400 animate-bounce shrink-0" />
             )}
             <div className="min-w-0">
-              <div className="text-[9px] uppercase text-slate-400 font-mono tracking-wider leading-none">Mesh RF</div>
+              <div className="text-[9px] uppercase text-slate-400 font-mono tracking-wider leading-none">Radio Signal</div>
               <div className="text-xs font-mono font-bold leading-tight mt-0.5 flex items-center gap-1.5 truncate">
                 <span className={overview.overallMeshIntegrity > 70 ? 'text-emerald-400' : 'text-rose-400'}>
                   {overview.overallMeshIntegrity}%
@@ -189,11 +189,11 @@ export const MissionHeader: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Operational Telemetry Status & Zulu Clock */}
+        {/* Right: Operational Telemetry Status & Clock */}
         <div className="flex items-center gap-3 shrink-0 font-mono text-xs">
           <div className="hidden sm:flex items-center gap-1.5 text-slate-300 font-bold tracking-wider text-[11px] bg-[#0b101b] border border-slate-800 px-2.5 py-1 rounded-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>C2 ONLINE</span>
+            <span>ONLINE</span>
             <span className="text-slate-600">|</span>
             <span className="text-cyan-400">{zuluTime}</span>
           </div>

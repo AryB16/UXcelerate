@@ -17,6 +17,8 @@ import {
   Heart,
   Columns,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 const MissionControlDeck: React.FC = () => {
@@ -38,8 +40,8 @@ const MissionControlDeck: React.FC = () => {
   } = useMission();
 
   const [rightPanelMode, setRightPanelMode] = useState<'triage' | 'hazards' | 'logs' | 'split'>('triage');
-  const [isLeftRosterOpen, setIsLeftRosterOpen] = useState<boolean>(true);
-  const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
+  const [isLeftRosterOpen, setIsLeftRosterOpen] = useState<boolean>(false);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'map' | 'roster' | 'triage'>('map');
 
   const isMapExpanded = !isLeftRosterOpen && !isRightPanelOpen;
@@ -215,10 +217,10 @@ const MissionControlDeck: React.FC = () => {
                     ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/50'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
-                title="Survivor Medical Triage (START Protocol)"
+                title="Survivors and medical status"
               >
                 <Heart className="w-3 h-3 text-rose-400" />
-                <span>Triage ({survivors.length})</span>
+                <span>Survivors ({survivors.length})</span>
               </button>
 
               <button
@@ -305,26 +307,32 @@ const MissionControlDeck: React.FC = () => {
 
       </main>
 
-      {/* Floating Buttons to Re-Open Panels when Closed on Desktop */}
+      {/* Side-Docked Edge Buttons to Open Menus (placed on either side of the screen) */}
       {!isLeftRosterOpen && (
         <button
           onClick={() => setIsLeftRosterOpen(true)}
-          className="hidden md:flex fixed bottom-9 left-3 z-30 items-center gap-2 px-3 py-1.5 rounded-md bg-[#07101e]/95 border border-cyan-400 text-cyan-300 hover:text-white hover:bg-cyan-950 font-mono text-xs shadow-xl backdrop-blur transition-all"
-          title="Open Swarm Tele-Ops Roster"
+          className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-0 z-30 items-center gap-1.5 py-3 px-2 rounded-r-md bg-[#111722]/95 border-y border-r border-slate-700 hover:border-cyan-500 text-cyan-400 hover:text-white hover:bg-slate-800 text-xs font-mono shadow-2xl backdrop-blur transition-all [writing-mode:vertical-lr] rotate-180"
+          title="Open Robots Menu"
         >
-          <Bot className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="font-bold">Swarm Roster ({robots.length})</span>
+          <div className="flex items-center gap-1.5 rotate-180 [writing-mode:horizontal-tb]">
+            <ChevronRight className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <Bot className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-bold tracking-wide">Robots ({robots.length})</span>
+          </div>
         </button>
       )}
 
       {!isRightPanelOpen && (
         <button
           onClick={() => setIsRightPanelOpen(true)}
-          className="hidden md:flex fixed bottom-9 right-3 z-30 items-center gap-2 px-3 py-1.5 rounded-md bg-[#180a15]/95 border border-rose-500 text-rose-300 hover:text-white hover:bg-rose-950 font-mono text-xs shadow-xl backdrop-blur transition-all"
-          title="Open Survivor Triage & Hazards Panel"
+          className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-0 z-30 items-center gap-1.5 py-3 px-2 rounded-l-md bg-[#111722]/95 border-y border-l border-slate-700 hover:border-rose-500 text-rose-400 hover:text-white hover:bg-slate-800 text-xs font-mono shadow-2xl backdrop-blur transition-all"
+          title="Open Survivors Menu"
         >
-          <Heart className="w-3.5 h-3.5 text-rose-400" />
-          <span className="font-bold">Triage & Hazards ({survivors.length})</span>
+          <div className="flex items-center gap-1.5">
+            <ChevronLeft className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+            <Heart className="w-3.5 h-3.5 text-rose-400" />
+            <span className="font-bold tracking-wide">Survivors ({survivors.length})</span>
+          </div>
         </button>
       )}
 

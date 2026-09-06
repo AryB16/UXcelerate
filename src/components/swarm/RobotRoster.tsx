@@ -81,19 +81,19 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
         <div className="flex items-center gap-1.5">
           <Bot className="w-3.5 h-3.5 text-cyan-400" />
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-100 tactical-font">
-            Swarm Roster ({robots.length})
+            Robots ({robots.length})
           </h2>
         </div>
 
         <div className="flex items-center gap-1.5">
           <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm bg-slate-800 text-cyan-300 border border-slate-700 hidden sm:inline-block">
-            AUTO-SYNC
+            LIVE SYNC
           </span>
           {onClose && (
             <button
               onClick={onClose}
               className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              title="Close Roster Panel"
+              title="Close Robots Menu"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -133,7 +133,7 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          Degraded ({robots.filter((r) => r.commsStatus === 'degraded').length})
+          Weak ({robots.filter((r) => r.commsStatus === 'degraded').length})
         </button>
 
         <button
@@ -144,7 +144,7 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          Ghost ({robots.filter((r) => r.commsStatus === 'disconnected').length})
+          Offline ({robots.filter((r) => r.commsStatus === 'disconnected').length})
         </button>
       </div>
 
