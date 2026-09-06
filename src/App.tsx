@@ -41,9 +41,6 @@ const MissionControlDeck: React.FC = () => {
   const [isLeftRosterOpen, setIsLeftRosterOpen] = useState<boolean>(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
   const [mobileTab, setMobileTab] = useState<'map' | 'roster' | 'triage'>('map');
-  const [showEvaluatorBanner, setShowEvaluatorBanner] = useState<boolean>(() => {
-    return !localStorage.getItem('aegis_eval_banner_dismissed');
-  });
 
   const isMapExpanded = !isLeftRosterOpen && !isRightPanelOpen;
 
@@ -126,43 +123,6 @@ const MissionControlDeck: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#05080f] text-slate-100 overflow-hidden font-sans select-none relative">
-      {/* Evaluator Welcome Banner (Dismissible, Non-Blocking) */}
-      {showEvaluatorBanner && !isTourOpen && (
-        <div className="bg-gradient-to-r from-cyan-950 via-[#091b30] to-cyan-950 border-b border-cyan-500/30 px-3 py-1.5 flex items-center justify-between z-50 text-xs font-mono backdrop-blur shrink-0 shadow-lg">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
-            </span>
-            <span className="text-slate-200">
-              <strong className="text-cyan-400 font-bold">⚡ New Evaluator?</strong> Take the 30s Interactive Tour to explore multi-robot tele-ops, triage, and seismic aftershock mitigation:
-            </span>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => {
-                startTour();
-                setShowEvaluatorBanner(false);
-                localStorage.setItem('aegis_eval_banner_dismissed', 'true');
-              }}
-              className="px-3 py-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded text-[11px] shadow-sm transition-all flex items-center gap-1"
-            >
-              <span>Take 30s Tour 🚀</span>
-            </button>
-            <button
-              onClick={() => {
-                setShowEvaluatorBanner(false);
-                localStorage.setItem('aegis_eval_banner_dismissed', 'true');
-              }}
-              className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition-colors"
-              title="Dismiss banner"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Reactive Aftershock Reroute Decision Card */}
       {reroutePrompt && reroutePrompt.isOpen && (
         <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 max-w-xl w-[92vw] bg-[#0c1424]/95 border-2 border-amber-500/80 rounded-xl p-4 shadow-[0_0_35px_rgba(245,158,11,0.35)] backdrop-blur animate-in fade-in slide-in-from-top duration-300">
