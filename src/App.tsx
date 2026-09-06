@@ -19,6 +19,8 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Wifi,
 } from 'lucide-react';
 
 const MissionControlDeck: React.FC = () => {
@@ -28,6 +30,7 @@ const MissionControlDeck: React.FC = () => {
     hazards,
     routes,
     selectRobot,
+    selectSurvivor,
     toggleSimPaused,
     setIsCaseStudyOpen,
     isFpvOpen,
@@ -307,33 +310,151 @@ const MissionControlDeck: React.FC = () => {
 
       </main>
 
-      {/* Side-Docked Edge Buttons to Open Menus (placed on either side of the screen) */}
+      {/* Organized Left Side Strip: Quick Robot Fleet Summary */}
       {!isLeftRosterOpen && (
-        <button
-          onClick={() => setIsLeftRosterOpen(true)}
-          className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-0 z-30 items-center gap-1.5 py-3 px-2 rounded-r-md bg-[#111722]/95 border-y border-r border-slate-700 hover:border-cyan-500 text-cyan-400 hover:text-white hover:bg-slate-800 text-xs font-mono shadow-2xl backdrop-blur transition-all [writing-mode:vertical-lr] rotate-180"
-          title="Open Robots Menu"
-        >
-          <div className="flex items-center gap-1.5 rotate-180 [writing-mode:horizontal-tb]">
-            <ChevronRight className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <Bot className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-bold tracking-wide">Robots ({robots.length})</span>
+        <aside className="hidden md:flex fixed top-24 left-3 z-30 flex-col w-56 bg-[#111722]/95 border border-slate-700/80 hover:border-cyan-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-left duration-200">
+          {/* Header click opens panel */}
+          <button
+            onClick={() => setIsLeftRosterOpen(true)}
+            className="w-full flex items-center justify-between px-3 py-2 bg-slate-900/90 border-b border-slate-800 text-left hover:bg-slate-850 transition-colors rounded-t-md group"
+            title="Expand Full Robots Menu"
+          >
+            <div className="flex items-center gap-1.5">
+              <Bot className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <span className="font-bold text-xs text-slate-100 font-mono tracking-wide">
+                Robots ({robots.length})
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-[10px] font-mono text-cyan-400 font-semibold group-hover:translate-x-0.5 transition-transform">
+              <span>Open</span>
+              <ChevronRight className="w-3 h-3" />
+            </div>
+          </button>
+
+          {/* Compact Mini List: 6 Robots Glanceable */}
+          <div className="p-2 space-y-1 text-[11px] font-mono">
+            {robots.map((r) => {
+              const isOffline = r.commsStatus === 'disconnected';
+              return (
+                <div
+                  key={r.id}
+                  onClick={() => {
+                    selectRobot(r.id);
+                    setIsLeftRosterOpen(true);
+                  }}
+                  className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/70 hover:border-cyan-500/50 cursor-pointer transition-all"
+                  title={`Click to view ${r.name} (${r.callsign})`}
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        isOffline ? 'bg-rose-500 animate-pulse' : 'bg-emerald-400'
+                      }`}
+                    />
+                    <span className="font-bold text-slate-200 truncate">{r.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 text-slate-400 text-[10px]">
+                    <span className={r.battery < 30 ? 'text-rose-400' : 'text-slate-300'}>
+                      {Math.round(r.battery)}%
+                    </span>
+                    <span
+                      className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                        isOffline
+                          ? 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
+                          : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {isOffline ? 'OFFLINE' : 'OK'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </button>
+
+          {/* Bottom Quick-Action hint */}
+          <button
+            onClick={() => setIsLeftRosterOpen(true)}
+            className="px-3 py-1.5 bg-[#0b101b] border-t border-slate-800/80 text-[10px] font-mono text-slate-400 hover:text-cyan-300 transition-colors flex items-center justify-between rounded-b-md"
+          >
+            <span>Live Cameras & Sensors</span>
+            <span>→</span>
+          </button>
+        </aside>
       )}
 
+      {/* Organized Right Side Strip: Quick Survivors & Rescue Queue Summary */}
       {!isRightPanelOpen && (
-        <button
-          onClick={() => setIsRightPanelOpen(true)}
-          className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-0 z-30 items-center gap-1.5 py-3 px-2 rounded-l-md bg-[#111722]/95 border-y border-l border-slate-700 hover:border-rose-500 text-rose-400 hover:text-white hover:bg-slate-800 text-xs font-mono shadow-2xl backdrop-blur transition-all"
-          title="Open Survivors Menu"
-        >
-          <div className="flex items-center gap-1.5">
-            <ChevronLeft className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-            <Heart className="w-3.5 h-3.5 text-rose-400" />
-            <span className="font-bold tracking-wide">Survivors ({survivors.length})</span>
+        <aside className="hidden md:flex fixed top-24 right-3 z-30 flex-col w-56 bg-[#111722]/95 border border-slate-700/80 hover:border-rose-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-right duration-200">
+          {/* Header click opens panel */}
+          <button
+            onClick={() => setIsRightPanelOpen(true)}
+            className="w-full flex items-center justify-between px-3 py-2 bg-slate-900/90 border-b border-slate-800 text-left hover:bg-slate-850 transition-colors rounded-t-md group"
+            title="Expand Full Survivors Menu"
+          >
+            <div className="flex items-center gap-1.5">
+              <Heart className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform animate-pulse" />
+              <span className="font-bold text-xs text-slate-100 font-mono tracking-wide">
+                Survivors ({survivors.length})
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-[10px] font-mono text-rose-400 font-semibold group-hover:-translate-x-0.5 transition-transform">
+              <ChevronLeft className="w-3 h-3" />
+              <span>Open</span>
+            </div>
+          </button>
+
+          {/* Compact Mini List: Found Survivors Glanceable */}
+          <div className="p-2 space-y-1 text-[11px] font-mono">
+            {survivors.map((s) => {
+              const isRed = s.triage === 'immediate';
+              const isYellow = s.triage === 'delayed';
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => {
+                    selectSurvivor(s.id);
+                    setIsRightPanelOpen(true);
+                  }}
+                  className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/70 hover:border-rose-500/50 cursor-pointer transition-all"
+                  title={`Click to view ${s.label}`}
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        isRed ? 'bg-rose-500 animate-pulse' : isYellow ? 'bg-amber-400' : 'bg-emerald-400'
+                      }`}
+                    />
+                    <span className="font-bold text-slate-200 truncate">{s.label.split(' ')[0]} {s.label.split(' ')[1]}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 text-slate-400 text-[10px]">
+                    <span className="text-slate-300">{s.vitals.heartRate} bpm</span>
+                    <span
+                      className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                        isRed
+                          ? 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
+                          : isYellow
+                          ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
+                          : 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
+                      }`}
+                    >
+                      {isRed ? 'URGENT' : isYellow ? 'DELAY' : 'MINOR'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </button>
+
+          {/* Bottom Quick-Action hint */}
+          <button
+            onClick={() => setIsRightPanelOpen(true)}
+            className="px-3 py-1.5 bg-[#0b101b] border-t border-slate-800/80 text-[10px] font-mono text-slate-400 hover:text-rose-300 transition-colors flex items-center justify-between rounded-b-md"
+          >
+            <span>Rescue Dispatch & Vitals</span>
+            <span>→</span>
+          </button>
+        </aside>
       )}
 
       {/* Responsive Mobile Bottom Navigation Bar (< md) */}
