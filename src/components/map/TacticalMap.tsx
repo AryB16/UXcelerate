@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import L from 'leaflet';
 import { useMission } from '../../store/MissionContext';
 import {
   Layers,
@@ -9,13 +10,14 @@ import {
   Maximize2,
   Minimize2,
   X,
-  AlertTriangle,
-  Mountain,
   Plus,
   Minus,
   RotateCcw,
   Compass,
-  Map,
+  Map as MapIcon,
+  Crosshair,
+  AlertTriangle,
+  Users,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 
@@ -24,13 +26,30 @@ interface TacticalMapProps {
   onToggleExpand?: () => void;
 }
 
+// BITS Pilani Dubai Campus & Sector 4 Collapse Bounds
+const CENTER_LAT = 25.1288;
+const CENTER_LNG = 55.4186;
+
+const BOUNDS_NORTH = 25.1330;
+const BOUNDS_SOUTH = 25.1240;
+const BOUNDS_WEST = 55.4120;
+const BOUNDS_EAST = 55.4250;
+
+// Converts SVG coords [0..800, 0..620] into geographic [Lat, Lng] within DIAC sector
+const svgToGeo = (x: number, y: number): [number, number] => {
+  const clampedX = Math.max(0, Math.min(800, x));
+  const clampedY = Math.max(0, Math.min(620, y));
+  const lat = BOUNDS_NORTH - (clampedY / 620) * (BOUNDS_NORTH - BOUNDS_SOUTH);
+  const lng = BOUNDS_WEST + (clampedX / 800) * (BOUNDS_EAST - BOUNDS_WEST);
+  return [lat, lng];
+};
+
 export const TacticalMap: React.FC<TacticalMapProps> = ({
   isExpanded = false,
   onToggleExpand,
 }) => {
   const {
     overview,
-    sectors,
     robots,
     survivors,
     hazards,
@@ -51,1706 +70,516 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     dispatchRobotToSurvivor,
   } = useMission();
 
-  const [mapMode, setMapMode] = useState<'slam' | 'satellite'>('slam');
-  const [zoom, setZoom] = useState<number>(1);
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [isDeployMode, setIsDeployMode] = useState<boolean>(false);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Local state
+  const [mapMode, setMapMode] = useState<'carto' | 'satellite'>('carto');
+  const [filterSurvivors, setFilterSurvivors] = useState<boolean>(true);
+  const [filterHazards, setFilterHazards] = useState<boolean>(true);
+  const [filterRoutes, setFilterRoutes] = useState<boolean>(true);
+  const [currentZoom, setCurrentZoom] = useState<number>(16);
 
-  // Hover state for sleek, clean tooltip
-  const [hoveredEntity, setHoveredEntity] = useState<{
-    type: 'robot' | 'survivor' | 'hazard' | 'beacon';
-    id: string;
-    x: number;
-    y: number;
-    title: string;
-    subtitle: string;
-    badge?: string;
-  } | null>(null);
+  // References
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const markersLayerGroupRef = useRef<L.LayerGroup | null>(null);
+  const routesLayerGroupRef = useRef<L.LayerGroup | null>(null);
+  const perimeterLayerRef = useRef<L.Rectangle | null>(null);
 
-  // Seismic camera shake effect when an aftershock strikes
-  const [isShaking, setIsShaking] = useState<boolean>(false);
-  const prevAftershockLevelRef = useRef(overview.aftershockRiskLevel);
-
+  // Initialize Map
   useEffect(() => {
-    if (overview.aftershockRiskLevel === 'CRITICAL' && prevAftershockLevelRef.current !== 'CRITICAL') {
-      setIsShaking(true);
-      const timer = setTimeout(() => setIsShaking(false), 850);
-      return () => clearTimeout(timer);
+    if (!mapContainerRef.current) return;
+
+    if (!mapInstanceRef.current) {
+      const map = L.map(mapContainerRef.current, {
+        center: [CENTER_LAT, CENTER_LNG],
+        zoom: 16,
+        zoomControl: false,
+        attributionControl: false,
+        minZoom: 13,
+        maxZoom: 19,
+      });
+
+      // CartoDB Dark Matter tile layer
+      const darkTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        subdomains: ['a', 'b', 'c', 'd'],
+      }).addTo(map);
+
+      tileLayerRef.current = darkTile;
+
+      // Disaster Zone Perimeter (Red Dashed Box)
+      const disasterBounds: L.LatLngBoundsExpression = [
+        [BOUNDS_NORTH, BOUNDS_WEST],
+        [BOUNDS_SOUTH, BOUNDS_EAST],
+      ];
+      const perimeter = L.rectangle(disasterBounds, {
+        color: '#ef4444',
+        weight: 2,
+        dashArray: '8, 8',
+        fillColor: '#991b1b',
+        fillOpacity: 0.18,
+      }).addTo(map);
+
+      perimeter.bindTooltip('DISASTER PERIMETER // SECTOR 4 COLLAPSE ZONE', {
+        permanent: false,
+        direction: 'top',
+        className: 'tactical-tooltip-perimeter',
+      });
+      perimeterLayerRef.current = perimeter;
+
+      // Layer groups for markers and routes
+      routesLayerGroupRef.current = L.layerGroup().addTo(map);
+      markersLayerGroupRef.current = L.layerGroup().addTo(map);
+
+      map.on('zoomend', () => {
+        setCurrentZoom(map.getZoom());
+      });
+
+      mapInstanceRef.current = map;
     }
-    prevAftershockLevelRef.current = overview.aftershockRiskLevel;
-  }, [overview.aftershockRiskLevel]);
 
-  // Detail mode: always simple by default for a clean, non-cluttered map
-  const [detailMode, setDetailMode] = useState<'simple' | 'detailed'>('simple');
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
 
-  const svgRef = useRef<SVGSVGElement | null>(null);
+  // Update Tile Layer if mapMode changes
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    if (tileLayerRef.current) {
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
+    }
 
-  // Wheel zoom handler: smoothly zooms in/out with trackpad/mouse scroll wheel
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
-    setZoom((prevZoom) => {
-      const nextZoom = Math.min(4.5, Math.max(0.7, prevZoom * zoomFactor));
-      return nextZoom;
+    let url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    let subdomains: string[] | string = ['a', 'b', 'c', 'd'];
+
+    if (mapMode === 'satellite') {
+      // High-res Esri World Imagery
+      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      subdomains = [];
+    }
+
+    const nextTile = L.tileLayer(url, {
+      maxZoom: 19,
+      subdomains,
+    }).addTo(mapInstanceRef.current);
+
+    // Keep tiles under overlays
+    nextTile.bringToBack();
+    tileLayerRef.current = nextTile;
+  }, [mapMode]);
+
+  // Invalidate map size when expanded or container dimensions change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [isExpanded]);
+
+  // Render Routes and Polylines
+  useEffect(() => {
+    if (!routesLayerGroupRef.current) return;
+    routesLayerGroupRef.current.clearLayers();
+
+    if (!filterRoutes || !layers.routes) return;
+
+    routes.forEach((route) => {
+      if (!route.points || route.points.length < 2) return;
+      const latlngs: [number, number][] = route.points.map((pt) => svgToGeo(pt.x, pt.y));
+
+      const isClear = route.status === 'clear';
+      const polyline = L.polyline(latlngs, {
+        color: isClear ? '#06b6d4' : '#ef4444',
+        weight: isClear ? 3 : 2.5,
+        dashArray: isClear ? undefined : '6, 6',
+        opacity: isClear ? 0.85 : 0.75,
+      });
+
+      polyline.bindTooltip(
+        `<div style="font-family: monospace; font-size: 11px;">ROUTE: <b>${route.name}</b> (${route.status.toUpperCase()})</div>`,
+        { sticky: true }
+      );
+
+      routesLayerGroupRef.current?.addLayer(polyline);
     });
-  };
+  }, [routes, filterRoutes, layers.routes]);
 
-  const handleZoomIn = () => {
-    soundManager.playTacticalClick();
-    setZoom((prev) => Math.min(4.5, prev * 1.3));
-  };
+  // Render Markers (Robots, Survivors, Hazards, Beacons)
+  useEffect(() => {
+    if (!markersLayerGroupRef.current) return;
+    markersLayerGroupRef.current.clearLayers();
 
-  const handleZoomOut = () => {
-    soundManager.playTacticalClick();
-    setZoom((prev) => Math.max(0.7, prev / 1.3));
-  };
+    // 1. Robots
+    robots.forEach((robot) => {
+      const [lat, lng] = svgToGeo(robot.position.x, robot.position.y);
+      const isSelected = selectedRobotId === robot.id;
+      const isGhost = robot.commsStatus === 'disconnected';
+      const callsignShort = robot.callsign.replace('CYB-', '').replace('VUL-', '');
 
-  const handleResetZoom = () => {
-    soundManager.playTacticalClick();
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  };
+      const markerHtml = `
+        <div class="tactical-leaflet-marker ${isGhost ? 'ghost' : ''} ${isSelected ? 'selected' : ''}">
+          <div class="marker-badge">${callsignShort}</div>
+          <div class="marker-callsign">${robot.callsign}</div>
+          <div class="tactical-bot-pulse"></div>
+        </div>
+      `;
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isDeployMode) return;
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-  };
+      const icon = L.divIcon({
+        className: 'tactical-div-icon',
+        html: markerHtml,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+      });
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
-  };
+      const marker = L.marker([lat, lng], { icon });
 
-  const handleMouseUp = () => setIsDragging(false);
+      marker.on('click', () => {
+        soundManager.playTacticalClick();
+        selectRobot(robot.id);
+      });
 
-  const handleMapClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!isDeployMode || !svgRef.current) return;
-    const rect = svgRef.current.getBoundingClientRect();
-    const clickX = (e.clientX - rect.left - pan.x) / zoom;
-    const clickY = (e.clientY - rect.top - pan.y) / zoom;
+      marker.bindTooltip(`
+        <div style="font-family: monospace; font-size: 11px; line-height: 1.4;">
+          <div style="font-weight: bold; color: ${isGhost ? '#f43f5e' : '#38bdf8'}">
+            ${robot.name} (${robot.callsign})
+          </div>
+          <div style="color: #94a3b8;">Status: ${robot.commsStatus.toUpperCase()}</div>
+          <div style="color: #94a3b8;">Battery: ${Math.round(robot.battery)}% | Signal: ${robot.signalStrength}%</div>
+          <div style="color: #e2e8f0;">${robot.currentTask}</div>
+        </div>
+      `, { offset: [0, -15], direction: 'top' });
 
-    deployBeaconAt(clickX, clickY, `Relay #${beacons.length + 1}`);
-    soundManager.playTacticalClick();
-    setIsDeployMode(false);
-  };
+      markersLayerGroupRef.current?.addLayer(marker);
+    });
 
-  const getRobotEmoji = (type: string) => {
-    switch (type) {
-      case 'aerial_drone': return '🛸';
-      case 'heavy_quadruped': return '🐕';
-      case 'snake_crawler': return '🐍';
-      case 'tracked_rover': return '🚜';
-      case 'wall_climber': return '🦎';
-      case 'amphibious': return '🌊';
-      default: return '🤖';
+    // 2. Survivors
+    if (filterSurvivors) {
+      survivors.forEach((survivor) => {
+        const [lat, lng] = svgToGeo(survivor.location.x, survivor.location.y);
+        const isSelected = selectedSurvivorId === survivor.id;
+        const isAssigned = !!survivor.assignedRobotId;
+
+        const markerHtml = `
+          <div class="tactical-leaflet-marker survivor ${isSelected ? 'selected' : ''}">
+            <div class="marker-badge survivor-badge">♥</div>
+            <div class="marker-callsign" style="color: #f87171;">${survivor.label}</div>
+            <div class="tactical-surv-pulse"></div>
+          </div>
+        `;
+
+        const icon = L.divIcon({
+          className: 'tactical-div-icon',
+          html: markerHtml,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+        });
+
+        const marker = L.marker([lat, lng], { icon });
+
+        marker.on('click', () => {
+          soundManager.playTacticalClick();
+          selectSurvivor(survivor.id);
+        });
+
+        marker.bindTooltip(`
+          <div style="font-family: monospace; font-size: 11px; line-height: 1.4;">
+            <div style="font-weight: bold; color: #f87171;">
+              ♥ ${survivor.label} [${survivor.triage.toUpperCase()}]
+            </div>
+            <div style="color: #94a3b8;">Depth: ${survivor.location.depthMeters}m | HR: ${survivor.vitals.heartRate} BPM</div>
+            <div style="color: #cbd5e1;">${survivor.notes}</div>
+            ${isAssigned ? '<div style="color: #34d399; font-weight: bold;">✓ Vulcan-X Dispatched</div>' : '<div style="color: #fb7185;">● Pending Dispatch</div>'}
+          </div>
+        `, { offset: [0, -15], direction: 'top' });
+
+        markersLayerGroupRef.current?.addLayer(marker);
+      });
     }
-  };
 
-  // Selected entities for the docked inspector panel
+    // 3. Hazards
+    if (filterHazards) {
+      hazards.forEach((hazard) => {
+        const [lat, lng] = svgToGeo(hazard.location.x, hazard.location.y);
+        const isSelected = selectedHazardId === hazard.id;
+        const isBio = hazard.type === 'gas_leak';
+
+        const markerHtml = `
+          <div class="tactical-leaflet-marker hazard ${isSelected ? 'selected' : ''}">
+            <div class="marker-badge hazard-badge">${isBio ? '☣' : '!'}</div>
+            <div class="marker-callsign" style="color: #fbbf24;">${hazard.type.replace('_', ' ').toUpperCase()}</div>
+          </div>
+        `;
+
+        const icon = L.divIcon({
+          className: 'tactical-div-icon',
+          html: markerHtml,
+          iconSize: [34, 34],
+          iconAnchor: [17, 17],
+        });
+
+        const marker = L.marker([lat, lng], { icon });
+
+        marker.on('click', () => {
+          soundManager.playTacticalClick();
+          selectHazard(hazard.id);
+        });
+
+        marker.bindTooltip(`
+          <div style="font-family: monospace; font-size: 11px; line-height: 1.4;">
+            <div style="font-weight: bold; color: #fbbf24;">
+              ${isBio ? '☣' : '⚠'} ${hazard.title} [${hazard.severity.toUpperCase()}]
+            </div>
+            <div style="color: #fde68a;">${hazard.readout}</div>
+            <div style="color: #94a3b8;">Perimeter: ${hazard.location.radius}m | Sector: ${hazard.location.sector}</div>
+          </div>
+        `, { offset: [0, -15], direction: 'top' });
+
+        markersLayerGroupRef.current?.addLayer(marker);
+      });
+    }
+
+    // 4. Beacons (Relays)
+    beacons.forEach((beacon) => {
+      const [lat, lng] = svgToGeo(beacon.x, beacon.y);
+      const markerHtml = `
+        <div class="tactical-leaflet-marker beacon">
+          <div class="marker-badge beacon-badge">RF</div>
+        </div>
+      `;
+      const icon = L.divIcon({
+        className: 'tactical-div-icon',
+        html: markerHtml,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([lat, lng], { icon });
+      marker.bindTooltip(`<div style="font-family: monospace; font-size: 11px;">MESH RELAY // ${beacon.id} (${beacon.batteryHours}h BAT)</div>`, {
+        offset: [0, -10],
+        direction: 'top',
+      });
+      markersLayerGroupRef.current?.addLayer(marker);
+    });
+  }, [
+    robots,
+    survivors,
+    hazards,
+    beacons,
+    selectedRobotId,
+    selectedSurvivorId,
+    selectedHazardId,
+    filterSurvivors,
+    filterHazards,
+    selectRobot,
+    selectSurvivor,
+    selectHazard,
+  ]);
+
+  // Selected Entities for Inspector Panel
   const selectedRobot = robots.find((r) => r.id === selectedRobotId);
   const selectedSurvivor = survivors.find((s) => s.id === selectedSurvivorId);
   const selectedHazard = hazards.find((h) => h.id === selectedHazardId);
 
+  // Map Controls
+  const handleZoomIn = () => {
+    soundManager.playTacticalClick();
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.zoomIn();
+    }
+  };
+
+  const handleZoomOut = () => {
+    soundManager.playTacticalClick();
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.zoomOut();
+    }
+  };
+
+  const handleRecenter = () => {
+    soundManager.playTacticalClick();
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([CENTER_LAT, CENTER_LNG], 16, { duration: 0.8 });
+    }
+  };
+
+  const getRobotEmoji = (type: string) => {
+    switch (type) {
+      case 'snake':
+        return '🐍';
+      case 'quadruped':
+        return '🐕';
+      case 'drone':
+        return '🛸';
+      case 'crawler':
+        return '🚜';
+      default:
+        return '🤖';
+    }
+  };
+
   return (
-    <div className="relative w-full h-full bg-[#060a13] rounded-md border border-slate-800 overflow-hidden flex flex-col shadow-2xl">
-      
-      {/* Top Map Toolbar: Seamless, aerospace HUD command bar */}
-      <div className="flex items-center justify-between px-2.5 py-1.5 bg-[#080e1b]/95 border-b border-slate-800/90 z-10 text-xs font-mono select-none shrink-0 gap-2">
-        {/* Left: Layer Controls in a single unified segmented pill */}
-        <div className="flex items-center bg-[#050b16] border border-slate-800 rounded-md p-0.5 text-[11px] shrink-0">
-          <span className="text-slate-400 font-semibold px-2 flex items-center gap-1.5 border-r border-slate-800/80 mr-0.5">
-            <Layers className="w-3 h-3 text-cyan-400" />
-            <span className="hidden sm:inline">Layers</span>
+    <div
+      data-tour="tactical-map"
+      className={`relative flex flex-col w-full h-full bg-[#050914] text-slate-100 overflow-hidden font-sans ${
+        isExpanded ? 'fixed inset-0 z-50 p-3 bg-black/85 backdrop-blur-md' : ''
+      }`}
+    >
+      {/* Top Tactical Map C2 Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-cyan-500/20 bg-[#07101e]/90 backdrop-blur z-20 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-1 text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider">
+            <MapIcon className="w-3.5 h-3.5" />
+            <span>GIS TACTICAL DECK // BITS DUBAI SECTOR 4</span>
+          </div>
+          <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800 font-mono">
+            LAT: {CENTER_LAT}°N LNG: {CENTER_LNG}°E
           </span>
-
-          <button
-            onClick={() => toggleLayer('slam')}
-            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
-              layers.slam
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="CAD Blueprint & SLAM Pointcloud"
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${layers.slam ? 'bg-cyan-400' : 'bg-slate-600'}`}></span>
-            <span>CAD</span>
-          </button>
-
-          <button
-            onClick={() => toggleLayer('mesh')}
-            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
-              layers.mesh
-                ? 'bg-emerald-500/20 text-emerald-300 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="RF Mesh Links & Repeater Beacons"
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${layers.mesh ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
-            <span>Mesh</span>
-          </button>
-
-          <button
-            onClick={() => toggleLayer('hazards')}
-            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
-              layers.hazards
-                ? 'bg-amber-500/20 text-amber-300 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Hazards & Environmental Risks"
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${layers.hazards ? 'bg-amber-400' : 'bg-slate-600'}`}></span>
-            <span>Hazards</span>
-          </button>
-
-          <button
-            onClick={() => toggleLayer('routes')}
-            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
-              layers.routes
-                ? 'bg-sky-500/20 text-sky-300 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Safe Evac Corridors & Autopath"
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${layers.routes ? 'bg-sky-400' : 'bg-slate-600'}`}></span>
-            <span>Routes</span>
-          </button>
-
-          <button
-            onClick={() => toggleLayer('terrain')}
-            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
-              layers.terrain
-                ? 'bg-amber-500/20 text-amber-300 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Elevation Contours, Rubble Mounds, Cratering & Debris Slopes"
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${layers.terrain ? 'bg-amber-400' : 'bg-slate-600'}`}></span>
-            <span>Terrain</span>
-          </button>
         </div>
 
-        {/* Map Mode Toggle: SLAM Mesh vs Satellite Terrain */}
-        <div className="flex items-center bg-[#050b16] border border-slate-800 rounded-md p-0.5 text-[10px] font-mono shrink-0">
-          <button
-            onClick={() => {
-              soundManager.playTacticalClick();
-              setMapMode('slam');
-            }}
-            className={`px-2 py-1 rounded transition-all font-bold ${
-              mapMode === 'slam'
-                ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Switch to SLAM Pointcloud Mesh Blueprint View"
-          >
-            SLAM Mesh
-          </button>
-          <button
-            onClick={() => {
-              soundManager.playTacticalClick();
-              setMapMode('satellite');
-            }}
-            className={`px-2 py-1 rounded transition-all font-bold ${
-              mapMode === 'satellite'
-                ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Switch to Satellite Orthophoto & Topographic Terrain View"
-          >
-            Satellite Terrain
-          </button>
-        </div>
+        {/* Top Control Bar */}
+        <div className="flex items-center gap-2">
+          {/* Carto vs Satellite Mode Toggle */}
+          <div className="flex items-center rounded bg-slate-900 border border-slate-700/80 p-0.5 font-mono text-xs">
+            <button
+              onClick={() => {
+                soundManager.playTacticalClick();
+                setMapMode('carto');
+              }}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                mapMode === 'carto'
+                  ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Dark GIS
+            </button>
+            <button
+              onClick={() => {
+                soundManager.playTacticalClick();
+                setMapMode('satellite');
+              }}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                mapMode === 'satellite'
+                  ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Satellite
+            </button>
+          </div>
 
-        {/* Right: Actions & Expand */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Deploy Relay Button */}
-          <button
-            onClick={() => setIsDeployMode(!isDeployMode)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border transition-all ${
-              isDeployMode
-                ? 'bg-cyan-400 text-slate-950 border-cyan-300 animate-pulse'
-                : 'bg-slate-800/80 text-cyan-300 border-slate-700 hover:bg-slate-700'
-            }`}
-            title="Drop a signal relay on the map"
-          >
-            <Radio className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{isDeployMode ? 'Click Map' : 'Drop Relay'}</span>
-            <span className="sm:hidden">Relay</span>
-          </button>
-
-          {/* Full-view / Expand Map toggle */}
+          {/* Expand / Minimize Modal */}
           {onToggleExpand && (
             <button
               onClick={onToggleExpand}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono bg-slate-800/80 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors"
-              title={isExpanded ? 'Restore side menus' : 'Full Screen Map'}
+              className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
+              title={isExpanded ? 'Restore View' : 'Fullscreen Tactical Deck'}
             >
-              {isExpanded ? (
-                <>
-                  <Minimize2 className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="hidden sm:inline">Split View</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="hidden sm:inline">Full Map</span>
-                </>
-              )}
+              {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
             </button>
           )}
         </div>
       </div>
 
-      {/* Deploy mode alert banner */}
-      {isDeployMode && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-cyan-950/95 border-2 border-cyan-400 text-cyan-200 text-xs font-mono font-bold rounded-full shadow-2xl flex items-center gap-2 animate-bounce">
-          <Radio className="w-4 h-4 text-cyan-400 animate-spin" />
-          <span>Click anywhere on the map to drop a signal relay</span>
+      {/* Main Map Canvas Area */}
+      <div className="relative flex-1 w-full h-full min-h-0">
+        {/* Leaflet DOM Node Container */}
+        <div ref={mapContainerRef} className="w-full h-full" style={{ background: '#050914' }} />
+
+        {/* Top-Left Floating Filter Buttons */}
+        <div className="absolute top-3 left-3 z-30 flex items-center gap-1.5 bg-[#08101e]/90 p-1 rounded-md border border-cyan-500/30 backdrop-blur shadow-lg font-mono text-[10px]">
+          <button
+            onClick={() => {
+              soundManager.playTacticalClick();
+              setFilterSurvivors(!filterSurvivors);
+            }}
+            className={`px-2 py-1 rounded font-bold flex items-center gap-1 transition-all ${
+              filterSurvivors
+                ? 'bg-rose-950/90 text-rose-300 border border-rose-600/70 shadow'
+                : 'bg-slate-800/80 text-slate-400 border border-slate-700 hover:text-slate-200'
+            }`}
+            title="Toggle Survivors Overlay"
+          >
+            <span>♥</span>
+            <span>SURV ({survivors.length})</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundManager.playTacticalClick();
+              setFilterHazards(!filterHazards);
+            }}
+            className={`px-2 py-1 rounded font-bold flex items-center gap-1 transition-all ${
+              filterHazards
+                ? 'bg-amber-950/90 text-amber-300 border border-amber-600/70 shadow'
+                : 'bg-slate-800/80 text-slate-400 border border-slate-700 hover:text-slate-200'
+            }`}
+            title="Toggle Hazards Overlay"
+          >
+            <span>⚠</span>
+            <span>HAZ ({hazards.length})</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundManager.playTacticalClick();
+              setFilterRoutes(!filterRoutes);
+            }}
+            className={`px-2 py-1 rounded font-bold flex items-center gap-1 transition-all ${
+              filterRoutes
+                ? 'bg-cyan-950/90 text-cyan-300 border border-cyan-600/70 shadow'
+                : 'bg-slate-800/80 text-slate-400 border border-slate-700 hover:text-slate-200'
+            }`}
+            title="Toggle Ingress Routes"
+          >
+            <span>NAV</span>
+          </button>
         </div>
-      )}
 
-      {/* Aftershock Alert Banner */}
-      {overview.aftershockRiskLevel === 'CRITICAL' && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-rose-950/95 border border-rose-500 text-rose-200 text-xs font-mono font-bold rounded-md shadow-lg flex items-center gap-2 animate-pulse">
-          <AlertTriangle className="w-4 h-4 text-rose-400" />
-          <span>⚠️ Earthquake detected — recalculating safe routes</span>
+        {/* Top-Right Tactical Zoom & Recenter Controls */}
+        <div className="absolute top-3 right-3 z-30 flex flex-col gap-1 bg-[#08101e]/90 p-1 rounded-md border border-cyan-500/30 backdrop-blur shadow-lg font-mono">
+          <button
+            onClick={handleZoomIn}
+            className="w-7 h-7 rounded flex items-center justify-center bg-slate-800 hover:bg-cyan-900/60 text-cyan-300 border border-slate-700 hover:border-cyan-500 transition-colors"
+            title="Zoom In"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="w-7 h-7 rounded flex items-center justify-center bg-slate-800 hover:bg-cyan-900/60 text-cyan-300 border border-slate-700 hover:border-cyan-500 transition-colors"
+            title="Zoom Out"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleRecenter}
+            className="w-7 h-7 rounded flex items-center justify-center bg-slate-800 hover:bg-cyan-900/60 text-cyan-300 border border-slate-700 hover:border-cyan-500 transition-colors"
+            title="Recenter on BITS Dubai Base (25.1288°N, 55.4186°E)"
+          >
+            <Crosshair className="w-3.5 h-3.5" />
+          </button>
+          <div className="text-[9px] text-center text-slate-400 font-bold border-t border-slate-700/60 pt-0.5">
+            Z{currentZoom}
+          </div>
         </div>
-      )}
 
-      {/* Main Map Canvas with scroll-wheel zoom */}
-      <div
-        className={`relative flex-1 w-full h-full overflow-hidden select-none ${
-          isShaking ? 'seismic-shake' : ''
-        } ${
-          isDeployMode ? 'cursor-crosshair' : isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        }`}
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={() => {
-          handleMouseUp();
-          setHoveredEntity(null);
-        }}
-      >
-        <svg
-          ref={svgRef}
-          className="w-full h-full"
-          viewBox="0 0 800 660"
-          onClick={handleMapClick}
-        >
-          <defs>
-            {/* Topographic Digital Elevation Model Contours Pattern for Satellite View */}
-            <pattern id="topoContours" width="60" height="60" patternUnits="userSpaceOnUse">
-              <path d="M 0 30 Q 15 10 30 30 T 60 30" fill="none" stroke="rgba(6, 182, 212, 0.22)" strokeWidth="0.8" />
-              <path d="M 0 10 Q 20 25 40 10 T 60 10" fill="none" stroke="rgba(217, 119, 6, 0.2)" strokeWidth="0.8" strokeDasharray="3,3" />
-              <path d="M 0 50 Q 25 35 50 50 T 60 50" fill="none" stroke="rgba(56, 189, 248, 0.18)" strokeWidth="0.8" />
-              <circle cx="30" cy="30" r="1" fill="rgba(6, 182, 212, 0.3)" />
-            </pattern>
-
-            {/* Rubble / Pancake Collapse Pattern */}
-            <pattern
-              id="rubblePattern"
-              width="20"
-              height="20"
-              patternTransform="rotate(45 0 0)"
-              patternUnits="userSpaceOnUse"
-            >
-              <line x1="0" y1="0" x2="0" y2="20" stroke="#ef4444" strokeWidth="1.5" opacity="0.15" />
-              <circle cx="10" cy="10" r="1.5" fill="#ef4444" opacity="0.3" />
-            </pattern>
-
-            {/* Epistemic Fog of Uncertainty Pattern: Dense diagonal caution hatching */}
-            <pattern
-              id="fogOfUncertainty"
-              width="8"
-              height="8"
-              patternTransform="rotate(45 0 0)"
-              patternUnits="userSpaceOnUse"
-            >
-              <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(148, 163, 184, 0.15)" strokeWidth="1" />
-            </pattern>
-
-            {/* Industrial Red Chevron Hatch Pattern for Blocked Corridors */}
-            <pattern
-              id="redIndustrialChevron"
-              width="14"
-              height="14"
-              patternTransform="rotate(45 0 0)"
-              patternUnits="userSpaceOnUse"
-            >
-              <rect x="0" y="0" width="7" height="14" fill="rgba(239, 68, 68, 0.45)" />
-              <rect x="7" y="0" width="7" height="14" fill="rgba(30, 8, 13, 0.9)" />
-              <line x1="0" y1="0" x2="0" y2="14" stroke="#ef4444" strokeWidth="1.5" />
-              <line x1="7" y1="0" x2="7" y2="14" stroke="#991b1b" strokeWidth="1" />
-            </pattern>
-
-            {/* Subtle tactical grid pattern */}
-            <pattern id="tacGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" opacity="0.5" />
-            </pattern>
-
-            {/* Terrain: Rubble Mound Stipple / Gravel Pattern */}
-            <pattern id="terrainRubbleStipple" width="16" height="16" patternUnits="userSpaceOnUse">
-              <circle cx="3" cy="4" r="1" fill="#b45309" opacity="0.3" />
-              <polygon points="10,2 13,5 9,6" fill="#d97706" opacity="0.25" />
-              <polygon points="4,12 7,10 6,14" fill="#92400e" opacity="0.3" />
-              <circle cx="12" cy="12" r="1.5" fill="#f59e0b" opacity="0.2" />
-              <line x1="2" y1="9" x2="5" y2="8" stroke="#78350f" strokeWidth="0.8" opacity="0.4" />
-            </pattern>
-
-            {/* Terrain: Mud / Sump / Water Silt Shading */}
-            <pattern id="terrainWaterSilt" width="24" height="12" patternUnits="userSpaceOnUse">
-              <path d="M 0 6 Q 6 2 12 6 T 24 6" fill="none" stroke="#06b6d4" strokeWidth="0.8" opacity="0.22" />
-              <path d="M 0 12 Q 6 8 12 12 T 24 12" fill="none" stroke="#0284c7" strokeWidth="0.6" opacity="0.18" />
-            </pattern>
-
-            {/* Terrain: Concrete Slab Fracture Pattern */}
-            <pattern id="terrainSlabFracture" width="30" height="30" patternUnits="userSpaceOnUse">
-              <line x1="0" y1="15" x2="12" y2="10" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
-              <line x1="12" y1="10" x2="24" y2="18" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
-              <line x1="12" y1="10" x2="16" y2="0" stroke="#94a3b8" strokeWidth="0.7" opacity="0.2" />
-              <line x1="24" y1="18" x2="30" y2="14" stroke="#94a3b8" strokeWidth="0.7" opacity="0.2" />
-            </pattern>
-
-            {/* Terrain Elevation Gradient for Collapse Slopes */}
-            <radialGradient id="rubbleMoundGrad" cx="50%" cy="50%" r="50%" fx="40%" fy="40%">
-              <stop offset="0%" stopColor="#d97706" stopOpacity="0.28" />
-              <stop offset="45%" stopColor="#b45309" stopOpacity="0.18" />
-              <stop offset="80%" stopColor="#78350f" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#451a03" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Terrain Depression / Sinkhole Radial Gradient */}
-            <radialGradient id="sinkholeGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#020617" stopOpacity="0.85" />
-              <stop offset="60%" stopColor="#0f172a" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Glowing marker filter */}
-            <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-            <filter id="redGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-          </defs>
-
-          <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-            {/* Satellite Orthophoto & BPDC Academic Block Context Layer (rendered underneath all routes, grid lines, and pins) */}
-            {mapMode === 'satellite' && (
-              <g id="satellite-orthophoto-layer">
-                <image
-                  href="https://images.unsplash.com/photo-1524813686514-a57563d77d66?auto=format&fit=crop&w=1600&q=80"
-                  x="0"
-                  y="0"
-                  width="800"
-                  height="660"
-                  preserveAspectRatio="xMidYMid slice"
-                  className="opacity-35 filter contrast-125 brightness-75 grayscale-[25%]"
-                />
-                <rect width="800" height="660" fill="url(#topoContours)" pointerEvents="none" />
-                <path
-                  d="M 120 180 Q 250 140 360 210 L 340 260 Q 240 200 110 240 Z"
-                  fill="rgba(6, 182, 212, 0.05)"
-                  stroke="rgba(6, 182, 212, 0.3)"
-                  strokeWidth="1"
-                  strokeDasharray="4 2"
-                />
-                <text
-                  x="140"
-                  y="210"
-                  fill="rgba(6, 182, 212, 0.5)"
-                  fontSize="9"
-                  fontFamily="JetBrains Mono"
-                >
-                  BPDC ACADEMIC BLOCK // NORTH WING
-                </text>
-              </g>
-            )}
-
-            {/* Tactical C2 Graphite Background & Grid */}
-            <rect x="0" y="0" width="800" height="660" fill="#0d1117" opacity={mapMode === 'satellite' ? 0.35 : 1} />
-            <rect x="0" y="0" width="800" height="660" fill="url(#tacGrid)" opacity={mapMode === 'satellite' ? 0.4 : 0.65} />
-
-            {/* Military UTM Coordinate Ticks along Top and Left Borders */}
-            <g id="utm-rulers" className="pointer-events-none select-none" opacity="0.7">
-              {/* Top X-Axis Ticks */}
-              {[
-                { x: 50, val: '+45.100' },
-                { x: 150, val: '+45.102' },
-                { x: 250, val: '+45.104' },
-                { x: 350, val: '+45.106' },
-                { x: 450, val: '+45.108' },
-                { x: 550, val: '+45.110' },
-                { x: 650, val: '+45.112' },
-                { x: 750, val: '+45.114' },
-              ].map((tick) => (
-                <g key={`x-tick-${tick.x}`}>
-                  <line x1={tick.x} y1={24} x2={tick.x} y2={30} stroke="#334155" strokeWidth="1" />
-                  <text x={tick.x} y={20} textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="JetBrains Mono">
-                    {tick.val}
-                  </text>
-                </g>
-              ))}
-
-              {/* Left Y-Axis Ticks */}
-              {[
-                { y: 50, val: '+09.200' },
-                { y: 150, val: '+09.202' },
-                { y: 250, val: '+09.204' },
-                { y: 350, val: '+09.206' },
-                { y: 450, val: '+09.208' },
-                { y: 550, val: '+09.210' },
-              ].map((tick) => (
-                <g key={`y-tick-${tick.y}`}>
-                  <line x1={24} y1={tick.y} x2={30} y2={tick.y} stroke="#334155" strokeWidth="1" />
-                  <text x={20} y={tick.y + 2.5} textAnchor="end" fill="#64748b" fontSize="7.5" fontFamily="JetBrains Mono">
-                    {tick.val}
-                  </text>
-                </g>
-              ))}
-            </g>
-
-            {/* ========================================================= */}
-            {/* 1. ARCHITECTURAL ZONES & EPISTEMIC FOG OF UNCERTAINTY     */}
-            {/* ========================================================= */}
-            <g id="architectural-zones">
-              {/* Outer Facility Boundary */}
-              <rect
-                x="30"
-                y="30"
-                width="740"
-                height="560"
-                rx="8"
-                fill="#131822"
-                stroke="#1e293b"
-                strokeWidth="1.5"
-              />
-
-              {/* Sector B: Dense Fog of Uncertainty Caution Hatching (Top-Right Rubble Collapse) */}
-              <rect
-                x="410"
-                y="40"
-                width="350"
-                height="260"
-                rx="6"
-                fill="url(#fogOfUncertainty)"
-                stroke="rgba(225, 29, 72, 0.25)"
-                strokeWidth="1"
-                strokeDasharray="4,4"
-              />
-              <g id="sec-b-labels">
-                <text
-                  x="510"
-                  y="58"
-                  className="fill-slate-400 font-bold text-[10px]"
-                  fontFamily="JetBrains Mono"
-                  letterSpacing="0.5"
-                >
-                  SEC B // COLLAPSE
-                </text>
-                <text
-                  x="510"
-                  y="72"
-                  className="fill-amber-500/60 text-[8px] tracking-wider"
-                  fontFamily="JetBrains Mono"
-                >
-                  [!] UNINSPECTED VOID • AFTERSHOCK COLLAPSE
-                </text>
-              </g>
-
-              {/* Sector C: Dense Fog of Uncertainty Caution Hatching (Bottom-Right Subterranean Metro Void) */}
-              <rect
-                x="410"
-                y="320"
-                width="350"
-                height="260"
-                rx="6"
-                fill="url(#fogOfUncertainty)"
-                stroke="rgba(217, 119, 6, 0.25)"
-                strokeWidth="1"
-                strokeDasharray="4,4"
-              />
-              <g id="sec-c-labels">
-                <text
-                  x="510"
-                  y="358"
-                  className="fill-slate-400 font-bold text-[10px]"
-                  fontFamily="JetBrains Mono"
-                  letterSpacing="0.5"
-                >
-                  SEC C // BASEMENT &amp; METRO
-                </text>
-                <text
-                  x="510"
-                  y="372"
-                  className="fill-amber-500/60 text-[8px] tracking-wider"
-                  fontFamily="JetBrains Mono"
-                >
-                  [!] SUBTERRANEAN METRO VOID • UNVERIFIED
-                </text>
-              </g>
-
-              {/* 50-Meter GIS Scale Bar Indicator in Bottom-Left */}
-              <g id="gis-scale-indicator" transform="translate(45, 570)" className="pointer-events-none select-none">
-                <line x1="0" y1="0" x2="60" y2="0" stroke="#64748b" strokeWidth="1.5" />
-                <line x1="0" y1="-3" x2="0" y2="3" stroke="#64748b" strokeWidth="1.5" />
-                <line x1="60" y1="-3" x2="60" y2="3" stroke="#64748b" strokeWidth="1.5" />
-                <text x="30" y="-4" textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="JetBrains Mono">
-                  |---- 50m ----|
-                </text>
-              </g>
-
-              {/* Sector D: Staging & HQ Tint (Bottom-Left) */}
-              <rect
-                x="30"
-                y="310"
-                width="370"
-                height="280"
-                rx="8"
-                fill="rgba(16, 185, 129, 0.02)"
-                stroke="rgba(16, 185, 129, 0.12)"
-                strokeDasharray="4,4"
-              />
-
-              {/* Hairline Zone Dividers */}
-              <line x1="400" y1="30" x2="400" y2="590" stroke="#152438" strokeWidth="1.5" strokeDasharray="6,4" />
-              <line x1="30" y1="310" x2="770" y2="310" stroke="#152438" strokeWidth="1.5" strokeDasharray="6,4" />
-
-              {/* Central Atrium Hub */}
-              <circle cx="400" cy="310" r="28" fill="#0b1322" stroke="#1e2d44" strokeWidth="1.5" />
-              <text x="400" y="314" textAnchor="middle" fill="#475569" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                ATRIUM
-              </text>
-
-              {/* ========================================================= */}
-              {/* FAINT STRUCTURAL CAD BLUEPRINT LINES BENEATH PATHS        */}
-              {/* ========================================================= */}
-              <g id="structural-cad-blueprint" opacity="0.85">
-                {/* Column Footprints Grid */}
-                {[
-                  { x: 120, y: 100 }, { x: 240, y: 100 }, { x: 360, y: 100 }, { x: 480, y: 100 }, { x: 600, y: 100 }, { x: 720, y: 100 },
-                  { x: 120, y: 200 }, { x: 240, y: 200 }, { x: 360, y: 200 }, { x: 480, y: 200, broken: true }, { x: 600, y: 200, broken: true }, { x: 720, y: 200 },
-                  { x: 120, y: 310 }, { x: 240, y: 310 }, { x: 360, y: 310 }, { x: 480, y: 310, broken: true }, { x: 600, y: 310 }, { x: 720, y: 310 },
-                  { x: 120, y: 430 }, { x: 240, y: 430 }, { x: 360, y: 430 }, { x: 480, y: 430, broken: true }, { x: 600, y: 430, broken: true }, { x: 720, y: 430 },
-                  { x: 120, y: 530 }, { x: 240, y: 530 }, { x: 360, y: 530 }, { x: 480, y: 530 }, { x: 600, y: 530 }, { x: 720, y: 530 },
-                ].map((col, idx) => (
-                  <g key={`cad-col-${idx}`}>
-                    <rect
-                      x={col.x - 5}
-                      y={col.y - 5}
-                      width="10"
-                      height="10"
-                      fill="none"
-                      stroke="rgba(100, 116, 139, 0.2)"
-                      strokeWidth="1"
-                      strokeDasharray={col.broken ? '2,2' : undefined}
-                    />
-                    <line x1={col.x - 5} y1={col.y - 5} x2={col.x + 5} y2={col.y + 5} stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.8" />
-                    <line x1={col.x + 5} y1={col.y - 5} x2={col.x - 5} y2={col.y + 5} stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.8" />
-                    {col.broken && (
-                      <text x={col.x + 8} y={col.y + 4} fill="rgba(248, 113, 113, 0.35)" fontSize="6" fontFamily="JetBrains Mono">
-                        SHEAR
-                      </text>
-                    )}
-                  </g>
-                ))}
-
-                {/* Elevator Shaft Rectangle Core with Cross Vectors */}
-                <g id="cad-elevator-shaft" transform="translate(425, 135)">
-                  <rect width="48" height="58" fill="rgba(15, 23, 42, 0.4)" stroke="rgba(100, 116, 139, 0.25)" strokeWidth="1.2" />
-                  <rect x="4" y="4" width="40" height="50" fill="none" stroke="rgba(100, 116, 139, 0.18)" strokeWidth="0.8" strokeDasharray="3,3" />
-                  <line x1="4" y1="4" x2="44" y2="54" stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.8" />
-                  <line x1="44" y1="4" x2="4" y2="54" stroke="rgba(100, 116, 139, 0.2)" strokeWidth="0.8" />
-                  <text x="24" y="-4" textAnchor="middle" fill="rgba(148, 163, 184, 0.35)" fontSize="6.5" fontFamily="JetBrains Mono">
-                    SHAFT #2 [COLLAPSED]
-                  </text>
-                </g>
-
-                {/* Collapsed CAD Structural Wall Vectors */}
-                <path
-                  d="M 50 100 L 380 100 M 50 200 L 220 200 M 260 200 L 380 200 M 120 40 L 120 290 M 240 40 L 240 290 M 50 430 L 380 430 M 420 100 L 750 100 M 600 40 L 600 290 M 420 430 L 750 430 M 50 530 L 750 530"
-                  fill="none"
-                  stroke="rgba(100, 116, 139, 0.2)"
-                  strokeWidth="1.2"
-                  strokeDasharray="4,4"
-                />
-                {/* Door Swings */}
-                <path d="M 220 200 A 40 40 0 0 1 260 200" fill="none" stroke="rgba(100, 116, 139, 0.18)" strokeWidth="0.8" strokeDasharray="2,2" />
-                <path d="M 120 200 A 30 30 0 0 1 120 230" fill="none" stroke="rgba(100, 116, 139, 0.18)" strokeWidth="0.8" strokeDasharray="2,2" />
-              </g>
-
-              {/* Sector Watermarks */}
-              {detailMode === 'simple' ? (
-                <g id="simple-sector-marks">
-                  <text x="50" y="55" fill="#38bdf8" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                    SEC A // NORTH WING
-                  </text>
-                  <text x="50" y="335" fill="#34d399" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                    SEC D // STAGING HQ
-                  </text>
-                </g>
-              ) : (
-                <g id="detailed-sector-marks">
-                  <g transform="translate(50, 56)">
-                    <text fill="#38bdf8" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                      SECTOR A • NORTH WING
-                    </text>
-                    <text y="16" fill="#64748b" fontSize="9.5" fontFamily="JetBrains Mono">
-                      Structure Intact // Stable 94% • 0 Anomalies
-                    </text>
-                  </g>
-
-                  <g transform="translate(50, 340)">
-                    <text fill="#34d399" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                      SECTOR D • STAGING &amp; HQ
-                    </text>
-                    <text y="16" fill="#64748b" fontSize="9.5" fontFamily="JetBrains Mono">
-                      Command Base // Ground Entry • Triaged Safe
-                    </text>
-                  </g>
-                </g>
-              )}
-            </g>
-
-            {/* ========================================================= */}
-            {/* 1B. TERRAIN, TOPOGRAPHY & DEBRIS FIELD LAYER              */}
-            {/* ========================================================= */}
-            {layers.terrain && (
-              <g id="terrain-layer" className="transition-opacity duration-300">
-                {/* 1. Topographic Elevation Contour Lines */}
-                <g id="terrain-contours" opacity="0.65">
-                  {/* Outer Low Grade Contours (+1.0m, +2.0m) */}
-                  <path
-                    d="M 40 180 C 140 160, 220 220, 360 210 S 520 120, 680 140 S 760 220, 760 250"
-                    fill="none"
-                    stroke="#475569"
-                    strokeWidth="0.9"
-                    strokeDasharray="4,3"
-                  />
-                  <text x="180" y="172" fill="#64748b" fontSize="6.5" fontFamily="JetBrains Mono">+1.0m EL</text>
-                  <text x="640" y="132" fill="#64748b" fontSize="6.5" fontFamily="JetBrains Mono">+2.0m EL</text>
-
-                  <path
-                    d="M 50 240 C 160 220, 260 260, 380 250 S 560 170, 700 190 S 750 270, 750 290"
-                    fill="none"
-                    stroke="#475569"
-                    strokeWidth="0.8"
-                    strokeDasharray="2,2"
-                  />
-
-                  {/* Mid-Elevation Ridge (+3.5m, +5.0m) around Sector Beta Collapse Pile */}
-                  <path
-                    d="M 440 80 C 490 60, 580 65, 660 85 S 730 160, 710 230 S 610 270, 520 250 S 430 180, 440 80 Z"
-                    fill="none"
-                    stroke="#ca8a04"
-                    strokeWidth="1.1"
-                    strokeDasharray="5,2"
-                  />
-                  <text x="670" y="95" fill="#eab308" fontSize="6.5" fontFamily="JetBrains Mono">+3.5m RIDGE</text>
-
-                  {/* High Peak Rubble Mound (+6.5m EL) - Summit */}
-                  <path
-                    d="M 480 110 C 520 90, 590 100, 640 120 S 670 180, 640 210 S 560 235, 510 215 S 465 155, 480 110 Z"
-                    fill="url(#rubbleMoundGrad)"
-                    stroke="#eab308"
-                    strokeWidth="1.3"
-                  />
-                  <text x="540" y="115" fill="#fde047" fontSize="7" fontFamily="JetBrains Mono" fontWeight="bold">+6.5m PEAK</text>
-
-                  {/* Subterranean Depression / Metro Void Contours (-2.0m, -4.5m, -6.0m) in Sector Gamma */}
-                  <path
-                    d="M 440 370 C 500 350, 640 360, 710 390 S 740 480, 720 540 S 610 570, 520 560 S 430 460, 440 370 Z"
-                    fill="none"
-                    stroke="#0284c7"
-                    strokeWidth="0.9"
-                    strokeDasharray="3,3"
-                  />
-                  <text x="630" y="375" fill="#38bdf8" fontSize="6.5" fontFamily="JetBrains Mono">-2.0m DEPRESSION</text>
-
-                  <path
-                    d="M 480 400 C 530 380, 630 390, 670 420 S 690 490, 660 525 S 570 545, 510 530 S 460 460, 480 400 Z"
-                    fill="url(#sinkholeGrad)"
-                    stroke="#0369a1"
-                    strokeWidth="1.2"
-                  />
-                  <text x="545" y="415" fill="#7dd3fc" fontSize="7" fontFamily="JetBrains Mono" fontWeight="bold">-4.5m VOID CHASM</text>
-
-                  <ellipse
-                    cx="580"
-                    cy="470"
-                    rx="55"
-                    ry="35"
-                    fill="#020617"
-                    stroke="#0284c7"
-                    strokeWidth="1.4"
-                    strokeDasharray="2,2"
-                  />
-                  <text x="580" y="473" textAnchor="middle" fill="#38bdf8" fontSize="7.5" fontFamily="JetBrains Mono" fontWeight="bold">
-                    -6.2m METRO BED
-                  </text>
-                </g>
-
-                {/* 2. Pancake Collapse Rubble Mounds & Concrete Slabs */}
-                <g id="terrain-rubble-fields">
-                  {/* Primary Collapse Ridge in Sector Beta */}
-                  <polygon
-                    points="460,85 550,65 680,95 720,170 690,240 580,260 470,220 445,150"
-                    fill="url(#terrainRubbleStipple)"
-                    stroke="rgba(217, 119, 6, 0.4)"
-                    strokeWidth="1"
-                  />
-
-                  {/* Concrete Slabs (Tilted Slabs & Structural Debris) */}
-                  <g id="tilted-concrete-slabs">
-                    {/* Slab 1 (Sector Beta north) */}
-                    <polygon
-                      points="475,130 525,115 540,145 490,160"
-                      fill="#1e293b"
-                      stroke="#64748b"
-                      strokeWidth="1.2"
-                      opacity="0.9"
-                    />
-                    <polygon
-                      points="475,130 525,115 540,145 490,160"
-                      fill="url(#terrainSlabFracture)"
-                      opacity="0.8"
-                    />
-                    <text x="507" y="140" textAnchor="middle" fill="#94a3b8" fontSize="6" fontFamily="JetBrains Mono">
-                      SLAB 14° TILT
-                    </text>
-
-                    {/* Slab 2 (Sector Beta near Corridor) */}
-                    <polygon
-                      points="550,180 610,165 625,200 565,215"
-                      fill="#1e293b"
-                      stroke="#64748b"
-                      strokeWidth="1.2"
-                      opacity="0.9"
-                    />
-                    <polygon
-                      points="550,180 610,165 625,200 565,215"
-                      fill="url(#terrainSlabFracture)"
-                      opacity="0.8"
-                    />
-                    <text x="587" y="193" textAnchor="middle" fill="#94a3b8" fontSize="6" fontFamily="JetBrains Mono">
-                      SLAB 22° TILT
-                    </text>
-
-                    {/* Slab 3 (Sector Gamma Metro Entry) */}
-                    <polygon
-                      points="450,420 500,405 515,435 465,450"
-                      fill="#1e293b"
-                      stroke="#64748b"
-                      strokeWidth="1.2"
-                      opacity="0.9"
-                    />
-                    <polygon
-                      points="450,420 500,405 515,435 465,450"
-                      fill="url(#terrainSlabFracture)"
-                      opacity="0.8"
-                    />
-                    <text x="482" y="430" textAnchor="middle" fill="#94a3b8" fontSize="6" fontFamily="JetBrains Mono">
-                      OVERHANG
-                    </text>
-                  </g>
-
-                  {/* Debris field micro-clusters */}
-                  {[
-                    { cx: 480, cy: 95, r: 18 },
-                    { cx: 620, cy: 110, r: 24 },
-                    { cx: 670, cy: 190, r: 20 },
-                    { cx: 530, cy: 230, r: 16 },
-                    { cx: 490, cy: 280, r: 14 },
-                    { cx: 380, cy: 210, r: 15 },
-                  ].map((cluster, i) => (
-                    <circle
-                      key={`debris-cluster-${i}`}
-                      cx={cluster.cx}
-                      cy={cluster.cy}
-                      r={cluster.r}
-                      fill="url(#terrainRubbleStipple)"
-                      stroke="#d97706"
-                      strokeWidth="0.8"
-                      strokeDasharray="2,2"
-                      opacity="0.75"
-                    />
-                  ))}
-                </g>
-
-                {/* 3. Flooded Sump / Water Mud Basin in Sector Delta / Lower Utility */}
-                <g id="terrain-water-sump">
-                  <path
-                    d="M 120 440 C 180 430, 240 450, 270 480 S 260 540, 220 560 S 130 550, 110 510 S 100 450, 120 440 Z"
-                    fill="rgba(6, 182, 212, 0.08)"
-                    stroke="#0891b2"
-                    strokeWidth="1.2"
-                    strokeDasharray="4,2"
-                  />
-                  <path
-                    d="M 120 440 C 180 430, 240 450, 270 480 S 260 540, 220 560 S 130 550, 110 510 S 100 450, 120 440 Z"
-                    fill="url(#terrainWaterSilt)"
-                  />
-                  <text x="180" y="495" textAnchor="middle" fill="#22d3ee" fontSize="7.5" fontFamily="JetBrains Mono" fontWeight="bold">
-                    FLOODED SUMP (0.8m WATER)
-                  </text>
-                  <text x="180" y="507" textAnchor="middle" fill="#67e8f9" fontSize="6.5" fontFamily="JetBrains Mono">
-                    AMPHIBIOUS ROVER CLEARED
-                  </text>
-                </g>
-
-                {/* 4. Terrain Passability / Slope Gradient Markers */}
-                <g id="terrain-slope-vectors" opacity="0.85">
-                  {/* Steep Slope Incline Indicators (Sector Beta) */}
-                  <g transform="translate(630, 150)">
-                    <rect x="-24" y="-7" width="48" height="14" rx="2" fill="#1c1306" stroke="#d97706" strokeWidth="0.8" />
-                    <text x="0" y="3" textAnchor="middle" fill="#fbbf24" fontSize="6.5" fontFamily="JetBrains Mono" fontWeight="bold">
-                      ▲ 34° GRADE
-                    </text>
-                  </g>
-
-                  <g transform="translate(490, 190)">
-                    <rect x="-22" y="-7" width="44" height="14" rx="2" fill="#1c1306" stroke="#d97706" strokeWidth="0.8" />
-                    <text x="0" y="3" textAnchor="middle" fill="#fbbf24" fontSize="6.5" fontFamily="JetBrains Mono" fontWeight="bold">
-                      ▲ 26° GRADE
-                    </text>
-                  </g>
-
-                  {/* Deep Vertical Drop Indicator (Sector Gamma Metro Void) */}
-                  <g transform="translate(580, 430)">
-                    <rect x="-26" y="-7" width="52" height="14" rx="2" fill="#031628" stroke="#0284c7" strokeWidth="0.8" />
-                    <text x="0" y="3" textAnchor="middle" fill="#38bdf8" fontSize="6.5" fontFamily="JetBrains Mono" fontWeight="bold">
-                      ▼ -4.2m DROP
-                    </text>
-                  </g>
-                </g>
-              </g>
-            )}
-
-            {/* ========================================================= */}
-            {/* 2. ROUTES & CORRIDORS (Tactical Dual-Line Conduits)       */}
-            {/* ========================================================= */}
-            {layers.routes && (
-              <g id="routes-layer">
-                {routes.map((route) => {
-                  const pathD = route.points.reduce((acc, pt, idx) => {
-                    return idx === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`;
-                  }, '');
-
-                  const midPoint = route.points[Math.floor(route.points.length / 2)] || route.points[0];
-                  const isBlocked = route.status === 'blocked';
-                  const isHazardous = route.status === 'hazardous';
-                  const isNew = route.status === 'newly_discovered';
-
-                  const strokeColor = isBlocked ? '#ef4444' : isHazardous ? '#f59e0b' : isNew ? '#10b981' : '#00e5ff';
-
-                  return (
-                    <g key={route.id}>
-                      {/* Outer Conduit Rail (Width 8px, produces 1px parallel rails spaced 6px apart) */}
-                      <path
-                        d={pathD}
-                        fill="none"
-                        stroke={strokeColor}
-                        strokeWidth="8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        opacity={isBlocked ? 0.95 : 0.85}
-                      />
-
-                      {/* Inner Conduit Core Cutout: Red Industrial Chevron when Blocked, else Floor Dark */}
-                      <path
-                        d={pathD}
-                        fill="none"
-                        stroke={isBlocked ? 'url(#redIndustrialChevron)' : '#080e1b'}
-                        strokeWidth="6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-
-                      {/* Directional Chevron Arrows along conduit segments (or Red Industrial X Barriers if Blocked) */}
-                      {route.points.map((p1, idx) => {
-                        if (idx >= route.points.length - 1) return null;
-                        const p2 = route.points[idx + 1];
-                        const segMidX = (p1.x + p2.x) / 2;
-                        const segMidY = (p1.y + p2.y) / 2;
-                        const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
-
-                        if (isBlocked) {
-                          return (
-                            <g key={`blocked-barr-${idx}`} transform={`translate(${segMidX}, ${segMidY}) rotate(${angle})`}>
-                              <line x1="-5" y1="-5" x2="5" y2="5" stroke="#fca5a5" strokeWidth="1.8" />
-                              <line x1="-5" y1="5" x2="5" y2="-5" stroke="#fca5a5" strokeWidth="1.8" />
-                            </g>
-                          );
-                        }
-
-                        return (
-                          <g key={`arrow-${idx}`} transform={`translate(${segMidX}, ${segMidY}) rotate(${angle})`}>
-                            <path
-                              d="M -3 -2.5 L 0 0 L -3 2.5"
-                              fill="none"
-                              stroke={strokeColor}
-                              strokeWidth="1.2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              opacity="0.9"
-                            />
-                          </g>
-                        );
-                      })}
-
-                      {/* Tactical Conduit Callout Badge */}
-                      {detailMode === 'simple' ? (
-                        isBlocked && (
-                          <g transform={`translate(${midPoint.x - 40}, ${midPoint.y - 9})`}>
-                            <rect x="0" y="0" width="80" height="18" rx="3" fill="#2d0c13" stroke="#ef4444" strokeWidth="1.2" />
-                            <text x="40" y="12.5" textAnchor="middle" fill="#fca5a5" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
-                              ⛔ BLOCKED
-                            </text>
-                          </g>
-                        )
-                      ) : (
-                        (isBlocked || isNew || isHazardous) && (
-                          <g transform={`translate(${midPoint.x - 46}, ${midPoint.y - 10})`}>
-                            <rect
-                              x="0"
-                              y="0"
-                              width="92"
-                              height="20"
-                              rx="3"
-                              fill={isBlocked ? '#2d0c13' : isHazardous ? '#2a1a06' : '#062e24'}
-                              stroke={strokeColor}
-                              strokeWidth="1.2"
-                            />
-                            <text
-                              x="46"
-                              y="13.5"
-                              textAnchor="middle"
-                              fill={isBlocked ? '#fca5a5' : isHazardous ? '#fde68a' : '#34d399'}
-                              fontSize="8"
-                              fontFamily="JetBrains Mono"
-                              fontWeight="bold"
-                            >
-                              {isBlocked ? '⛔ JOIST COLLAPSE' : isHazardous ? '⚠️ TIGHT CRAWL' : '✨ NEW VOID'}
-                            </text>
-                          </g>
-                        )
-                      )}
-                    </g>
-                  );
-                })}
-              </g>
-            )}
-
-            {/* ========================================================= */}
-            {/* 3. RF MESH NETWORK & RELAYS                               */}
-            {/* ========================================================= */}
-            {layers.mesh && (
-              <g id="mesh-layer">
-                {/* Mesh Link Lines between Beacons (Detailed Mode Only) */}
-                {detailMode === 'detailed' &&
-                  beacons.map((bcn, idx) => {
-                    if (idx === 0) return null;
-                    const prevBcn = beacons[idx - 1];
-                    const midX = (bcn.x + prevBcn.x) / 2;
-                    const midY = (bcn.y + prevBcn.y) / 2;
-                    return (
-                      <g key={`bcn-link-${bcn.id}-${prevBcn.id}`}>
-                        <line
-                          x1={bcn.x}
-                          y1={bcn.y}
-                          x2={prevBcn.x}
-                          y2={prevBcn.y}
-                          stroke="#10b981"
-                          strokeWidth="1.5"
-                          strokeDasharray="4,4"
-                          opacity="0.5"
-                        />
-                        <rect x={midX - 22} y={midY - 7} width="44" height="14" rx="2" fill="#04201b" stroke="#10b981" strokeWidth="0.8" />
-                        <text x={midX} y={midY + 3.5} textAnchor="middle" fill="#6ee7b7" fontSize="7.5" fontFamily="JetBrains Mono">
-                          -64 dBm
-                        </text>
-                      </g>
-                    );
-                  })}
-
-                {/* Mesh Link Lines from Connected Robots to Nearest Beacon (Detailed Mode Only) */}
-                {detailMode === 'detailed' &&
-                  robots
-                    .filter((r) => r.commsStatus === 'connected')
-                    .map((r) => {
-                      let closest = beacons[0];
-                      let minDist = 99999;
-                      beacons.forEach((b) => {
-                        const d = Math.hypot(b.x - r.position.x, b.y - r.position.y);
-                        if (d < minDist) {
-                          minDist = d;
-                          closest = b;
-                        }
-                      });
-                      if (!closest || minDist > 280) return null;
-                      return (
-                        <line
-                          key={`robot-mesh-${r.id}`}
-                          x1={r.position.x}
-                          y1={r.position.y}
-                          x2={closest.x}
-                          y2={closest.y}
-                          stroke="#00f0ff"
-                          strokeWidth="1"
-                          strokeDasharray="3,3"
-                          opacity="0.35"
-                        />
-                      );
-                    })}
-
-                {/* RF Mesh Coverage Radii (Detailed Mode Only) */}
-                {detailMode === 'detailed' &&
-                  beacons.map((bcn) => (
-                    <circle
-                      key={`rad-${bcn.id}`}
-                      cx={bcn.x}
-                      cy={bcn.y}
-                      r={Math.min(bcn.radius, 90)}
-                      fill="rgba(16, 185, 129, 0.03)"
-                      stroke="#10b981"
-                      strokeWidth="1"
-                      strokeDasharray="4,4"
-                      opacity="0.3"
-                    />
-                  ))}
-
-                {/* Relay Beacon Pins */}
-                {beacons.map((bcn) => (
-                  <g
-                    key={bcn.id}
-                    className="cursor-pointer"
-                    onMouseEnter={() =>
-                      setHoveredEntity({
-                        type: 'beacon',
-                        id: bcn.id,
-                        x: bcn.x,
-                        y: bcn.y,
-                        title: bcn.label,
-                        subtitle: `Battery: ${bcn.batteryHours}h • Uplink: ${bcn.uplinkId}`,
-                        badge: 'ACTIVE RF REPEATER',
-                      })
-                    }
-                    onMouseLeave={() => setHoveredEntity(null)}
-                  >
-                    <circle cx={bcn.x} cy={bcn.y} r={detailMode === 'detailed' ? '8' : '7'} fill="#042f2e" stroke="#10b981" strokeWidth="1.5" />
-                    <circle cx={bcn.x} cy={bcn.y} r="3" fill="#34d399" />
-                    <text x={bcn.x} y={bcn.y + 16} textAnchor="middle" fill="#6ee7b7" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
-                      {bcn.label.split(' ')[0]}
-                    </text>
-                    {detailMode === 'detailed' && (
-                      <text x={bcn.x} y={bcn.y + 25} textAnchor="middle" fill="#94a3b8" fontSize="7" fontFamily="JetBrains Mono">
-                        {bcn.batteryHours}h
-                      </text>
-                    )}
-                  </g>
-                ))}
-              </g>
-            )}
-
-            {/* ========================================================= */}
-            {/* 4. HAZARDS                                                */}
-            {/* ========================================================= */}
-            {layers.hazards && (
-              <g id="hazards-layer">
-                {hazards.map((haz) => {
-                  const isSelected = selectedHazardId === haz.id;
-                  const isGas = haz.type === 'gas_leak';
-                  const isStructural = haz.type === 'structural_collapse';
-
-                  const strokeCol = isGas ? '#ef4444' : isStructural ? '#f59e0b' : '#eab308';
-                  const fillCol = isGas
-                    ? 'rgba(239, 68, 68, 0.08)'
-                    : isStructural
-                    ? 'rgba(245, 158, 11, 0.08)'
-                    : 'rgba(234, 179, 8, 0.08)';
-                  const iconChar = isGas ? '☣' : isStructural ? '⚠' : '⚡';
-                  const simpleTitle = isGas ? 'Gas' : isStructural ? 'Collapse' : 'Arc';
-                  const detailedTitle = isGas ? 'Methane 520PPM' : isStructural ? 'Column Tilt 18°' : '480V Arc';
-
-                  return (
-                    <g
-                      key={haz.id}
-                      className="cursor-pointer"
-                      onClick={() => selectHazard(haz.id)}
-                      onMouseEnter={() =>
-                        setHoveredEntity({
-                          type: 'hazard',
-                          id: haz.id,
-                          x: haz.location.x,
-                          y: haz.location.y,
-                          title: haz.title,
-                          subtitle: haz.readout,
-                          badge: `${haz.severity.toUpperCase()} HAZARD`,
-                        })
-                      }
-                      onMouseLeave={() => setHoveredEntity(null)}
-                    >
-                      {/* Perimeter radius circle in detailed mode */}
-                      {detailMode === 'detailed' && (
-                        <circle
-                          cx={haz.location.x}
-                          cy={haz.location.y}
-                          r={Math.min(haz.location.radius, 38)}
-                          fill={fillCol}
-                          stroke={strokeCol}
-                          strokeWidth="1"
-                          strokeDasharray="4,4"
-                        />
-                      )}
-
-                      {/* Pin Center */}
-                      <circle
-                        cx={haz.location.x}
-                        cy={haz.location.y}
-                        r={detailMode === 'detailed' ? '12' : '10'}
-                        fill="#160c12"
-                        stroke={strokeCol}
-                        strokeWidth={isSelected ? '2.5' : '1.8'}
-                      />
-                      <text
-                        x={haz.location.x}
-                        y={haz.location.y + 4}
-                        textAnchor="middle"
-                        fontSize={detailMode === 'detailed' ? '11' : '10'}
-                        fill="#ffffff"
-                      >
-                        {iconChar}
-                      </text>
-
-                      {/* On-Demand Hazard Tooltip on Hover or Selection */}
-                      {(isSelected || hoveredEntity?.id === haz.id) && (
-                        <g className="pointer-events-none transition-opacity">
-                          <rect
-                            x={haz.location.x - 44}
-                            y={haz.location.y + 14}
-                            width="88"
-                            height="16"
-                            rx="3"
-                            fill="#0d070b"
-                            stroke={strokeCol}
-                            strokeWidth="1"
-                          />
-                          <text
-                            x={haz.location.x}
-                            y={haz.location.y + 25.5}
-                            textAnchor="middle"
-                            fill={isGas ? '#fca5a5' : '#fde68a'}
-                            fontSize="10"
-                            fontFamily="JetBrains Mono"
-                            fontWeight="bold"
-                          >
-                            {haz.title}
-                          </text>
-                        </g>
-                      )}
-                    </g>
-                  );
-                })}
-              </g>
-            )}
-
-            {/* ========================================================= */}
-            {/* 5. SURVIVORS                                              */}
-            {/* ========================================================= */}
-            <g id="survivors-layer">
-              {survivors.map((surv) => {
-                const isSelected = selectedSurvivorId === surv.id;
-                const isCrit = surv.triage === 'immediate';
-                const isDelayed = surv.triage === 'delayed';
-
-                const strokeCol = isCrit ? '#ef4444' : isDelayed ? '#f59e0b' : '#10b981';
-                const fillCol = isCrit ? '#220812' : isDelayed ? '#201406' : '#061e16';
-                const textCol = isCrit ? '#fca5a5' : isDelayed ? '#fde68a' : '#6ee7b7';
-
-                return (
-                  <g
-                    key={surv.id}
-                    className="cursor-pointer"
-                    onClick={() => {
-                      selectSurvivor(surv.id);
-                      soundManager.playSonarPing();
-                    }}
-                    onMouseEnter={() =>
-                      setHoveredEntity({
-                        type: 'survivor',
-                        id: surv.id,
-                        x: surv.location.x,
-                        y: surv.location.y,
-                        title: surv.label,
-                        subtitle: `HR: ${surv.vitals.heartRate} BPM • SpO2: ${surv.vitals.spO2}% • Depth: ${surv.location.depthMeters}m`,
-                        badge: `${surv.triage.toUpperCase()} TRIAGE`,
-                      })
-                    }
-                    onMouseLeave={() => setHoveredEntity(null)}
-                  >
-                    {/* Pulsing ring for critical */}
-                    {isCrit && (
-                      <circle
-                        cx={surv.location.x}
-                        cy={surv.location.y}
-                        r={detailMode === 'detailed' ? '20' : '16'}
-                        fill="none"
-                        stroke="#ef4444"
-                        strokeWidth="1.5"
-                        opacity="0.45"
-                        className="animate-ping"
-                      />
-                    )}
-
-                    {/* Clean Pin Circle */}
-                    <circle
-                      cx={surv.location.x}
-                      cy={surv.location.y}
-                      r={detailMode === 'detailed' ? '13' : '11'}
-                      fill={fillCol}
-                      stroke={strokeCol}
-                      strokeWidth={isSelected ? '2.5' : '1.8'}
-                    />
-                    <text
-                      x={surv.location.x}
-                      y={surv.location.y + 4}
-                      textAnchor="middle"
-                      fontSize={detailMode === 'detailed' ? '11' : '10'}
-                    >
-                      ❤️
-                    </text>
-
-                    {/* On-Demand Survivor Pill: Shown only on hover or selection */}
-                    {(isSelected || hoveredEntity?.id === surv.id) && (
-                      surv.id === 'SURV-03' ? (
-                        /* SURV-03: Offset to the right with 1px connector leader line */
-                        <g id="surv-03-callout" className="pointer-events-none">
-                          <polyline
-                            points={`${surv.location.x + 11},${surv.location.y} ${surv.location.x + 22},${surv.location.y} ${surv.location.x + 28},${surv.location.y + 4}`}
-                            fill="none"
-                            stroke="rgba(245, 158, 11, 0.45)"
-                            strokeWidth="1"
-                          />
-                          <circle cx={surv.location.x + 11} cy={surv.location.y} r="1.5" fill="#f59e0b" />
-                          <g transform={`translate(${surv.location.x + 28}, ${surv.location.y - 6})`}>
-                            <rect width="44" height="15" rx="2.5" fill="#0b0f19" stroke={strokeCol} strokeWidth="1" />
-                            <text x="22" y="10.5" textAnchor="middle" fill={textCol} fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
-                              {surv.id}
-                            </text>
-                          </g>
-                        </g>
-                      ) : (
-                        <g className="pointer-events-none">
-                          <rect
-                            x={surv.location.x - 22}
-                            y={surv.location.y - 21}
-                            width="44"
-                            height="14"
-                            rx="2.5"
-                            fill="#0b0f19"
-                            stroke={strokeCol}
-                            strokeWidth="1"
-                          />
-                          <text
-                            x={surv.location.x}
-                            y={surv.location.y - 10.5}
-                            textAnchor="middle"
-                            fill={textCol}
-                            fontSize="8"
-                            fontFamily="JetBrains Mono"
-                            fontWeight="bold"
-                          >
-                            {surv.id}
-                          </text>
-                        </g>
-                      )
-                    )}
-                  </g>
-                );
-              })}
-            </g>
-
-            {/* ========================================================= */}
-            {/* 6. ROBOTS                                                 */}
-            {/* ========================================================= */}
-            <g id="robots-layer">
-              {robots.map((robot) => {
-                const isSelected = selectedRobotId === robot.id;
-                const isDisconnected = robot.commsStatus === 'disconnected';
-                const isDegraded = robot.commsStatus === 'degraded';
-                const shortName = robot.name.split('-')[0] || robot.callsign;
-
-                if (isDisconnected) {
-                  // GHOST MODE: Last known pin + clean dashed line + ghost pin
-                  const lkp = robot.lastKnownPosition || {
-                    x: robot.position.x - 30,
-                    y: robot.position.y - 30,
-                  };
-
-                  return (
-                    <g
-                      key={robot.id}
-                      className="cursor-pointer"
-                      onClick={() => selectRobot(robot.id)}
-                      onDoubleClick={() => openFpv(robot.id)}
-                      onMouseEnter={() =>
-                        setHoveredEntity({
-                          type: 'robot',
-                          id: robot.id,
-                          x: robot.position.x,
-                          y: robot.position.y,
-                          title: `${robot.name} (${robot.callsign})`,
-                          subtitle: `GHOST OFFLINE // ${robot.storeAndForwardBacklog} Pkts Buffered`,
-                          badge: 'NO CARRIER',
-                        })
-                      }
-                      onMouseLeave={() => setHoveredEntity(null)}
-                    >
-                      <circle cx={lkp.x} cy={lkp.y} r="4" fill="#f43f5e" />
-
-                      <line
-                        x1={lkp.x}
-                        y1={lkp.y}
-                        x2={robot.position.x}
-                        y2={robot.position.y}
-                        stroke="#f43f5e"
-                        strokeWidth="1.8"
-                        strokeDasharray="4,3"
-                      />
-
-                      {detailMode === 'detailed' && (
-                        <ellipse
-                          cx={robot.position.x}
-                          cy={robot.position.y}
-                          rx="32"
-                          ry="22"
-                          fill="rgba(244, 63, 94, 0.05)"
-                          stroke="#f43f5e"
-                          strokeWidth="0.8"
-                          strokeDasharray="3,3"
-                        />
-                      )}
-
-                      {/* Faint Expanding Dashed Uncertainty Rings (25% opacity) */}
-                      <circle
-                        cx={robot.position.x}
-                        cy={robot.position.y}
-                        r="36"
-                        fill="rgba(244, 63, 94, 0.04)"
-                        stroke="#f43f5e"
-                        strokeWidth="1"
-                        strokeDasharray="2,2"
-                        opacity="0.6"
-                      />
-                      <circle
-                        cx={robot.position.x}
-                        cy={robot.position.y}
-                        r="52"
-                        fill="none"
-                        stroke="#f43f5e"
-                        strokeWidth="0.8"
-                        strokeDasharray="3,3"
-                        opacity="0.35"
-                      />
-
-                      <circle
-                        cx={robot.position.x}
-                        cy={robot.position.y}
-                        r={detailMode === 'detailed' ? '14' : '12'}
-                        fill="#1f0a12"
-                        stroke="#f43f5e"
-                        strokeWidth={isSelected ? '2.5' : '1.8'}
-                      />
-                      <text
-                        x={robot.position.x}
-                        y={robot.position.y + 4.5}
-                        textAnchor="middle"
-                        fontSize={detailMode === 'detailed' ? '12' : '11'}
-                      >
-                        👻
-                      </text>
-
-                      {/* Ghost Pill: Shown only on hover or selection */}
-                      {(isSelected || hoveredEntity?.id === robot.id) && (
-                        <g className="pointer-events-none">
-                          <rect
-                            x={robot.position.x - 30}
-                            y={robot.position.y + 15}
-                            width="60"
-                            height="14"
-                            rx="2.5"
-                            fill="#15050c"
-                            stroke="#f43f5e"
-                            strokeWidth="1"
-                          />
-                          <text
-                            x={robot.position.x}
-                            y={robot.position.y + 25}
-                            textAnchor="middle"
-                            fill="#fca5a5"
-                            fontSize="8"
-                            fontFamily="JetBrains Mono"
-                            fontWeight="bold"
-                          >
-                            {shortName}
-                          </text>
-                        </g>
-                      )}
-                    </g>
-                  );
-                }
-
-                // CONNECTED OR DEGRADED ROBOT
-                const strokeColor = isDegraded ? '#f59e0b' : '#00f0ff';
-
-                return (
-                  <g
-                    key={robot.id}
-                    className="cursor-pointer"
-                    onClick={() => selectRobot(robot.id)}
-                    onDoubleClick={() => openFpv(robot.id)}
-                    onMouseEnter={() =>
-                      setHoveredEntity({
-                        type: 'robot',
-                        id: robot.id,
-                        x: robot.position.x,
-                        y: robot.position.y,
-                        title: `${robot.name} (${robot.callsign})`,
-                        subtitle: `Battery: ${Math.round(robot.battery)}% • Signal: ${robot.signalStrength}% • ${robot.currentTask}`,
-                        badge: isDegraded ? 'DEGRADED RSSI' : 'ONLINE MESH',
-                      })
-                    }
-                    onMouseLeave={() => setHoveredEntity(null)}
-                  >
-                    {/* Drone Aerial RF Coverage Footprint (25% opacity boundary) */}
-                    {robot.type === 'aerial_drone' && (
-                      <g id="drone-rf-footprint">
-                        <circle
-                          cx={robot.position.x}
-                          cy={robot.position.y}
-                          r="72"
-                          fill="rgba(0, 240, 255, 0.03)"
-                          stroke="rgba(0, 240, 255, 0.28)"
-                          strokeWidth="1"
-                          strokeDasharray="4,4"
-                        />
-                        {/* Cardinal Crosshair Ticks */}
-                        <line x1={robot.position.x - 76} y1={robot.position.y} x2={robot.position.x - 68} y2={robot.position.y} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1" />
-                        <line x1={robot.position.x + 68} y1={robot.position.y} x2={robot.position.x + 76} y2={robot.position.y} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1" />
-                        <line x1={robot.position.x} y1={robot.position.y - 76} x2={robot.position.x} y2={robot.position.y - 68} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1" />
-                        <line x1={robot.position.x} y1={robot.position.y + 68} x2={robot.position.x} y2={robot.position.y + 76} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1" />
-                        <text x={robot.position.x} y={robot.position.y - 58} textAnchor="middle" fill="rgba(0, 240, 255, 0.4)" fontSize="6.5" fontFamily="JetBrains Mono">
-                          RF RELAY 96% // ALT 25m
-                        </text>
-                      </g>
-                    )}
-
-                    {/* 60-degree Directional LiDAR Arc along Heading Vector */}
-                    {(robot.type === 'heavy_quadruped' || robot.type === 'tracked_rover') && (
-                      (() => {
-                        const headingRad = (robot.heading * Math.PI) / 180;
-                        const arcRadius = 58;
-                        const startAngle = headingRad - Math.PI / 6;
-                        const endAngle = headingRad + Math.PI / 6;
-                        const x1 = robot.position.x + arcRadius * Math.cos(startAngle);
-                        const y1 = robot.position.y + arcRadius * Math.sin(startAngle);
-                        const x2 = robot.position.x + arcRadius * Math.cos(endAngle);
-                        const y2 = robot.position.y + arcRadius * Math.sin(endAngle);
-                        const conePath = `M ${robot.position.x} ${robot.position.y} L ${x1} ${y1} A ${arcRadius} ${arcRadius} 0 0 1 ${x2} ${y2} Z`;
-
-                        return (
-                          <g id={`lidar-cone-${robot.id}`}>
-                            <path
-                              d={conePath}
-                              fill="rgba(0, 240, 255, 0.07)"
-                              stroke="rgba(0, 240, 255, 0.35)"
-                              strokeWidth="1"
-                              strokeDasharray="3,2"
-                            />
-                            {/* Heading centerline tick */}
-                            <line
-                              x1={robot.position.x}
-                              y1={robot.position.y}
-                              x2={robot.position.x + (arcRadius + 6) * Math.cos(headingRad)}
-                              y2={robot.position.y + (arcRadius + 6) * Math.sin(headingRad)}
-                              stroke="rgba(0, 240, 255, 0.45)"
-                              strokeWidth="0.8"
-                              strokeDasharray="2,2"
-                            />
-                          </g>
-                        );
-                      })()
-                    )}
-
-                    {isSelected && (
-                      <circle
-                        cx={robot.position.x}
-                        cy={robot.position.y}
-                        r={detailMode === 'detailed' ? '20' : '17'}
-                        fill="none"
-                        stroke={strokeColor}
-                        strokeWidth="1.5"
-                        strokeDasharray="3,2"
-                        className="animate-spin"
-                      />
-                    )}
-
-                    <circle
-                      cx={robot.position.x}
-                      cy={robot.position.y}
-                      r={detailMode === 'detailed' ? '14' : '12'}
-                      fill="#071322"
-                      stroke={strokeColor}
-                      strokeWidth={isSelected ? '2.5' : '1.8'}
-                    />
-                    <text
-                      x={robot.position.x}
-                      y={robot.position.y + 4.5}
-                      textAnchor="middle"
-                      fontSize={detailMode === 'detailed' ? '12' : '10.5'}
-                    >
-                      {getRobotEmoji(robot.type)}
-                    </text>
-
-                    {/* On-Demand Robot Callsign Pill: Shown only on hover or selection */}
-                    {(isSelected || hoveredEntity?.id === robot.id) && (
-                      robot.id === 'ROB-01' ? (
-                        <g id="skyeye-callout" className="pointer-events-none">
-                          {/* 1px Connector Leader Line */}
-                          <polyline
-                            points={`${robot.position.x - 9},${robot.position.y - 9} ${robot.position.x - 22},${robot.position.y - 18} ${robot.position.x - 34},${robot.position.y - 18}`}
-                            fill="none"
-                            stroke="rgba(0, 240, 255, 0.5)"
-                            strokeWidth="1"
-                          />
-                          <circle cx={robot.position.x - 9} cy={robot.position.y - 9} r="1.5" fill="#00f0ff" />
-                          <g transform={`translate(${robot.position.x - 80}, ${robot.position.y - 25})`}>
-                            <rect width="46" height="14" rx="2.5" fill="#060c18" stroke={strokeColor} strokeWidth="1" />
-                            <text x="23" y="10" textAnchor="middle" fill="#e2e8f0" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
-                              {shortName}
-                            </text>
-                          </g>
-                        </g>
-                      ) : (
-                        <g className="pointer-events-none">
-                          <rect
-                            x={robot.position.x - 24}
-                            y={robot.position.y + 15}
-                            width="48"
-                            height="14"
-                            rx="2.5"
-                            fill="#060c18"
-                            stroke={strokeColor}
-                            strokeWidth="1"
-                          />
-                          <text
-                            x={robot.position.x}
-                            y={robot.position.y + 25}
-                            textAnchor="middle"
-                            fill="#e2e8f0"
-                            fontSize="8"
-                            fontFamily="JetBrains Mono"
-                            fontWeight="bold"
-                          >
-                            {shortName}
-                          </text>
-                        </g>
-                      )
-                    )}
-                  </g>
-                );
-              })}
-            </g>
-
-            {/* Detailed Mode HUD overlay watermark */}
-            {detailMode === 'detailed' && (
-              <g transform="translate(480, 565)">
-                <rect x="0" y="0" width="270" height="20" rx="4" fill="#07101e" stroke="#1e3a5f" strokeWidth="1" />
-                <text x="135" y="14" textAnchor="middle" fill="#38bdf8" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
-                  🔬 DEEP TELEMETRY // 6 SWARM UNITS // RSSI -64dBm
-                </text>
-              </g>
-            )}
-
-
-            {/* ========================================================= */}
-            {/* 7. SLEEK ON-DEMAND HOVER TOOLTIP                          */}
-            {/* ========================================================= */}
-            {hoveredEntity && 
-             hoveredEntity.id !== selectedRobotId && 
-             hoveredEntity.id !== selectedSurvivorId && 
-             hoveredEntity.id !== selectedHazardId && (
-              <g
-                transform={`translate(${
-                  hoveredEntity.x > 520 ? hoveredEntity.x - 260 : hoveredEntity.x + 20
-                }, ${
-                  hoveredEntity.y > 450 ? hoveredEntity.y - 75 : hoveredEntity.y - 45
-                })`}
-                className="pointer-events-none transition-all duration-150"
-              >
-                <rect
-                  x="0"
-                  y="0"
-                  width="250"
-                  height="58"
-                  fill="#07101e"
-                  stroke="#38bdf8"
-                  strokeWidth="1.5"
-                  rx="6"
-                  filter="url(#cyanGlow)"
-                />
-                {hoveredEntity.badge && (
-                  <text
-                    x="10"
-                    y="16"
-                    fill="#38bdf8"
-                    fontSize="9"
-                    fontFamily="JetBrains Mono"
-                    fontWeight="bold"
-                    letterSpacing="1"
-                  >
-                    {hoveredEntity.badge}
-                  </text>
-                )}
-                <text
-                  x="10"
-                  y="32"
-                  fill="#ffffff"
-                  fontSize="11"
-                  fontFamily="JetBrains Mono"
-                  fontWeight="bold"
-                >
-                  {hoveredEntity.title.length > 28 ? hoveredEntity.title.slice(0, 27) + '…' : hoveredEntity.title}
-                </text>
-                <text
-                  x="10"
-                  y="47"
-                  fill="#94a3b8"
-                  fontSize="9.5"
-                  fontFamily="JetBrains Mono"
-                >
-                  {hoveredEntity.subtitle.length > 38 ? hoveredEntity.subtitle.slice(0, 36) + '…' : hoveredEntity.subtitle}
-                </text>
-              </g>
-            )}
-
-          </g>
-        </svg>
-
-        {/* ========================================================= */}
-        {/* 8. DOCKED ENTITY INSPECTOR PANEL (At Bottom-Left)         */}
-        {/* ========================================================= */}
+        {/* Bottom-Left Geocode Sector Badge */}
+        <div className="absolute bottom-8 left-3 z-20 pointer-events-none hidden sm:block">
+          <div className="px-2.5 py-1 rounded bg-[#08101e]/85 border border-cyan-500/30 backdrop-blur text-[9px] font-mono text-cyan-300/90 shadow-md">
+            DUBAI • DIAC / BITS PILANI DUBAI CAMPUS • SECTOR 4 COLLAPSE ZONE
+          </div>
+        </div>
+
+        {/* DOCKED ENTITY INSPECTOR PANEL (At Bottom-Left when entity selected) */}
         {!isTourOpen && (selectedRobot || selectedSurvivor || selectedHazard) && (
           <div className="absolute bottom-9 left-3 z-30 p-3 rounded-md bg-[#08101e]/95 border border-cyan-500/40 shadow-2xl backdrop-blur w-80 max-w-[calc(100%-24px)] max-h-[calc(100%-110px)] overflow-y-auto no-scrollbar font-mono text-xs select-none">
-            
             {/* Robot Inspector */}
             {selectedRobot && (
               <div>
@@ -1921,13 +750,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 </p>
               </div>
             )}
-
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* 9. DOCKED TACTICAL MAP LEGEND HUD STRIP                   */}
-        {/* ========================================================= */}
+        {/* DOCKED TACTICAL MAP LEGEND HUD STRIP */}
         <div className="absolute bottom-0 left-0 right-0 z-20 hidden md:flex items-center justify-between px-3 py-1 bg-[#050914]/90 border-t border-slate-800/90 text-[9px] font-mono text-slate-400 select-none backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <span className="text-slate-500 font-bold uppercase tracking-wider">GIS SYMBOLOGY // INSARAG</span>
@@ -1962,13 +788,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
               <span className="w-3 h-0.5 rounded-sm bg-rose-500" />
               <span>Blocked</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-1.5 rounded-sm border border-amber-500/60 bg-amber-500/20" />
-              <span>Terrain</span>
-            </div>
           </div>
         </div>
-
       </div>
     </div>
   );
