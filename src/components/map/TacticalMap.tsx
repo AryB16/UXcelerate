@@ -569,30 +569,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     </text>
                   </g>
 
-                  <g transform="translate(420, 56)">
-                    <text fill="#f87171" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                      SECTOR B • MAIN TOWER COLLAPSE
-                    </text>
-                    <text y="16" fill="#f87171" fontSize="9.5" fontFamily="JetBrains Mono">
-                      Floor Inversion // Unstable 68% • Aftershock Risk
-                    </text>
-                  </g>
-
                   <g transform="translate(50, 340)">
                     <text fill="#34d399" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                      SECTOR D • STAGING & HQ
+                      SECTOR D • STAGING &amp; HQ
                     </text>
                     <text y="16" fill="#64748b" fontSize="9.5" fontFamily="JetBrains Mono">
                       Command Base // Ground Entry • Triaged Safe
-                    </text>
-                  </g>
-
-                  <g transform="translate(420, 340)">
-                    <text fill="#fbbf24" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                      SECTOR C • METRO BASEMENT
-                    </text>
-                    <text y="16" fill="#f59e0b" fontSize="9.5" fontFamily="JetBrains Mono">
-                      Subterranean Voids // Critical 35% • Moisture
                     </text>
                   </g>
                 </g>

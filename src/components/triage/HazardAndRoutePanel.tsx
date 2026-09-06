@@ -41,16 +41,16 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#080705] border border-amber-950/60 rounded-md overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full bg-[#0b101b] border border-slate-800 rounded-md overflow-hidden shadow-xl select-none">
       {/* Header Tabs */}
-      <div className="p-2.5 bg-gradient-to-r from-amber-950/40 via-slate-900/90 to-slate-900/90 border-b border-amber-900/40 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
+      <div className="px-3 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveTab('hazards')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-bold transition-all ${
               activeTab === 'hazards'
-                ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-slate-800 text-amber-400 border border-amber-500/40'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
@@ -59,10 +59,10 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
 
           <button
             onClick={() => setActiveTab('routes')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-bold transition-all ${
               activeTab === 'routes'
-                ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/50'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-slate-800 text-cyan-300 border border-cyan-500/40'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Navigation className="w-3.5 h-3.5 text-cyan-400" />
@@ -71,7 +71,7 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/60 text-amber-400 border border-amber-800/60 hidden sm:inline-block">
+          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-400 border border-slate-700 hidden sm:inline-block">
             AUTOPATH v2.4
           </span>
           {onClose && (
@@ -80,14 +80,14 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
               className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               title="Close Panel"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       </div>
 
       {/* Main Tab Content */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+      <div className="flex-1 overflow-y-auto p-2 pb-6 space-y-2 no-scrollbar">
         {activeTab === 'hazards' ? (
           /* HAZARDS LIST */
           hazards.map((haz) => {
@@ -97,10 +97,10 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
               <div
                 key={haz.id}
                 onClick={() => selectHazard(haz.id)}
-                className={`p-3 rounded-md border transition-all cursor-pointer ${
+                className={`p-2.5 rounded-md border transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-amber-950/40 border-amber-400 ring-1 ring-amber-400/40'
-                    : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                    ? 'bg-slate-900 border-amber-500/70 shadow-md ring-1 ring-amber-500/30'
+                    : 'bg-[#0e1526] border-slate-800/90 hover:border-slate-700 hover:bg-slate-900/60'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
@@ -117,19 +117,19 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
                   </div>
 
                   <span
-                    className={`text-[9px] font-mono px-2 py-0.5 rounded border uppercase font-semibold ${
+                    className={`text-[9px] font-mono px-1.5 py-0.5 rounded-sm border uppercase font-bold ${
                       haz.status === 'active'
-                        ? 'bg-rose-950/80 text-rose-300 border-rose-500/60'
+                        ? 'bg-rose-950/50 text-rose-400 border-rose-500/40'
                         : haz.status === 'contained'
-                        ? 'bg-amber-950/80 text-amber-300 border-amber-500/60'
-                        : 'bg-emerald-950/80 text-emerald-300 border-emerald-500/60'
+                        ? 'bg-amber-950/50 text-amber-400 border-amber-500/40'
+                        : 'bg-emerald-950/50 text-emerald-400 border-emerald-500/40'
                     }`}
                   >
                     {haz.status}
                   </span>
                 </div>
 
-                <div className="p-2 rounded bg-slate-950/80 border border-slate-800/80 text-[11px] font-mono text-amber-300 font-semibold my-2">
+                <div className="p-2 rounded-sm bg-[#080d1a] border border-slate-800/80 text-[11px] font-mono text-amber-300 font-semibold my-1.5 break-words">
                   {haz.readout}
                 </div>
 
@@ -140,7 +140,7 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
                       e.stopPropagation();
                       toggleHazardStatus(haz.id);
                     }}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 underline font-mono"
+                    className="text-[11px] text-cyan-400 hover:text-cyan-300 font-mono hover:underline"
                   >
                     Cycle Status
                   </button>
@@ -158,15 +158,7 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
             return (
               <div
                 key={rte.id}
-                className={`p-3 rounded-md border transition-all ${
-                  isBlocked
-                    ? 'bg-rose-950/20 border-rose-900/60'
-                    : isNew
-                    ? 'bg-emerald-950/20 border-emerald-800/60'
-                    : isHazardous
-                    ? 'bg-amber-950/20 border-amber-800/60'
-                    : 'bg-slate-900/60 border-slate-800'
-                }`}
+                className="p-2.5 rounded-md border border-slate-800 bg-[#0e1526] hover:border-slate-700 transition-all"
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div>
@@ -180,25 +172,25 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
                   </div>
 
                   <span
-                    className={`text-[9px] font-mono px-2 py-0.5 rounded border uppercase font-semibold ${
+                    className={`text-[9px] font-mono px-1.5 py-0.5 rounded-sm border uppercase font-bold ${
                       isBlocked
-                        ? 'bg-rose-950 text-rose-300 border-rose-500/50'
+                        ? 'bg-rose-950/50 text-rose-400 border-rose-500/40'
                         : isNew
-                        ? 'bg-emerald-950 text-emerald-300 border-emerald-500/50'
+                        ? 'bg-emerald-950/50 text-emerald-400 border-emerald-500/40'
                         : isHazardous
-                        ? 'bg-amber-950 text-amber-300 border-amber-500/50'
-                        : 'bg-cyan-950 text-cyan-300 border-cyan-500/50'
+                        ? 'bg-amber-950/50 text-amber-400 border-amber-500/40'
+                        : 'bg-slate-800 text-slate-300 border-slate-700'
                     }`}
                   >
                     {rte.status.replace('_', ' ')}
                   </span>
                 </div>
 
-                <p className="text-[11px] text-slate-300 font-mono my-2 leading-relaxed">
+                <p className="text-[11px] text-slate-300 font-mono my-1.5 leading-relaxed break-words">
                   {rte.description}
                 </p>
 
-                <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono">
+                <div className="pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono">
                   <span className="text-slate-500">{rte.points.length} SLAM Waypoints</span>
                   {!isBlocked && (
                     <button
@@ -209,7 +201,7 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
                           `EVACUATION PATH SENT: Human rescue units assigned to ${rte.name}.`
                         );
                       }}
-                      className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 underline"
+                      className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-mono hover:underline"
                     >
                       <span>Assign to Field Team</span>
                       <ArrowRight className="w-3 h-3" />
