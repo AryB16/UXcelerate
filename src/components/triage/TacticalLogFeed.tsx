@@ -32,7 +32,7 @@ export const TacticalLogFeed: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#060a12] border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full bg-[#060a12] border border-slate-800 rounded-md overflow-hidden shadow-xl">
       {/* Header */}
       <div className="p-2.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-2">

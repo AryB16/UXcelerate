@@ -41,15 +41,15 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#080705] border border-amber-950/60 rounded-xl overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full bg-[#080705] border border-amber-950/60 rounded-md overflow-hidden shadow-xl">
       {/* Header Tabs */}
       <div className="p-2.5 bg-gradient-to-r from-amber-950/40 via-slate-900/90 to-slate-900/90 border-b border-amber-900/40 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setActiveTab('hazards')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${
               activeTab === 'hazards'
-                ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
+                ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -59,9 +59,9 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
 
           <button
             onClick={() => setActiveTab('routes')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${
               activeTab === 'routes'
-                ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/50'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -77,7 +77,7 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
           {onClose && (
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               title="Close Panel"
             >
               <X className="w-4 h-4" />
@@ -97,9 +97,9 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
               <div
                 key={haz.id}
                 onClick={() => selectHazard(haz.id)}
-                className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                className={`p-3 rounded-md border transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-amber-950/40 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                    ? 'bg-amber-950/40 border-amber-400 ring-1 ring-amber-400/40'
                     : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                 }`}
               >
@@ -158,7 +158,7 @@ export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClos
             return (
               <div
                 key={rte.id}
-                className={`p-3 rounded-lg border transition-all ${
+                className={`p-3 rounded-md border transition-all ${
                   isBlocked
                     ? 'bg-rose-950/20 border-rose-900/60'
                     : isNew

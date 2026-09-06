@@ -77,7 +77,7 @@ const MissionControlDeck: React.FC = () => {
       (tourStep === 4 && section === 'header');
 
     if (isTarget) {
-      return 'relative z-20 ring-2 ring-cyan-400 shadow-[0_0_35px_rgba(6,182,212,0.4)] rounded-xl pointer-events-auto filter-none opacity-100 transition-all duration-300 bg-[#060a12]';
+      return 'relative z-20 ring-1 ring-cyan-400 shadow-2xl rounded-md pointer-events-auto filter-none opacity-100 transition-all duration-300 bg-[#060a12]';
     }
 
     return 'filter blur-[5px] opacity-20 brightness-50 pointer-events-none transition-all duration-300';
@@ -125,9 +125,9 @@ const MissionControlDeck: React.FC = () => {
     <div className="flex flex-col h-screen w-screen bg-[#05080f] text-slate-100 overflow-hidden font-sans select-none relative">
       {/* Reactive Aftershock Reroute Decision Card */}
       {reroutePrompt && reroutePrompt.isOpen && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 max-w-xl w-[92vw] bg-[#0c1424]/95 border-2 border-amber-500/80 rounded-xl p-4 shadow-[0_0_35px_rgba(245,158,11,0.35)] backdrop-blur animate-in fade-in slide-in-from-top duration-300">
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 max-w-xl w-[92vw] bg-[#0c1424]/95 border border-amber-500/80 rounded-md p-4 shadow-2xl backdrop-blur animate-in fade-in slide-in-from-top duration-300">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 shrink-0 mt-0.5">
+            <div className="p-2 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/40 shrink-0 mt-0.5">
               <AlertTriangle className="w-6 h-6 animate-pulse text-amber-400" />
             </div>
             <div className="flex-1 min-w-0">
@@ -135,7 +135,7 @@ const MissionControlDeck: React.FC = () => {
                 <h3 className="font-bold text-sm text-amber-300 tracking-wide font-mono uppercase">
                   {reroutePrompt.title}
                 </h3>
-                <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded">
+                <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-sm">
                   ACTION REQUIRED
                 </span>
               </div>
@@ -145,14 +145,14 @@ const MissionControlDeck: React.FC = () => {
               <div className="flex items-center gap-2 mt-3 font-mono text-xs">
                 <button
                   onClick={confirmReroute}
-                  className="flex-1 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-lg shadow-md transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-md shadow-md transition-all flex items-center justify-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Confirm Reroute via Alpha-1</span>
                 </button>
                 <button
                   onClick={dismissReroute}
-                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-700 transition-colors font-medium"
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-md border border-slate-700 transition-colors font-medium"
                 >
                   Dismiss / Manual
                 </button>
@@ -198,13 +198,13 @@ const MissionControlDeck: React.FC = () => {
           } ${isRightPanelOpen ? 'md:flex md:col-span-3' : 'md:hidden'} h-full min-h-0 flex-col gap-1.5 ${getTourSpotlightStyle('right')}`}
         >
           {/* Top-Level Panel Switcher: Distinct Separation of Triage vs Hazards vs Logs */}
-          <div className="flex items-center justify-between p-1 bg-[#090e1a] border border-slate-800 rounded-xl shadow-md shrink-0">
+          <div className="flex items-center justify-between p-1 bg-[#090e1a] border border-slate-800 rounded-md shadow-md shrink-0">
             <div className="flex items-center gap-1 flex-1 font-mono text-[10px]">
               <button
                 onClick={() => setRightPanelMode('triage')}
-                className={`flex-1 py-1 px-1.5 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1 px-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${
                   rightPanelMode === 'triage'
-                    ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.25)]'
+                    ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/50'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
                 title="Survivor Medical Triage (START Protocol)"
@@ -215,9 +215,9 @@ const MissionControlDeck: React.FC = () => {
 
               <button
                 onClick={() => setRightPanelMode('hazards')}
-                className={`flex-1 py-1 px-1.5 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1 px-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${
                   rightPanelMode === 'hazards'
-                    ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.25)]'
+                    ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/50'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
                 title="Hazards & Structural Paths"
@@ -228,9 +228,9 @@ const MissionControlDeck: React.FC = () => {
 
               <button
                 onClick={() => setRightPanelMode('logs')}
-                className={`py-1 px-2 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                className={`py-1 px-2 rounded-md transition-all flex items-center justify-center gap-1 ${
                   rightPanelMode === 'logs'
-                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/50 shadow-[0_0_8px_rgba(6,182,212,0.25)]'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/50'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
                 title="Live Incident & Comms Log"
@@ -241,7 +241,7 @@ const MissionControlDeck: React.FC = () => {
 
               <button
                 onClick={() => setRightPanelMode('split')}
-                className={`py-1 px-1.5 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                className={`py-1 px-1.5 rounded-md transition-all flex items-center justify-center gap-1 ${
                   rightPanelMode === 'split'
                     ? 'bg-slate-700 text-slate-100 font-bold border border-slate-500 shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
@@ -255,7 +255,7 @@ const MissionControlDeck: React.FC = () => {
 
             <button
               onClick={() => setIsRightPanelOpen(false)}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-1"
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-1"
               title="Close Right Panel"
             >
               <X className="w-3.5 h-3.5" />
@@ -309,7 +309,7 @@ const MissionControlDeck: React.FC = () => {
       {!isLeftRosterOpen && (
         <button
           onClick={() => setIsLeftRosterOpen(true)}
-          className="hidden md:flex fixed bottom-9 left-3 z-30 items-center gap-2 px-3 py-1.5 rounded-lg bg-[#07101e]/95 border border-cyan-400 text-cyan-300 hover:text-white hover:bg-cyan-950 font-mono text-xs shadow-2xl backdrop-blur transition-all"
+          className="hidden md:flex fixed bottom-9 left-3 z-30 items-center gap-2 px-3 py-1.5 rounded-md bg-[#07101e]/95 border border-cyan-400 text-cyan-300 hover:text-white hover:bg-cyan-950 font-mono text-xs shadow-xl backdrop-blur transition-all"
           title="Open Swarm Tele-Ops Roster"
         >
           <Bot className="w-3.5 h-3.5 text-cyan-400" />
@@ -320,7 +320,7 @@ const MissionControlDeck: React.FC = () => {
       {!isRightPanelOpen && (
         <button
           onClick={() => setIsRightPanelOpen(true)}
-          className="hidden md:flex fixed bottom-9 right-3 z-30 items-center gap-2 px-3 py-1.5 rounded-lg bg-[#180a15]/95 border border-rose-500 text-rose-300 hover:text-white hover:bg-rose-950 font-mono text-xs shadow-2xl backdrop-blur transition-all"
+          className="hidden md:flex fixed bottom-9 right-3 z-30 items-center gap-2 px-3 py-1.5 rounded-md bg-[#180a15]/95 border border-rose-500 text-rose-300 hover:text-white hover:bg-rose-950 font-mono text-xs shadow-xl backdrop-blur transition-all"
           title="Open Survivor Triage & Hazards Panel"
         >
           <Heart className="w-3.5 h-3.5 text-rose-400" />
@@ -332,7 +332,7 @@ const MissionControlDeck: React.FC = () => {
       <nav className="flex md:hidden items-center justify-around bg-[#060a12] border-t border-slate-800 py-2 px-2 text-xs font-mono select-none z-30 shrink-0">
         <button
           onClick={() => setMobileTab('map')}
-          className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors ${
+          className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-md transition-colors ${
             mobileTab === 'map'
               ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
               : 'text-slate-400 hover:text-slate-200'
@@ -344,7 +344,7 @@ const MissionControlDeck: React.FC = () => {
 
         <button
           onClick={() => setMobileTab('roster')}
-          className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors ${
+          className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-md transition-colors ${
             mobileTab === 'roster'
               ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
               : 'text-slate-400 hover:text-slate-200'
@@ -356,7 +356,7 @@ const MissionControlDeck: React.FC = () => {
 
         <button
           onClick={() => setMobileTab('triage')}
-          className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors ${
+          className={`flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 rounded-md transition-colors ${
             mobileTab === 'triage'
               ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40'
               : 'text-slate-400 hover:text-slate-200'

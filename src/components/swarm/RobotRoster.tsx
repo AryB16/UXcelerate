@@ -59,7 +59,7 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#070b14] border border-slate-800 rounded-xl overflow-hidden shadow-xl select-none">
+    <div className="flex flex-col h-full bg-[#070b14] border border-slate-800 rounded-md overflow-hidden shadow-xl select-none">
       {/* 1. Compact Panel Header with Close Button strictly at top right */}
       <div className="px-3 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-1.5">
@@ -145,7 +145,7 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
               onClick={() => handleSelectRobot(bot.id)}
               className={`p-2 rounded-md border transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-cyan-950/40 border-cyan-400/80 shadow-[0_0_10px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/40'
+                  ? 'bg-cyan-950/40 border-cyan-400/80 ring-1 ring-cyan-400/60'
                   : isDisconnected
                   ? 'bg-rose-950/15 border-rose-900/50 hover:border-rose-700/60'
                   : 'bg-[#0a101d] border-slate-800 hover:border-slate-700'

@@ -141,12 +141,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   const selectedHazard = hazards.find((h) => h.id === selectedHazardId);
 
   return (
-    <div className="relative w-full h-full bg-[#060a13] rounded-xl border border-slate-800 overflow-hidden flex flex-col shadow-2xl">
+    <div className="relative w-full h-full bg-[#060a13] rounded-md border border-slate-800 overflow-hidden flex flex-col shadow-2xl">
       
       {/* Top Map Toolbar: Seamless, aerospace HUD command bar */}
       <div className="flex items-center justify-between px-2.5 py-1.5 bg-[#080e1b]/95 border-b border-slate-800/90 z-10 text-xs font-mono select-none shrink-0 gap-2">
         {/* Left: Layer Controls in a single unified segmented pill */}
-        <div className="flex items-center bg-[#050b16] border border-slate-800 rounded-lg p-0.5 text-[11px] shrink-0">
+        <div className="flex items-center bg-[#050b16] border border-slate-800 rounded-md p-0.5 text-[11px] shrink-0">
           <span className="text-slate-400 font-semibold px-2 flex items-center gap-1.5 border-r border-slate-800/80 mr-0.5">
             <Layers className="w-3 h-3 text-cyan-400" />
             <span className="hidden sm:inline">Layers</span>
@@ -154,53 +154,53 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
           <button
             onClick={() => toggleLayer('slam')}
-            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1.5 ${
+            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
               layers.slam
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold shadow-sm'
+                ? 'bg-cyan-500/20 text-cyan-300 font-bold'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
             title="CAD Blueprint & SLAM Pointcloud"
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${layers.slam ? 'bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.8)]' : 'bg-slate-600'}`}></span>
+            <span className={`w-1.5 h-1.5 rounded-full ${layers.slam ? 'bg-cyan-400' : 'bg-slate-600'}`}></span>
             <span>CAD</span>
           </button>
 
           <button
             onClick={() => toggleLayer('mesh')}
-            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1.5 ${
+            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
               layers.mesh
-                ? 'bg-emerald-500/20 text-emerald-300 font-bold shadow-sm'
+                ? 'bg-emerald-500/20 text-emerald-300 font-bold'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
             title="RF Mesh Links & Repeater Beacons"
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${layers.mesh ? 'bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]' : 'bg-slate-600'}`}></span>
+            <span className={`w-1.5 h-1.5 rounded-full ${layers.mesh ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
             <span>Mesh</span>
           </button>
 
           <button
             onClick={() => toggleLayer('hazards')}
-            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1.5 ${
+            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
               layers.hazards
-                ? 'bg-amber-500/20 text-amber-300 font-bold shadow-sm'
+                ? 'bg-amber-500/20 text-amber-300 font-bold'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
             title="Hazards & Environmental Risks"
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${layers.hazards ? 'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)]' : 'bg-slate-600'}`}></span>
+            <span className={`w-1.5 h-1.5 rounded-full ${layers.hazards ? 'bg-amber-400' : 'bg-slate-600'}`}></span>
             <span>Hazards</span>
           </button>
 
           <button
             onClick={() => toggleLayer('routes')}
-            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1.5 ${
+            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
               layers.routes
-                ? 'bg-sky-500/20 text-sky-300 font-bold shadow-sm'
+                ? 'bg-sky-500/20 text-sky-300 font-bold'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
             title="Safe Evac Corridors & Autopath"
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${layers.routes ? 'bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]' : 'bg-slate-600'}`}></span>
+            <span className={`w-1.5 h-1.5 rounded-full ${layers.routes ? 'bg-sky-400' : 'bg-slate-600'}`}></span>
             <span>Routes</span>
           </button>
         </div>
@@ -210,9 +210,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           {/* Detail Mode Pill (Compact & non-intrusive) */}
           <button
             onClick={() => setDetailMode((m) => (m === 'simple' ? 'detailed' : 'simple'))}
-            className={`px-2 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 border ${
+            className={`px-2 py-1 rounded-md text-xs font-mono transition-all flex items-center gap-1.5 border ${
               detailMode === 'detailed'
-                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-[0_0_8px_rgba(6,182,212,0.3)] font-bold'
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 font-bold'
                 : 'bg-slate-800/60 text-slate-400 border-slate-700 hover:text-slate-200'
             }`}
             title={detailMode === 'detailed' ? 'Switch to Simplified Overview' : 'Switch to Deep Telemetry Mode'}
@@ -224,9 +224,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           {/* Deploy Relay Button */}
           <button
             onClick={() => setIsDeployMode(!isDeployMode)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border transition-all ${
               isDeployMode
-                ? 'bg-cyan-400 text-slate-950 border-cyan-300 animate-pulse shadow-[0_0_12px_rgba(6,182,212,0.5)]'
+                ? 'bg-cyan-400 text-slate-950 border-cyan-300 animate-pulse'
                 : 'bg-slate-800/80 text-cyan-300 border-slate-700 hover:bg-slate-700'
             }`}
             title="Deploy RF Relay Beacon"
@@ -240,7 +240,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           {onToggleExpand && (
             <button
               onClick={onToggleExpand}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono bg-slate-800/80 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono bg-slate-800/80 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors"
               title={isExpanded ? 'Restore 3-Column Deck (M)' : 'Maximize Map Full Width (M)'}
             >
               {isExpanded ? (
@@ -258,7 +258,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           )}
 
           {/* Zoom controls */}
-          <div className="flex items-center bg-slate-800/80 rounded-lg border border-slate-700 p-0.5">
+          <div className="flex items-center bg-slate-800/80 rounded-md border border-slate-700 p-0.5">
             <button
               onClick={handleZoomIn}
               className="p-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
@@ -294,7 +294,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
       {/* Aftershock Alert Banner */}
       {overview.aftershockRiskLevel === 'CRITICAL' && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-rose-950/95 border-2 border-rose-500 text-rose-200 text-xs font-mono font-bold rounded-full shadow-[0_0_30px_rgba(244,63,94,0.6)] flex items-center gap-2 animate-pulse">
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-rose-950/95 border border-rose-500 text-rose-200 text-xs font-mono font-bold rounded-md shadow-lg flex items-center gap-2 animate-pulse">
           <AlertTriangle className="w-4 h-4 text-rose-400" />
           <span>⚠️ 5.2M AFTERSHOCK REGISTERED // SECONDARY COLLAPSE IN SECTOR BETA // REROUTING</span>
         </div>
@@ -1533,7 +1533,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         {/* 8. DOCKED ENTITY INSPECTOR PANEL (At Bottom-Left)         */}
         {/* ========================================================= */}
         {(selectedRobot || selectedSurvivor || selectedHazard) && (
-          <div className="absolute bottom-3 left-3 z-30 p-3.5 rounded-xl bg-[#091122]/95 border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] backdrop-blur max-w-sm font-mono text-xs">
+          <div className="absolute bottom-8 left-3 z-30 p-3.5 rounded-md bg-[#091122]/95 border border-cyan-500/40 shadow-xl backdrop-blur max-w-sm font-mono text-xs">
             
             {/* Robot Inspector */}
             {selectedRobot && (
@@ -1542,14 +1542,14 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-base">{getRobotEmoji(selectedRobot.type)}</span>
                     <span className="font-bold text-white text-sm">{selectedRobot.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold">
                       {selectedRobot.callsign}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-sm border ${
                         selectedRobot.commsStatus === 'connected'
                           ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
                           : selectedRobot.commsStatus === 'degraded'
@@ -1571,13 +1571,13 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
                 {/* Telemetry stats */}
                 <div className="grid grid-cols-2 gap-2 mb-2 text-[11px] text-slate-300">
-                  <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                  <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-sm border border-slate-800">
                     <span>⚡ Battery:</span>
                     <span className={`font-bold ${selectedRobot.battery < 30 ? 'text-rose-400' : 'text-emerald-400'}`}>
                       {Math.round(selectedRobot.battery)}%
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                  <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded-sm border border-slate-800">
                     <span>📶 Signal:</span>
                     <span className={`font-bold ${selectedRobot.signalStrength < 50 ? 'text-amber-400' : 'text-cyan-400'}`}>
                       {selectedRobot.signalStrength}%
@@ -1585,7 +1585,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   </div>
                 </div>
 
-                <p className="text-[11px] text-slate-300 mb-3 leading-relaxed bg-slate-900/50 p-1.5 rounded border border-slate-800/60 line-clamp-2">
+                <p className="text-[11px] text-slate-300 mb-3 leading-relaxed bg-slate-900/50 p-1.5 rounded-sm border border-slate-800/60 line-clamp-2">
                   <strong className="text-cyan-400">Mission:</strong> {selectedRobot.currentTask}
                 </p>
 
@@ -1593,7 +1593,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openFpv(selectedRobot.id)}
-                    className="flex-1 py-1.5 px-3 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.3)] transition-all"
+                    className="flex-1 py-1.5 px-3 rounded-md bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>Open FPV Cockpit</span>
@@ -1602,7 +1602,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   {selectedRobot.commsStatus === 'disconnected' && (
                     <button
                       onClick={() => restoreComms(selectedRobot.id)}
-                      className="py-1.5 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow transition-all"
+                      className="py-1.5 px-3 rounded-md bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow transition-all"
                     >
                       <Signal className="w-3.5 h-3.5" />
                       <span>Sync Comms</span>
@@ -1611,7 +1611,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
                   <button
                     onClick={() => deployBeaconAt(selectedRobot.position.x + 20, selectedRobot.position.y + 20)}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
+                    className="p-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
                     title="Drop RF Mesh Relay at Robot Spot"
                   >
                     <Radio className="w-4 h-4" />
@@ -1629,7 +1629,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     <span className="font-bold text-white text-sm">{selectedSurvivor.label}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700 font-bold animate-pulse">
+                    <span className="text-[10px] px-2 py-0.5 rounded-sm bg-rose-950 text-rose-300 border border-rose-700 font-bold animate-pulse">
                       {selectedSurvivor.triage.toUpperCase()}
                     </span>
                     <button
@@ -1643,23 +1643,23 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mb-2 text-[11px] text-slate-300">
-                  <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                  <div className="bg-slate-900/80 p-1.5 rounded-sm border border-slate-800">
                     <span className="text-slate-400">Heart Rate: </span>
                     <strong className="text-rose-400">{selectedSurvivor.vitals.heartRate} BPM</strong>
                   </div>
-                  <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                  <div className="bg-slate-900/80 p-1.5 rounded-sm border border-slate-800">
                     <span className="text-slate-400">Oxygen SpO2: </span>
                     <strong className="text-cyan-400">{selectedSurvivor.vitals.spO2}%</strong>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-slate-300 mb-3 bg-slate-900/50 p-1.5 rounded border border-slate-800/60 leading-relaxed">
+                <p className="text-[11px] text-slate-300 mb-3 bg-slate-900/50 p-1.5 rounded-sm border border-slate-800/60 leading-relaxed">
                   <strong className="text-amber-400">Entrapment:</strong> Depth {selectedSurvivor.location.depthMeters}m • {selectedSurvivor.notes}
                 </p>
 
                 <button
                   onClick={() => dispatchRobotToSurvivor('ROB-02', selectedSurvivor.id)}
-                  className="w-full py-1.5 px-3 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(244,63,94,0.4)] transition-all"
+                  className="w-full py-1.5 px-3 rounded-md bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Dispatch Vulcan-X Life Support</span>
@@ -1676,7 +1676,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     <span className="font-bold text-white text-sm">{selectedHazard.title}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700 font-bold">
+                    <span className="text-[10px] px-2 py-0.5 rounded-sm bg-amber-950 text-amber-300 border border-amber-700 font-bold">
                       {selectedHazard.severity.toUpperCase()}
                     </span>
                     <button
@@ -1689,7 +1689,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   </div>
                 </div>
 
-                <p className="text-xs text-amber-300 font-bold mb-2 bg-amber-950/40 p-2 rounded border border-amber-500/40">
+                <p className="text-xs text-amber-300 font-bold mb-2 bg-amber-950/40 p-2 rounded-sm border border-amber-500/40">
                   {selectedHazard.readout}
                 </p>
 
@@ -1703,32 +1703,40 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         )}
 
         {/* ========================================================= */}
-        {/* 9. TACTICAL MAP LEGEND RIBBON (Bottom-Right)              */}
+        {/* 9. DOCKED TACTICAL MAP LEGEND HUD STRIP                   */}
         {/* ========================================================= */}
-        <div className="absolute bottom-3 right-3 z-20 hidden md:flex items-center gap-3 px-3.5 py-2 rounded-lg bg-[#070e1c]/95 border border-slate-700/80 text-[11px] font-mono text-slate-300 shadow-xl backdrop-blur select-none">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
-            <span>Active Bot</span>
+        <div className="absolute bottom-0 left-0 right-0 z-20 hidden md:flex items-center justify-between px-3 py-1 bg-[#050914]/90 border-t border-slate-800/90 text-[9px] font-mono text-slate-400 select-none backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-500 font-bold uppercase tracking-wider">GIS SYMBOLOGY // INSARAG</span>
+            <span className="text-slate-700">|</span>
+            <span className="text-slate-400">COORD: UTM ZONE 32N WGS-84</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-            <span>Ghost Bot</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-            <span>Survivor</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-            <span>Hazard</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-1 rounded bg-cyan-400" />
-            <span>Safe Path</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-1 rounded bg-rose-500 border border-dashed" />
-            <span>Blocked</span>
+
+          <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+              <span>Active Bot</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              <span>Ghost Bot</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              <span>Survivor</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              <span>Hazard</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-0.5 rounded-sm bg-cyan-400" />
+              <span>Safe Path</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-0.5 rounded-sm bg-rose-500" />
+              <span>Blocked</span>
+            </div>
           </div>
         </div>
 

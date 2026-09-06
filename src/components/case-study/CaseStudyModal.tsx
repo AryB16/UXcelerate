@@ -31,12 +31,12 @@ export const CaseStudyModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 md:p-6 animate-fade-in">
-      <div className="relative w-full max-w-6xl bg-[#080d1a] border border-cyan-500/50 rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(6,182,212,0.3)] flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-6xl bg-[#080d1a] border border-cyan-500/50 rounded-md overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-slate-900/90 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-cyan-950/80 border border-cyan-400 text-cyan-400">
+            <div className="p-2 rounded-md bg-cyan-950/80 border border-cyan-400 text-cyan-400">
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
@@ -44,7 +44,7 @@ export const CaseStudyModal: React.FC = () => {
                 <h2 className="text-base font-bold text-slate-100 tactical-font">
                   AEGIS-USAR // COMPREHENSIVE UI/UX CASE STUDY & DESIGN SPEC
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-cyan-900/60 text-cyan-300 border border-cyan-700">
+                <span className="px-2 py-0.5 text-[10px] font-mono rounded-sm bg-cyan-900/60 text-cyan-300 border border-cyan-700">
                   UXCELERATE 2026 SUBMISSION
                 </span>
               </div>
@@ -56,7 +56,7 @@ export const CaseStudyModal: React.FC = () => {
 
           <button
             onClick={() => setIsCaseStudyOpen(false)}
-            className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-md bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -74,9 +74,9 @@ export const CaseStudyModal: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setCurrentTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md whitespace-nowrap transition-all ${
                 currentTab === tab.id
-                  ? 'bg-cyan-600 text-white font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]'
+                  ? 'bg-cyan-600 text-white font-bold'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
             >
@@ -92,7 +92,7 @@ export const CaseStudyModal: React.FC = () => {
           {/* TAB 1: EXECUTIVE SUMMARY */}
           {currentTab === 'summary' && (
             <div className="space-y-6">
-              <div className="p-4 rounded-xl bg-cyan-950/20 border border-cyan-500/30">
+              <div className="p-4 rounded-md bg-cyan-950/20 border border-cyan-500/30">
                 <h3 className="text-base font-bold text-cyan-400 tactical-font mb-2">
                   The Problem Space & The "Golden 72 Hours"
                 </h3>
@@ -111,7 +111,7 @@ export const CaseStudyModal: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800">
+                <div className="p-4 rounded-md bg-slate-900/60 border border-slate-800">
                   <div className="text-cyan-400 font-bold font-mono text-xs mb-1">SUPERVISORY AUTONOMY</div>
                   <h4 className="text-sm font-bold text-slate-100 mb-1">1 Operator to 6+ Robots</h4>
                   <p className="text-xs text-slate-400">
@@ -119,7 +119,7 @@ export const CaseStudyModal: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800">
+                <div className="p-4 rounded-md bg-slate-900/60 border border-slate-800">
                   <div className="text-emerald-400 font-bold font-mono text-xs mb-1">EPISTEMIC MAPPING</div>
                   <h4 className="text-sm font-bold text-slate-100 mb-1">Fog of Uncertainty</h4>
                   <p className="text-xs text-slate-400">
@@ -127,7 +127,7 @@ export const CaseStudyModal: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800">
+                <div className="p-4 rounded-md bg-slate-900/60 border border-slate-800">
                   <div className="text-amber-400 font-bold font-mono text-xs mb-1">RESILIENT MESH UX</div>
                   <h4 className="text-sm font-bold text-slate-100 mb-1">Ghost Telemetry & Relay Drop</h4>
                   <p className="text-xs text-slate-400">
@@ -147,7 +147,7 @@ export const CaseStudyModal: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Persona 1 */}
-                <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800">
+                <div className="p-5 rounded-md bg-slate-900/70 border border-slate-800">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 rounded-full bg-cyan-950 border border-cyan-400 flex items-center justify-center text-cyan-400 font-bold font-mono">
                       EV
@@ -163,13 +163,13 @@ export const CaseStudyModal: React.FC = () => {
                   <p className="text-xs text-slate-400 mb-3">
                     <strong>Key Needs:</strong> Sector-wide bird's-eye view, total survivor triage tally, safe extraction corridors for human fire & rescue squads, and aftershock risk alerts.
                   </p>
-                  <div className="text-[11px] font-mono text-cyan-300 bg-cyan-950/40 p-2 rounded border border-cyan-900/50">
+                  <div className="text-[11px] font-mono text-cyan-300 bg-cyan-950/40 p-2 rounded-sm border border-cyan-900/50">
                     "I cannot afford to send my human firefighters into Sector Beta without knowing if the bearing columns have sheared."
                   </div>
                 </div>
 
                 {/* Persona 2 */}
-                <div className="p-5 rounded-xl bg-slate-900/70 border border-slate-800">
+                <div className="p-5 rounded-md bg-slate-900/70 border border-slate-800">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 rounded-full bg-emerald-950 border border-emerald-400 flex items-center justify-center text-emerald-400 font-bold font-mono">
                       TM
@@ -185,7 +185,7 @@ export const CaseStudyModal: React.FC = () => {
                   <p className="text-xs text-slate-400 mb-3">
                     <strong>Key Needs:</strong> Instant battery and RF link status, dead-reckoning ghost tracking when robots crawl into basements, FPV borescope control, and breadcrumb relay dropping.
                   </p>
-                  <div className="text-[11px] font-mono text-emerald-300 bg-emerald-950/40 p-2 rounded border border-emerald-900/50">
+                  <div className="text-[11px] font-mono text-emerald-300 bg-emerald-950/40 p-2 rounded-sm border border-emerald-900/50">
                     "When Serpens-3 dives into an elevator shaft, I need to know its dead-reckoning trajectory and when to drop a repeater."
                   </div>
                 </div>
@@ -202,7 +202,7 @@ export const CaseStudyModal: React.FC = () => {
 
               <div className="space-y-4">
                 {/* Challenge 1 */}
-                <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div className="p-4 rounded-md bg-slate-900/80 border border-slate-800">
                   <div className="flex items-center gap-2 mb-2 text-cyan-400 font-mono font-bold text-xs">
                     <Layers className="w-4 h-4" />
                     <span>CHALLENGE 1: INCOMPLETE MAPS & FOG OF UNCERTAINTY</span>
@@ -218,7 +218,7 @@ export const CaseStudyModal: React.FC = () => {
                 </div>
 
                 {/* Challenge 2 */}
-                <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div className="p-4 rounded-md bg-slate-900/80 border border-slate-800">
                   <div className="flex items-center gap-2 mb-2 text-rose-400 font-mono font-bold text-xs">
                     <Radio className="w-4 h-4" />
                     <span>CHALLENGE 2: UNRELIABLE / INTERMITTENT COMMUNICATIONS</span>
@@ -234,7 +234,7 @@ export const CaseStudyModal: React.FC = () => {
                 </div>
 
                 {/* Challenge 3 */}
-                <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div className="p-4 rounded-md bg-slate-900/80 border border-slate-800">
                   <div className="flex items-center gap-2 mb-2 text-emerald-400 font-mono font-bold text-xs">
                     <Heart className="w-4 h-4" />
                     <span>CHALLENGE 3: CONTINUOUS DYNAMIC DISCOVERIES & TRIAGE</span>
@@ -260,48 +260,48 @@ export const CaseStudyModal: React.FC = () => {
               </h3>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-xs">
-                <div className="p-3 rounded-lg bg-[#06090e] border border-cyan-500/40">
-                  <div className="w-full h-8 rounded bg-[#06090e] border border-slate-700 mb-2" />
+                <div className="p-3 rounded-md bg-[#06090e] border border-cyan-500/40">
+                  <div className="w-full h-8 rounded-sm bg-[#06090e] border border-slate-700 mb-2" />
                   <div className="font-bold text-white">Obsidian Base</div>
                   <div className="text-slate-500">#06090E</div>
                   <div className="text-[10px] text-cyan-400 mt-1">OLED Battery Save & Glare Shield</div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-900 border border-cyan-500/40">
-                  <div className="w-full h-8 rounded bg-[#00F0FF] mb-2" />
+                <div className="p-3 rounded-md bg-slate-900 border border-cyan-500/40">
+                  <div className="w-full h-8 rounded-sm bg-[#00F0FF] mb-2" />
                   <div className="font-bold text-white">Tactical Cyan</div>
                   <div className="text-slate-500">#00F0FF</div>
                   <div className="text-[10px] text-cyan-400 mt-1">11.4:1 Contrast Ratio (AAA)</div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-900 border border-rose-500/40">
-                  <div className="w-full h-8 rounded bg-[#F43F5E] mb-2" />
+                <div className="p-3 rounded-md bg-slate-900 border border-rose-500/40">
+                  <div className="w-full h-8 rounded-sm bg-[#F43F5E] mb-2" />
                   <div className="font-bold text-white">Immediate Alert</div>
                   <div className="text-slate-500">#F43F5E</div>
                   <div className="text-[10px] text-rose-400 mt-1">START Red & Seismic Warning</div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-900 border border-emerald-500/40">
-                  <div className="w-full h-8 rounded bg-[#10B981] mb-2" />
+                <div className="p-3 rounded-md bg-slate-900 border border-emerald-500/40">
+                  <div className="w-full h-8 rounded-sm bg-[#10B981] mb-2" />
                   <div className="font-bold text-white">Mesh Verified</div>
                   <div className="text-slate-500">#10B981</div>
                   <div className="text-[10px] text-emerald-400 mt-1">RF Connected & Safe Corridor</div>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
+              <div className="p-4 rounded-md bg-slate-900/60 border border-slate-800 text-xs">
                 <h4 className="font-bold text-slate-100 mb-2 font-mono">COLORBLIND-SAFE REDUNDANCY</h4>
                 <p className="text-slate-300">
                   In accordance with Universal Design and WCAG guidelines, no critical piece of information relies solely on color:
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 font-mono text-[11px]">
-                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                  <div className="p-2 rounded-sm bg-slate-950 border border-slate-800">
                     <span className="text-rose-400 font-bold">Immediate Triage:</span> Red color + Pulsing animation + Text badge "[RED // IMMEDIATE]" + Warning icon.
                   </div>
-                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                  <div className="p-2 rounded-sm bg-slate-950 border border-slate-800">
                     <span className="text-amber-400 font-bold">Comms Loss:</span> Amber color + "GHOST" text + Last known timestamp + WiFi-Off icon.
                   </div>
-                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                  <div className="p-2 rounded-sm bg-slate-950 border border-slate-800">
                     <span className="text-cyan-400 font-bold">Route Block:</span> Red color + Dashed line + Red cross barrier + "⛔ BLOCKED" label.
                   </div>
                 </div>
@@ -317,7 +317,7 @@ export const CaseStudyModal: React.FC = () => {
               </h3>
 
               <div className="space-y-3">
-                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                <div className="p-3 rounded-md bg-slate-900/70 border border-slate-800">
                   <div className="font-bold text-slate-100 font-mono mb-1">
                     1. Visibility of System Status
                   </div>
@@ -326,7 +326,7 @@ export const CaseStudyModal: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                <div className="p-3 rounded-md bg-slate-900/70 border border-slate-800">
                   <div className="font-bold text-slate-100 font-mono mb-1">
                     2. Match Between System and the Real World
                   </div>
@@ -335,7 +335,7 @@ export const CaseStudyModal: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                <div className="p-3 rounded-md bg-slate-900/70 border border-slate-800">
                   <div className="font-bold text-slate-100 font-mono mb-1">
                     3. User Control and Freedom
                   </div>
@@ -344,7 +344,7 @@ export const CaseStudyModal: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                <div className="p-3 rounded-md bg-slate-900/70 border border-slate-800">
                   <div className="font-bold text-slate-100 font-mono mb-1">
                     4. Error Prevention & Recovery
                   </div>
@@ -365,7 +365,7 @@ export const CaseStudyModal: React.FC = () => {
           </span>
           <button
             onClick={() => setIsCaseStudyOpen(false)}
-            className="px-4 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition-colors"
+            className="px-4 py-1.5 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition-colors"
           >
             Close Case Study
           </button>

@@ -100,7 +100,7 @@ export const MissionHeader: React.FC = () => {
         
         {/* Left: Brand & Incident Title */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-950/60 border border-cyan-400/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)]">
+          <div className="relative flex items-center justify-center w-9 h-9 rounded-md bg-cyan-950/60 border border-cyan-400/40 text-cyan-400">
             <Radio className="w-4 h-4 animate-pulse" />
             <span className="absolute -top-1 -right-1 flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
@@ -130,7 +130,7 @@ export const MissionHeader: React.FC = () => {
         {/* Center: Standardized Mission Vital Telemetry Cards */}
         <div className="hidden lg:flex items-center gap-2 shrink-0">
           {/* Card 1: Golden Window */}
-          <div className="bg-[#0a101d] border border-slate-800 rounded-lg px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5">
+          <div className="bg-[#0a101d] border border-slate-800 rounded-md px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5">
             <Clock className="w-4 h-4 text-amber-400 shrink-0" />
             <div className="min-w-0">
               <div className="text-[9px] uppercase text-slate-400 font-mono tracking-wider leading-none">Golden Window</div>
@@ -141,7 +141,7 @@ export const MissionHeader: React.FC = () => {
           </div>
 
           {/* Card 2: Seismic Risk */}
-          <div className={`bg-[#0a101d] border border-slate-800 rounded-lg px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5 ${
+          <div className={`bg-[#0a101d] border border-slate-800 rounded-md px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5 ${
             overview.aftershockRiskLevel === 'CRITICAL' ? 'border-rose-500/50 bg-rose-950/20' : ''
           }`}>
             <Activity className={`w-4 h-4 shrink-0 ${overview.aftershockRiskLevel === 'CRITICAL' ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`} />
@@ -159,7 +159,7 @@ export const MissionHeader: React.FC = () => {
           </div>
 
           {/* Card 3: Mesh RF */}
-          <div className="bg-[#0a101d] border border-slate-800 rounded-lg px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5">
+          <div className="bg-[#0a101d] border border-slate-800 rounded-md px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5">
             {overview.overallMeshIntegrity > 70 ? (
               <Wifi className="w-4 h-4 text-emerald-400 shrink-0" />
             ) : (
@@ -179,7 +179,7 @@ export const MissionHeader: React.FC = () => {
           </div>
 
           {/* Card 4: Survivors */}
-          <div className="bg-[#0a101d] border border-slate-800 rounded-lg px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5">
+          <div className="bg-[#0a101d] border border-slate-800 rounded-md px-3 py-1 h-11 w-36 min-w-[140px] flex items-center gap-2.5">
             <Heart className="w-4 h-4 text-rose-400 shrink-0" />
             <div className="min-w-0">
               <div className="text-[9px] uppercase text-slate-400 font-mono tracking-wider leading-none">Survivors</div>
@@ -206,7 +206,7 @@ export const MissionHeader: React.FC = () => {
           </div>
 
           {/* Tablet compact indicators if screen < lg */}
-          <div className="flex lg:hidden items-center gap-2 bg-[#0a101d] border border-slate-800 rounded-lg px-2 py-1 text-[11px]">
+          <div className="flex lg:hidden items-center gap-2 bg-[#0a101d] border border-slate-800 rounded-md px-2 py-1 text-[11px]">
             <span className="text-amber-400 font-bold">67h</span>
             <span className="text-slate-700">•</span>
             <span className={overview.aftershockRiskLevel === 'CRITICAL' ? 'text-rose-400 font-bold' : 'text-slate-300'}>

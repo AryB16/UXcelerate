@@ -51,7 +51,7 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#090508] border border-rose-950/60 rounded-xl overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full bg-[#090508] border border-rose-950/60 rounded-md overflow-hidden shadow-xl">
       {/* Header */}
       <div className="p-3 bg-gradient-to-r from-rose-950/45 via-slate-900/90 to-slate-900/90 border-b border-rose-900/40 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -67,7 +67,7 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
           {onClose && (
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               title="Close Triage Panel"
             >
               <X className="w-4 h-4" />
@@ -87,9 +87,9 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
             <div
               key={surv.id}
               onClick={() => selectSurvivor(surv.id)}
-              className={`p-3 rounded-lg border transition-all cursor-pointer ${
+              className={`p-3 rounded-md border transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-rose-950/30 border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.2)]'
+                  ? 'bg-rose-950/30 border-rose-400 ring-1 ring-rose-400/40'
                   : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
               }`}
             >
