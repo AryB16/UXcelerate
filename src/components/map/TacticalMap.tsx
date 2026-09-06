@@ -72,7 +72,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   } = useMission();
 
   // Local state
-  const [mapMode, setMapMode] = useState<'dark' | 'satellite'>('dark');
+  const [mapMode, setMapMode] = useState<'dark' | 'satellite'>('satellite');
   const [filterSurvivors, setFilterSurvivors] = useState<boolean>(true);
   const [filterHazards, setFilterHazards] = useState<boolean>(true);
   const [filterRoutes, setFilterRoutes] = useState<boolean>(true);
@@ -100,20 +100,13 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         maxZoom: 19,
       });
 
-      // High-Contrast Dark Tactical Basemap (Esri Dark Gray Canvas - No API Key Required)
-      const baseTile = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+      // Ultra-crisp Satellite Imagery as default basemap
+      const satTile = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         { maxZoom: 19, attribution: '' }
       );
-
-      // Reference labels overlay on top of base
-      const refLabels = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 19, attribution: '' }
-      );
-
-      const initialGroup = L.layerGroup([baseTile, refLabels]).addTo(map);
-      baseTile.bringToBack();
+      const initialGroup = L.layerGroup([satTile]).addTo(map);
+      satTile.bringToBack();
       tileLayerRef.current = initialGroup;
 
       // Disaster Zone Perimeter (Red Dashed Box)
@@ -489,16 +482,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             </button>
           </div>
 
-          {/* Expand / Minimize Modal */}
-          {onToggleExpand && (
-            <button
-              onClick={onToggleExpand}
-              className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
-              title={isExpanded ? 'Restore View' : 'Fullscreen Tactical Deck'}
-            >
-              {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-            </button>
-          )}
+
         </div>
       </div>
 

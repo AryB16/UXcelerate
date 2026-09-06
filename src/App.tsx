@@ -194,49 +194,46 @@ const MissionControlDeck: React.FC = () => {
         <MissionHeader />
       </div>
 
-      {/* Main Command Deck Layout */}
-      <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-2 p-2 min-h-0 overflow-hidden">
+      {/* Main Command Deck Layout: Big Fixed Map with Slender Side Panels */}
+      <main className="flex-1 flex flex-col md:flex-row gap-2 p-2 min-h-0 overflow-hidden relative">
         
-        {/* LEFT COLUMN: Swarm Tele-Ops Roster */}
+        {/* LEFT COLUMN: Slender Swarm Tele-Ops Roster */}
         <div
           className={`relative ${
             mobileTab === 'roster' ? 'flex' : 'hidden'
-          } ${isLeftRosterOpen ? 'md:flex md:col-span-3' : 'md:hidden'} h-full min-h-0 ${getTourSpotlightStyle('left')}`}
+          } ${isLeftRosterOpen ? 'md:flex md:w-64 lg:w-72 shrink-0' : 'md:hidden'} h-full min-h-0 z-20 transition-all duration-200 ${getTourSpotlightStyle('left')}`}
         >
           <RobotRoster onClose={() => setIsLeftRosterOpen(false)} />
           {/* Collapse tab on the right (map-facing) edge */}
           <button
             onClick={() => setIsLeftRosterOpen(false)}
             title="Collapse Robots panel"
-            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -right-3 z-20 flex-col items-center justify-center w-3 h-16 bg-slate-800 hover:bg-cyan-900/80 border border-slate-700 hover:border-cyan-500/60 rounded-r-md text-slate-400 hover:text-cyan-300 transition-all shadow-md"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -right-3 z-30 flex-col items-center justify-center w-3 h-16 bg-slate-800 hover:bg-cyan-900/80 border border-slate-700 hover:border-cyan-500/60 rounded-r-md text-slate-400 hover:text-cyan-300 transition-all shadow-md"
           >
             <ChevronLeft className="w-2.5 h-2.5" />
           </button>
         </div>
 
-        {/* CENTER COLUMN: Tactical Disaster Map */}
+        {/* CENTER COLUMN: Big Fixed Tactical Disaster Map */}
         <div
           className={`${
             mobileTab === 'map' ? 'flex' : 'hidden'
-          } md:flex col-span-1 ${getCenterColSpan()} h-full min-h-0 flex-col ${getTourSpotlightStyle('center')}`}
+          } md:flex flex-1 w-full h-full min-w-0 min-h-0 flex-col rounded-md overflow-hidden border border-slate-800 shadow-xl ${getTourSpotlightStyle('center')}`}
         >
-          <TacticalMap
-            isExpanded={isMapExpanded}
-            onToggleExpand={toggleMapExpanded}
-          />
+          <TacticalMap />
         </div>
 
-        {/* RIGHT COLUMN: Dedicated Triage, Hazards & Incident Log */}
+        {/* RIGHT COLUMN: Slender Dedicated Triage, Hazards & Incident Log */}
         <div
           className={`relative ${
             mobileTab === 'triage' ? 'flex' : 'hidden'
-          } ${isRightPanelOpen ? 'md:flex md:col-span-3' : 'md:hidden'} h-full min-h-0 flex-col gap-1.5 ${getTourSpotlightStyle('right')}`}
+          } ${isRightPanelOpen ? 'md:flex md:w-64 lg:w-72 shrink-0' : 'md:hidden'} h-full min-h-0 flex-col gap-1.5 z-20 transition-all duration-200 ${getTourSpotlightStyle('right')}`}
         >
           {/* Collapse tab on the left (map-facing) edge */}
           <button
             onClick={() => setIsRightPanelOpen(false)}
             title="Collapse Survivors panel"
-            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-3 z-20 flex-col items-center justify-center w-3 h-16 bg-slate-800 hover:bg-rose-900/80 border border-slate-700 hover:border-rose-500/60 rounded-l-md text-slate-400 hover:text-rose-300 transition-all shadow-md"
+            className="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-3 z-30 flex-col items-center justify-center w-3 h-16 bg-slate-800 hover:bg-rose-900/80 border border-slate-700 hover:border-rose-500/60 rounded-l-md text-slate-400 hover:text-rose-300 transition-all shadow-md"
           >
             <ChevronRight className="w-2.5 h-2.5" />
           </button>
@@ -331,7 +328,7 @@ const MissionControlDeck: React.FC = () => {
 
       {/* Organized Left Side Strip: Quick Robot Fleet Summary */}
       {!isTourOpen && !isLeftRosterOpen && (
-        <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-3 z-30 flex-col w-56 bg-[#111722]/95 border border-slate-700/80 hover:border-cyan-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-left duration-200">
+        <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-3 z-30 flex-col w-48 lg:w-52 bg-[#111722]/95 border border-slate-700/80 hover:border-cyan-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-left duration-200">
           {/* Header click opens panel */}
           <button
             onClick={() => setIsLeftRosterOpen(true)}
@@ -404,7 +401,7 @@ const MissionControlDeck: React.FC = () => {
 
       {/* Organized Right Side Strip: Quick Survivors & Rescue Queue Summary */}
       {!isTourOpen && !isRightPanelOpen && (
-        <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-3 z-30 flex-col w-56 bg-[#111722]/95 border border-slate-700/80 hover:border-rose-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-right duration-200">
+        <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-3 z-30 flex-col w-48 lg:w-52 bg-[#111722]/95 border border-slate-700/80 hover:border-rose-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-right duration-200">
           {/* Header click opens panel */}
           <button
             onClick={() => setIsRightPanelOpen(true)}
