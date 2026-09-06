@@ -291,10 +291,16 @@ export const RobotFpvModal: React.FC = () => {
               {/* HUD Crosshairs Overlay */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                 <Crosshair className="w-14 h-14 text-cyan-400/60" />
-                <div className="absolute top-4 right-4 text-cyan-400/80 font-mono text-xs">
-                  REC ● [LIVE SLAM STREAM]
+                
+                {/* Clean Top-Left Recording & Live Stream Badge (Zero Overlap with Top-Right telemetry) */}
+                <div className="absolute top-4 left-4 flex items-center gap-2 font-mono text-xs text-rose-400 bg-black/80 px-3 py-1.5 rounded-lg border border-rose-500/40 backdrop-blur shadow-xl">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                  <span className="font-bold text-white tracking-wider">REC</span>
+                  <span className="text-slate-500">•</span>
+                  <span className="text-cyan-300 text-[11px] font-semibold">LIVE SLAM FEED [1080p @ 60FPS]</span>
                 </div>
-                <div className="absolute bottom-4 right-4 text-slate-400 font-mono text-[10px]">
+
+                <div className="absolute bottom-4 right-4 text-slate-300 bg-black/75 px-2.5 py-1 rounded-md border border-slate-800 font-mono text-[10px] backdrop-blur">
                   FOV: 110° // RANGE: 40m
                 </div>
               </div>
