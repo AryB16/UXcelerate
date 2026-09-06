@@ -46,6 +46,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     dispatchRobotToSurvivor,
   } = useMission();
 
+  const [mapMode, setMapMode] = useState<'slam' | 'satellite'>('slam');
   const [zoom, setZoom] = useState<number>(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDeployMode, setIsDeployMode] = useState<boolean>(false);
@@ -210,6 +211,38 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           </button>
         </div>
 
+        {/* Map Mode Toggle: SLAM Mesh vs Satellite Terrain */}
+        <div className="flex items-center bg-[#050b16] border border-slate-800 rounded-md p-0.5 text-[10px] font-mono shrink-0">
+          <button
+            onClick={() => {
+              soundManager.playTacticalClick();
+              setMapMode('slam');
+            }}
+            className={`px-2 py-1 rounded transition-all font-bold ${
+              mapMode === 'slam'
+                ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Switch to SLAM Pointcloud Mesh Blueprint View"
+          >
+            SLAM Mesh
+          </button>
+          <button
+            onClick={() => {
+              soundManager.playTacticalClick();
+              setMapMode('satellite');
+            }}
+            className={`px-2 py-1 rounded transition-all font-bold ${
+              mapMode === 'satellite'
+                ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Switch to Satellite Orthophoto & Topographic Terrain View"
+          >
+            Satellite Terrain
+          </button>
+        </div>
+
         {/* Right: Actions & Expand */}
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Deploy Relay Button */}
@@ -285,10 +318,18 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         <svg
           ref={svgRef}
           className="w-full h-full"
-          viewBox="0 0 800 620"
+          viewBox="0 0 800 660"
           onClick={handleMapClick}
         >
           <defs>
+            {/* Topographic Digital Elevation Model Contours Pattern for Satellite View */}
+            <pattern id="topoContours" width="60" height="60" patternUnits="userSpaceOnUse">
+              <path d="M 0 30 Q 15 10 30 30 T 60 30" fill="none" stroke="rgba(6, 182, 212, 0.22)" strokeWidth="0.8" />
+              <path d="M 0 10 Q 20 25 40 10 T 60 10" fill="none" stroke="rgba(217, 119, 6, 0.2)" strokeWidth="0.8" strokeDasharray="3,3" />
+              <path d="M 0 50 Q 25 35 50 50 T 60 50" fill="none" stroke="rgba(56, 189, 248, 0.18)" strokeWidth="0.8" />
+              <circle cx="30" cy="30" r="1" fill="rgba(6, 182, 212, 0.3)" />
+            </pattern>
+
             {/* Rubble / Pancake Collapse Pattern */}
             <pattern
               id="rubblePattern"
@@ -381,10 +422,41 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           </defs>
 
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-            
+            {/* Satellite Orthophoto & BPDC Academic Block Context Layer (rendered underneath all routes, grid lines, and pins) */}
+            {mapMode === 'satellite' && (
+              <g id="satellite-orthophoto-layer">
+                <image
+                  href="https://images.unsplash.com/photo-1524813686514-a57563d77d66?auto=format&fit=crop&w=1600&q=80"
+                  x="0"
+                  y="0"
+                  width="800"
+                  height="660"
+                  preserveAspectRatio="xMidYMid slice"
+                  className="opacity-35 filter contrast-125 brightness-75 grayscale-[25%]"
+                />
+                <rect width="800" height="660" fill="url(#topoContours)" pointerEvents="none" />
+                <path
+                  d="M 120 180 Q 250 140 360 210 L 340 260 Q 240 200 110 240 Z"
+                  fill="rgba(6, 182, 212, 0.05)"
+                  stroke="rgba(6, 182, 212, 0.3)"
+                  strokeWidth="1"
+                  strokeDasharray="4 2"
+                />
+                <text
+                  x="140"
+                  y="210"
+                  fill="rgba(6, 182, 212, 0.5)"
+                  fontSize="9"
+                  fontFamily="JetBrains Mono"
+                >
+                  BPDC ACADEMIC BLOCK // NORTH WING
+                </text>
+              </g>
+            )}
+
             {/* Tactical C2 Graphite Background & Grid */}
-            <rect x="0" y="0" width="800" height="620" fill="#0d1117" />
-            <rect x="0" y="0" width="800" height="620" fill="url(#tacGrid)" opacity="0.65" />
+            <rect x="0" y="0" width="800" height="660" fill="#0d1117" opacity={mapMode === 'satellite' ? 0.35 : 1} />
+            <rect x="0" y="0" width="800" height="660" fill="url(#tacGrid)" opacity={mapMode === 'satellite' ? 0.4 : 0.65} />
 
             {/* Military UTM Coordinate Ticks along Top and Left Borders */}
             <g id="utm-rulers" className="pointer-events-none select-none" opacity="0.7">
@@ -456,22 +528,18 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
               <g id="sec-b-labels">
                 <text
                   x="510"
-                  y="60"
-                  fill="#94a3b8"
-                  fontSize="10"
+                  y="58"
+                  className="fill-slate-400 font-bold text-[10px]"
                   fontFamily="JetBrains Mono"
-                  fontWeight="bold"
                   letterSpacing="0.5"
                 >
-                  [ SEC B // MAIN TOWER COLLAPSE ]
+                  SEC B // COLLAPSE
                 </text>
                 <text
                   x="510"
-                  y="74"
-                  fill="rgba(217, 119, 6, 0.6)"
-                  fontSize="8"
+                  y="72"
+                  className="fill-amber-500/60 text-[8px] tracking-wider"
                   fontFamily="JetBrains Mono"
-                  letterSpacing="0.8"
                 >
                   [!] UNINSPECTED VOID • AFTERSHOCK COLLAPSE
                 </text>
@@ -492,22 +560,18 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
               <g id="sec-c-labels">
                 <text
                   x="510"
-                  y="360"
-                  fill="#94a3b8"
-                  fontSize="10"
+                  y="358"
+                  className="fill-slate-400 font-bold text-[10px]"
                   fontFamily="JetBrains Mono"
-                  fontWeight="bold"
                   letterSpacing="0.5"
                 >
-                  [ SEC C // BASEMENT &amp; METRO VOID ]
+                  SEC C // BASEMENT &amp; METRO
                 </text>
                 <text
                   x="510"
-                  y="374"
-                  fill="rgba(217, 119, 6, 0.6)"
-                  fontSize="8"
+                  y="372"
+                  className="fill-amber-500/60 text-[8px] tracking-wider"
                   fontFamily="JetBrains Mono"
-                  letterSpacing="0.8"
                 >
                   [!] SUBTERRANEAN METRO VOID • UNVERIFIED
                 </text>
@@ -1847,7 +1911,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-slate-500 font-bold uppercase tracking-wider">GIS SYMBOLOGY // INSARAG</span>
             <span className="text-slate-700">|</span>
-            <span className="text-slate-400">COORD: UTM ZONE 32N WGS-84</span>
+            <span className="text-slate-400">
+              GIS: UTM ZONE 40R (DUBAI) • WGS-84 | BASE: 25.1288° N, 55.4186° E • DIAC BLDG 4 (BPDC) • ELEV: 14m AMSL
+            </span>
           </div>
 
           <div className="flex items-center gap-3.5">

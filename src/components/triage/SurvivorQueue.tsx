@@ -92,7 +92,7 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
       </div>
 
       {/* Compact Survivor Objective Cards List */}
-      <div className="flex-1 overflow-y-auto p-2 pb-6 space-y-1.5 no-scrollbar">
+      <div className="flex-1 overflow-y-auto p-2 pb-8 space-y-2 no-scrollbar">
         {survivors.map((surv) => {
           const isSelected = selectedSurvivorId === surv.id;
           const theme = getTriageTheme(surv.triage);
