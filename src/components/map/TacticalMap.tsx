@@ -20,6 +20,13 @@ import {
   Users,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
+import {
+  RobotTypeIcon,
+  getRobotMarkerSvg,
+  getSurvivorMarkerSvg,
+  getHazardMarkerSvg,
+  getBeaconMarkerSvg,
+} from '../common/TacticalIcons';
 
 interface TacticalMapProps {
   isExpanded?: boolean;
@@ -236,12 +243,11 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
       const [lat, lng] = svgToGeo(robot.position.x, robot.position.y);
       const isSelected = selectedRobotId === robot.id;
       const isGhost = robot.commsStatus === 'disconnected';
-      const callsignShort = robot.callsign.replace('CYB-', '').replace('VUL-', '');
 
       const markerHtml = `
         <div class="tactical-leaflet-marker ${isGhost ? 'ghost' : ''} ${isSelected ? 'selected' : ''}">
           <div class="marker-badge-container">
-            <div class="marker-badge">${callsignShort}</div>
+            <div class="marker-badge">${getRobotMarkerSvg(robot.type, 16)}</div>
             <div class="tactical-bot-pulse"></div>
           </div>
           <div class="marker-callsign">${robot.callsign}</div>
@@ -286,7 +292,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         const markerHtml = `
           <div class="tactical-leaflet-marker survivor ${isSelected ? 'selected' : ''}">
             <div class="marker-badge-container">
-              <div class="marker-badge survivor-badge">♥</div>
+              <div class="marker-badge survivor-badge">${getSurvivorMarkerSvg(14)}</div>
               <div class="tactical-surv-pulse"></div>
             </div>
             <div class="marker-callsign" style="color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">${survivor.label.split(' ')[0]}</div>
@@ -332,7 +338,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         const markerHtml = `
           <div class="tactical-leaflet-marker hazard ${isSelected ? 'selected' : ''}">
             <div class="marker-badge-container">
-              <div class="marker-badge hazard-badge">${isBio ? '☣' : '!'}</div>
+              <div class="marker-badge hazard-badge">${getHazardMarkerSvg(hazard.type, 14)}</div>
             </div>
             <div class="marker-callsign" style="color: #fde68a; border-color: rgba(245, 158, 11, 0.4);">${hazard.id}</div>
           </div>
@@ -372,7 +378,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
       const markerHtml = `
         <div class="tactical-leaflet-marker beacon">
           <div class="marker-badge-container">
-            <div class="marker-badge beacon-badge">RF</div>
+            <div class="marker-badge beacon-badge">${getBeaconMarkerSvg(13)}</div>
           </div>
           <div class="marker-callsign" style="color: #6ee7b7; border-color: rgba(16, 185, 129, 0.4); font-size: 8px;">${beacon.id}</div>
         </div>
@@ -433,24 +439,6 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     }
   };
 
-  const getRobotEmoji = (type: string) => {
-    switch (type) {
-      case 'aerial_drone':
-        return '🛸';
-      case 'heavy_quadruped':
-        return '🐕';
-      case 'snake_crawler':
-        return '🐍';
-      case 'tracked_rover':
-        return '🚜';
-      case 'wall_climber':
-        return '🦎';
-      case 'amphibious':
-        return '🌊';
-      default:
-        return '🤖';
-    }
-  };
 
   return (
     <div
@@ -605,7 +593,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
               <div>
                 <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-base shrink-0">{getRobotEmoji(selectedRobot.type)}</span>
+                    <div className="w-6 h-6 rounded bg-slate-900 border border-cyan-500/40 flex items-center justify-center p-0.5 text-cyan-400 shrink-0">
+                      <RobotTypeIcon type={selectedRobot.type} className="w-4 h-4" />
+                    </div>
                     <span className="font-bold text-white text-sm truncate">{selectedRobot.name}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold shrink-0">
                       {selectedRobot.callsign}

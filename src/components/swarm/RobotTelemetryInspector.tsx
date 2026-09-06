@@ -1,6 +1,7 @@
 import React from 'react';
 import { useMission } from '../../store/MissionContext';
 import { Eye, Radio, RotateCw, Activity, Cpu, Wifi, WifiOff, Layers } from 'lucide-react';
+import { RobotTypeIcon } from '../common/TacticalIcons';
 
 export const RobotTelemetryInspector: React.FC = () => {
   const {
@@ -55,8 +56,10 @@ export const RobotTelemetryInspector: React.FC = () => {
       {/* 1. Header: Selected Unit Callsign + Operational Directive */}
       <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-800/80 shrink-0">
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded bg-slate-900 border border-cyan-500/40 flex items-center justify-center p-0.5 text-cyan-400 shrink-0">
+              <RobotTypeIcon type={selectedRobot.type} className="w-3.5 h-3.5" />
+            </div>
             <span className="font-bold text-slate-100 tracking-wider text-[11px] truncate">
               {selectedRobot.callsign} // {selectedRobot.name}
             </span>

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 import { RobotTelemetryInspector } from './RobotTelemetryInspector';
+import { RobotTypeIcon } from '../common/TacticalIcons';
 
 interface RobotRosterProps {
   onClose?: () => void;
@@ -32,22 +33,6 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
     return r.commsStatus === filter;
   });
 
-  const getRobotIcon = (type: RobotType) => {
-    switch (type) {
-      case 'aerial_drone':
-        return '🛸';
-      case 'heavy_quadruped':
-        return '🐕';
-      case 'snake_crawler':
-        return '🐍';
-      case 'tracked_rover':
-        return '🚜';
-      case 'wall_climber':
-        return '🦎';
-      case 'amphibious':
-        return '🌊';
-    }
-  };
 
   const getStatusChip = (bot: (typeof robots)[0]) => {
     if (bot.commsStatus === 'disconnected') {
@@ -170,7 +155,17 @@ export const RobotRoster: React.FC<RobotRosterProps> = ({ onClose }) => {
               <div className="flex items-center justify-between px-2 py-1.5 h-11">
                 {/* Left: Type icon + Callsign */}
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-base shrink-0">{getRobotIcon(bot.type)}</span>
+                  <div
+                    className={`w-7 h-7 rounded flex items-center justify-center p-1 shrink-0 border transition-colors ${
+                      isDisconnected
+                        ? 'bg-rose-950/50 border-rose-500/50 text-rose-400'
+                        : isSelected
+                        ? 'bg-cyan-950 border-cyan-400 text-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.4)]'
+                        : 'bg-slate-900 border-slate-700/80 text-cyan-400'
+                    }`}
+                  >
+                    <RobotTypeIcon type={bot.type} className="w-4 h-4" />
+                  </div>
                   <div className="min-w-0">
                     <div className="text-xs font-bold text-slate-100 font-mono tracking-wide truncate">
                       {bot.callsign}

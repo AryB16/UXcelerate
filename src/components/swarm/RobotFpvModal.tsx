@@ -11,6 +11,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
+import { RobotTypeIcon } from '../common/TacticalIcons';
 
 export const RobotFpvModal: React.FC = () => {
   const {
@@ -104,7 +105,9 @@ export const RobotFpvModal: React.FC = () => {
         {/* Cockpit Top Bar */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900/90 border-b border-cyan-500/30 font-mono select-none">
           <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse" />
+            <div className="w-6 h-6 rounded bg-slate-950 border border-cyan-500/50 flex items-center justify-center p-1 text-cyan-400 shrink-0">
+              <RobotTypeIcon type={robot.type} className="w-4 h-4" />
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm text-slate-100 tactical-font">{robot.name}</span>

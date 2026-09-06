@@ -201,6 +201,13 @@
   z-index: 2;
 }
 
+.marker-badge svg {
+  display: block;
+  pointer-events: none;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
 .tactical-leaflet-marker:hover .marker-badge,
 .tactical-leaflet-marker.selected .marker-badge {
   transform: scale(1.18);
