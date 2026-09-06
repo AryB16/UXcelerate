@@ -27,14 +27,15 @@ interface TacticalMapProps {
 }
 
 // BITS Pilani Dubai Campus & Sector 4 Collapse Bounds
-const CENTER_LAT = 25.1288;
-const CENTER_LNG = 55.4186;
+// Precise BITS Pilani Dubai Campus (Academic City) Center & Disaster Bounds
+const CENTER_LAT = 25.1312;
+const CENTER_LNG = 55.4190;
 
-// Expanded DIAC / BITS Pilani Dubai Campus Sector 4
-const BOUNDS_NORTH = 25.1360;
-const BOUNDS_SOUTH = 25.1210;
-const BOUNDS_WEST = 55.4080;
-const BOUNDS_EAST = 55.4290;
+// Encompassing BITS Pilani Dubai Campus & Academic City Sector
+const BOUNDS_NORTH = 25.1350;
+const BOUNDS_SOUTH = 25.1270;
+const BOUNDS_WEST = 55.4130;
+const BOUNDS_EAST = 55.4250;
 
 // Converts SVG coords [0..800, 0..620] into geographic [Lat, Lng] within DIAC sector
 const svgToGeo = (x: number, y: number): [number, number] => {
@@ -93,7 +94,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
         center: [CENTER_LAT, CENTER_LNG],
-        zoom: 16,
+        zoom: 17,
         zoomControl: false,
         attributionControl: false,
         minZoom: 13,
@@ -122,7 +123,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         fillOpacity: 0.18,
       }).addTo(map);
 
-      perimeter.bindTooltip('DISASTER PERIMETER // SECTOR 4 COLLAPSE ZONE', {
+      perimeter.bindTooltip('DISASTER PERIMETER // BITS PILANI DUBAI CAMPUS', {
         permanent: false,
         direction: 'top',
         className: 'tactical-tooltip-perimeter',
@@ -567,7 +568,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           <button
             onClick={handleRecenter}
             className="w-7 h-7 rounded flex items-center justify-center bg-slate-800 hover:bg-cyan-900/60 text-cyan-300 border border-slate-700 hover:border-cyan-500 transition-colors"
-            title="Recenter on BITS Dubai Base (25.1288°N, 55.4186°E)"
+            title="Recenter on BITS Dubai Base (25.1312°N, 55.4190°E)"
           >
             <Crosshair className="w-3.5 h-3.5" />
           </button>
@@ -579,7 +580,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         {/* Bottom-Left Geocode Sector Badge */}
         <div className="absolute bottom-8 left-3 z-20 pointer-events-none hidden sm:block">
           <div className="px-2.5 py-1 rounded bg-[#08101e]/85 border border-cyan-500/30 backdrop-blur text-[9px] font-mono text-cyan-300/90 shadow-md">
-            DUBAI • DIAC / BITS PILANI DUBAI CAMPUS • SECTOR 4 COLLAPSE ZONE
+            DUBAI • DIAC // BITS PILANI DUBAI CAMPUS • DISASTER ZONE
           </div>
         </div>
 
@@ -765,7 +766,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <span className="text-slate-500 font-bold uppercase tracking-wider">GIS SYMBOLOGY // INSARAG</span>
             <span className="text-slate-700">|</span>
             <span className="text-slate-400">
-              GIS: UTM ZONE 40R (DUBAI) • WGS-84 | BASE: 25.1288° N, 55.4186° E • DIAC BLDG 4 (BPDC) • ELEV: 14m AMSL
+              GIS: UTM ZONE 40R (DUBAI) • WGS-84 | BASE: 25.1312° N, 55.4190° E • DIAC BLDG 4 (BPDC) • ELEV: 14m AMSL
             </span>
           </div>
 

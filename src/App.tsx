@@ -164,7 +164,7 @@ const MissionControlDeck: React.FC = () => {
         <div
           className={`relative ${
             mobileTab === 'roster' ? 'flex' : 'hidden'
-          } ${isLeftRosterOpen ? 'md:flex md:w-64 lg:w-72 xl:w-80 shrink-0' : 'md:hidden'} h-full min-h-0 z-20 transition-all duration-200 ${getTourSpotlightStyle('left')}`}
+          } ${isLeftRosterOpen ? 'md:flex md:w-56 lg:w-60 xl:w-64 shrink-0' : 'md:hidden'} h-full min-h-0 z-20 transition-all duration-200 ${getTourSpotlightStyle('left')}`}
         >
           <RobotRoster onClose={() => setIsLeftRosterOpen(false)} />
           {/* Collapse tab on the right (map-facing) edge */}
@@ -212,7 +212,7 @@ const MissionControlDeck: React.FC = () => {
         <div
           className={`relative ${
             mobileTab === 'triage' ? 'flex' : 'hidden'
-          } ${isRightPanelOpen ? 'md:flex md:w-72 lg:w-80 xl:w-[340px] shrink-0' : 'md:hidden'} h-full min-h-0 flex-col gap-1.5 z-20 transition-all duration-200 ${getTourSpotlightStyle('right')}`}
+          } ${isRightPanelOpen ? 'md:flex md:w-60 lg:w-64 xl:w-72 shrink-0' : 'md:hidden'} h-full min-h-0 flex-col gap-1.5 z-20 transition-all duration-200 ${getTourSpotlightStyle('right')}`}
         >
           {/* Collapse tab on the left (map-facing) edge */}
           <button

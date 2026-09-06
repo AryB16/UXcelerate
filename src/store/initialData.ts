@@ -16,7 +16,7 @@ export const initialMissionOverview: MissionOverview = {
 export const initialSectors: Sector[] = [
   {
     id: 'SEC-A',
-    name: 'Sector Alpha - North Wing ER',
+    name: 'Sector Alpha - Main Academic Block',
     code: 'SEC-A',
     bounds: { minX: 40, minY: 40, maxX: 380, maxY: 300 },
     structuralRating: 'stabilized',
@@ -27,7 +27,7 @@ export const initialSectors: Sector[] = [
   },
   {
     id: 'SEC-B',
-    name: 'Sector Beta - Main Tower Collapse',
+    name: 'Sector Beta - Mechanical & Robotics Labs',
     code: 'SEC-B',
     bounds: { minX: 420, minY: 40, maxX: 760, maxY: 300 },
     structuralRating: 'unstable',
@@ -38,7 +38,7 @@ export const initialSectors: Sector[] = [
   },
   {
     id: 'SEC-C',
-    name: 'Sector Gamma - Metro Void & Basement',
+    name: 'Sector Gamma - Central Library & Auditorium',
     code: 'SEC-C',
     bounds: { minX: 420, minY: 340, maxX: 760, maxY: 620 },
     structuralRating: 'critical_tilt',
@@ -49,7 +49,7 @@ export const initialSectors: Sector[] = [
   },
   {
     id: 'SEC-D',
-    name: 'Sector Delta - South Courtyard / Staging',
+    name: 'Sector Delta - Student Activity Center & Hostel',
     code: 'SEC-D',
     bounds: { minX: 40, minY: 340, maxX: 380, maxY: 620 },
     structuralRating: 'moderate',
@@ -207,7 +207,7 @@ export const initialSurvivors: Survivor[] = [
     label: 'Survivor #1 (Adult Male)',
     discoveredBy: 'ROB-02',
     discoveredAt: '03:42:10',
-    location: { x: 530, y: 160, sector: 'Sector Beta', depthMeters: 2.1 },
+    location: { x: 530, y: 160, sector: 'Robotics Lab', depthMeters: 2.1 },
     triage: 'immediate',
     confidence: 96,
     vitals: {
@@ -228,7 +228,7 @@ export const initialSurvivors: Survivor[] = [
     label: 'Survivor #2 (Child)',
     discoveredBy: 'ROB-03',
     discoveredAt: '04:02:18',
-    location: { x: 660, y: 495, sector: 'Sector Gamma', depthMeters: 4.8 },
+    location: { x: 660, y: 495, sector: 'Library Void', depthMeters: 4.8 },
     triage: 'immediate',
     confidence: 92,
     vitals: {
@@ -249,7 +249,7 @@ export const initialSurvivors: Survivor[] = [
     label: 'Survivor #3 (Adult Female)',
     discoveredBy: 'ROB-01',
     discoveredAt: '02:15:30',
-    location: { x: 290, y: 190, sector: 'Sector Alpha', depthMeters: 0.6 },
+    location: { x: 290, y: 190, sector: 'Academic Block', depthMeters: 0.6 },
     triage: 'delayed',
     confidence: 99,
     vitals: {
@@ -269,7 +269,7 @@ export const initialSurvivors: Survivor[] = [
     label: 'Survivor #4 (Unconfirmed biosignal)',
     discoveredBy: 'ROB-05',
     discoveredAt: '04:15:05',
-    location: { x: 710, y: 190, sector: 'Sector Beta', depthMeters: 3.4 },
+    location: { x: 710, y: 190, sector: 'Robotics Lab', depthMeters: 3.4 },
     triage: 'minor',
     confidence: 68,
     vitals: {
@@ -292,7 +292,7 @@ export const initialHazards: Hazard[] = [
     type: 'gas_leak',
     severity: 'critical',
     title: 'Methane / Mercaptan Rupture',
-    location: { x: 585, y: 235, radius: 45, sector: 'Sector Beta' },
+    location: { x: 585, y: 235, radius: 45, sector: 'Robotics Lab' },
     readout: 'CH4: 520 PPM (Lower Explosive Limit Alert)',
     status: 'active',
     timestamp: '03:55:12',
@@ -302,7 +302,7 @@ export const initialHazards: Hazard[] = [
     type: 'structural_collapse',
     severity: 'high',
     title: 'Bearing Column Shear Rupture',
-    location: { x: 610, y: 390, radius: 55, sector: 'Sector Gamma' },
+    location: { x: 610, y: 390, radius: 55, sector: 'Library Void' },
     readout: 'Structural Deflection: 18.4° Tilt / 92% Yield Stress',
     status: 'active',
     timestamp: '04:08:44',
@@ -312,7 +312,7 @@ export const initialHazards: Hazard[] = [
     type: 'high_voltage',
     severity: 'moderate',
     title: 'Substation Transformer Feeder Short',
-    location: { x: 730, y: 260, radius: 30, sector: 'Sector Beta' },
+    location: { x: 730, y: 260, radius: 30, sector: 'Robotics Lab' },
     readout: '480V Arc Flash Hazard / Ground Fault Detected',
     status: 'active',
     timestamp: '02:40:19',

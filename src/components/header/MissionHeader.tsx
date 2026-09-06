@@ -119,7 +119,7 @@ export const MissionHeader: React.FC = () => {
               </span>
             </div>
             <p className="text-[11px] text-slate-400 font-mono flex items-center gap-2 mt-0.5">
-              <span>INCIDENT: 7.2M QUAKE // ST. JUDE COMPLEX</span>
+              <span>INCIDENT: 7.2M QUAKE // BITS PILANI DUBAI CAMPUS (DIAC)</span>
               <span className="text-slate-600 hidden sm:inline">•</span>
               <span className="text-cyan-400 hidden sm:inline">SWARM AUTO-MESH ACTIVE</span>
             </p>
