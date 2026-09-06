@@ -77,7 +77,7 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
       </div>
 
       {/* Survivor List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+      <div className="flex-1 overflow-y-auto p-2 pb-6 space-y-2">
         {survivors.map((surv) => {
           const isSelected = selectedSurvivorId === surv.id;
           const badge = getTriageBadge(surv.triage);

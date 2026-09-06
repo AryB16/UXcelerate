@@ -409,9 +409,29 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 strokeWidth="1"
                 strokeDasharray="4,4"
               />
-              <text x="745" y="56" textAnchor="end" fill="rgba(248, 113, 113, 0.35)" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                [⚠️ SECTOR B // UNINSPECTED VOID • AFTERSHOCK COLLAPSE]
-              </text>
+              <g id="sec-b-labels">
+                <text
+                  x="510"
+                  y="60"
+                  fill="#64748b"
+                  fontSize="10"
+                  fontFamily="JetBrains Mono"
+                  fontWeight="bold"
+                  letterSpacing="0.5"
+                >
+                  SEC B // MAIN TOWER
+                </text>
+                <text
+                  x="510"
+                  y="74"
+                  fill="rgba(245, 158, 11, 0.5)"
+                  fontSize="8"
+                  fontFamily="JetBrains Mono"
+                  letterSpacing="0.8"
+                >
+                  [!] UNINSPECTED VOID • AFTERSHOCK COLLAPSE
+                </text>
+              </g>
 
               {/* Sector C: Dense Fog of Uncertainty Caution Hatching (Bottom-Right Subterranean Metro Void) */}
               <rect
@@ -425,9 +445,29 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 strokeWidth="1"
                 strokeDasharray="4,4"
               />
-              <text x="745" y="336" textAnchor="end" fill="rgba(251, 191, 36, 0.35)" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
-                [⚠️ SECTOR C // SUBTERRANEAN METRO VOID • UNVERIFIED]
-              </text>
+              <g id="sec-c-labels">
+                <text
+                  x="510"
+                  y="360"
+                  fill="#64748b"
+                  fontSize="10"
+                  fontFamily="JetBrains Mono"
+                  fontWeight="bold"
+                  letterSpacing="0.5"
+                >
+                  SEC C // BASEMENT &amp; METRO
+                </text>
+                <text
+                  x="510"
+                  y="374"
+                  fill="rgba(245, 158, 11, 0.5)"
+                  fontSize="8"
+                  fontFamily="JetBrains Mono"
+                  letterSpacing="0.8"
+                >
+                  [!] SUBTERRANEAN METRO VOID • UNVERIFIED
+                </text>
+              </g>
 
               {/* Sector D: Staging & HQ Tint (Bottom-Left) */}
               <rect
@@ -514,14 +554,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                   <text x="50" y="55" fill="#38bdf8" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
                     SEC A // NORTH WING
                   </text>
-                  <text x="420" y="55" fill="#f87171" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                    SEC B // COLLAPSE
-                  </text>
                   <text x="50" y="335" fill="#34d399" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
                     SEC D // STAGING HQ
-                  </text>
-                  <text x="420" y="335" fill="#fbbf24" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                    SEC C // BASEMENT
                   </text>
                 </g>
               ) : (
