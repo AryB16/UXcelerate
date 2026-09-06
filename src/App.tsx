@@ -40,10 +40,10 @@ const MissionControlDeck: React.FC = () => {
       (tourStep === 4 && section === 'header');
 
     if (isTarget) {
-      return 'relative z-40 ring-4 ring-cyan-400/90 shadow-[0_0_60px_rgba(6,182,212,0.5)] transition-all duration-500 rounded-xl pointer-events-auto filter-none opacity-100 scale-[1.008]';
+      return 'relative z-20 ring-2 ring-cyan-400 shadow-[0_0_35px_rgba(6,182,212,0.4)] rounded-xl pointer-events-auto filter-none opacity-100 transition-all duration-300 bg-[#060a12]';
     }
 
-    return 'filter blur-[6px] opacity-20 pointer-events-none transition-all duration-500';
+    return 'filter blur-[5px] opacity-20 brightness-50 pointer-events-none transition-all duration-300';
   };
 
   // Auto-launch guided tour on first visit after 1.2s
