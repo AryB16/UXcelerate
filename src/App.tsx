@@ -22,9 +22,29 @@ const MissionControlDeck: React.FC = () => {
     setIsCaseStudyOpen,
     isFpvOpen,
     startTour,
+    isTourOpen,
+    tourStep,
   } = useMission();
 
   const [rightPanelTab, setRightPanelTab] = useState<'survivors' | 'hazards' | 'logs'>('survivors');
+
+  // Determine if a section should be spotlighted or blurred during the interactive tour
+  const getTourSpotlightStyle = (section: 'header' | 'left' | 'center' | 'right' | 'footer') => {
+    if (!isTourOpen) return '';
+
+    const isTarget =
+      (tourStep === 0 && section === 'center') ||
+      (tourStep === 1 && section === 'left') ||
+      (tourStep === 2 && section === 'center') ||
+      (tourStep === 3 && section === 'right') ||
+      (tourStep === 4 && section === 'header');
+
+    if (isTarget) {
+      return 'relative z-40 ring-4 ring-cyan-400/90 shadow-[0_0_60px_rgba(6,182,212,0.5)] transition-all duration-500 rounded-xl pointer-events-auto filter-none opacity-100 scale-[1.008]';
+    }
+
+    return 'filter blur-[6px] opacity-20 pointer-events-none transition-all duration-500';
+  };
 
   // Auto-launch guided tour on first visit after 1.2s
   useEffect(() => {
@@ -46,43 +66,45 @@ const MissionControlDeck: React.FC = () => {
         return;
       }
 
-      if (e.key === ' ' && !isFpvOpen) {
+      if (e.key === ' ' && !isFpvOpen && !isTourOpen) {
         e.preventDefault();
         toggleSimPaused();
-      } else if (e.key >= '1' && e.key <= '6' && !isFpvOpen) {
+      } else if (e.key >= '1' && e.key <= '6' && !isFpvOpen && !isTourOpen) {
         const idx = parseInt(e.key, 10) - 1;
         if (robots[idx]) {
           selectRobot(robots[idx].id);
         }
-      } else if (e.key === '?' || e.key === '/') {
+      } else if ((e.key === '?' || e.key === '/') && !isTourOpen) {
         setIsCaseStudyOpen(true);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [robots, selectRobot, toggleSimPaused, setIsCaseStudyOpen, isFpvOpen]);
+  }, [robots, selectRobot, toggleSimPaused, setIsCaseStudyOpen, isFpvOpen, isTourOpen]);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#05080f] text-slate-100 overflow-hidden font-sans select-none">
       {/* Top Mission Header */}
-      <MissionHeader />
+      <div className={getTourSpotlightStyle('header')}>
+        <MissionHeader />
+      </div>
 
       {/* Main 3-Column Command Deck Layout */}
       <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-2 p-2 min-h-0 overflow-hidden">
         
         {/* LEFT COLUMN: Swarm Tele-Ops Roster (3 of 12 cols on desktop) */}
-        <div className="hidden md:flex md:col-span-3 h-full min-h-0">
+        <div className={`hidden md:flex md:col-span-3 h-full min-h-0 ${getTourSpotlightStyle('left')}`}>
           <RobotRoster />
         </div>
 
         {/* CENTER COLUMN: Tactical Disaster Map (6 of 12 cols on desktop) */}
-        <div className="col-span-1 md:col-span-6 h-full min-h-0 flex flex-col">
+        <div className={`col-span-1 md:col-span-6 h-full min-h-0 flex flex-col ${getTourSpotlightStyle('center')}`}>
           <TacticalMap />
         </div>
 
         {/* RIGHT COLUMN: Triage, Hazards & Incident Log (3 of 12 cols on desktop) */}
-        <div className="hidden md:flex md:col-span-3 h-full min-h-0 flex-col gap-2">
+        <div className={`hidden md:flex md:col-span-3 h-full min-h-0 flex-col gap-2 ${getTourSpotlightStyle('right')}`}>
           
           {/* Top Half: Survivor Triage Queue */}
           <div className="flex-1 min-h-0">
@@ -131,7 +153,7 @@ const MissionControlDeck: React.FC = () => {
       </main>
 
       {/* Floating Keyboard Shortcuts Hint at Bottom Bar */}
-      <footer className="hidden lg:flex items-center justify-between px-4 py-1 bg-slate-950 border-t border-slate-900 text-[10px] font-mono text-slate-500">
+      <footer className={`hidden lg:flex items-center justify-between px-4 py-1 bg-slate-950 border-t border-slate-900 text-[10px] font-mono text-slate-500 ${getTourSpotlightStyle('footer')}`}>
         <div className="flex items-center gap-4">
           <span>KEYBOARD SHORTCUTS:</span>
           <span><kbd className="px-1 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">1-6</kbd> Select Robot</span>
