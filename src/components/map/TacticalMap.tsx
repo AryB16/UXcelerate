@@ -77,6 +77,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     prevAftershockLevelRef.current = overview.aftershockRiskLevel;
   }, [overview.aftershockRiskLevel]);
 
+  // Detail mode: 'simple' (minimalist uncluttered overview) or 'detailed' (deep mission telemetry)
+  const [detailMode, setDetailMode] = useState<'simple' | 'detailed'>('simple');
+
+  // When map expands, automatically provide full details!
+  // When map is restored to 3-column deck, return to simplified mode for a clean overview.
+  useEffect(() => {
+    if (isExpanded) {
+      setDetailMode('detailed');
+    } else {
+      setDetailMode('simple');
+    }
+  }, [isExpanded]);
+
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const handleZoomIn = () => setZoom((z) => Math.min(2.4, z + 0.15));
@@ -184,17 +197,45 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         </div>
 
         {/* Action Tools & Zoom */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {/* Detail Mode Switcher */}
+          <div className="flex items-center bg-slate-900/90 rounded-lg p-0.5 border border-slate-700/80">
+            <button
+              onClick={() => setDetailMode('simple')}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-all ${
+                detailMode === 'simple'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/50 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Clean, simplified overview map"
+            >
+              <Eye className="w-3 h-3 text-cyan-400" />
+              <span>Simple</span>
+            </button>
+            <button
+              onClick={() => setDetailMode('detailed')}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-all ${
+                detailMode === 'detailed'
+                  ? 'bg-cyan-400 text-slate-950 font-bold border border-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.4)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Deep telemetry, RF topology & sensor readouts"
+            >
+              <Layers className="w-3 h-3" />
+              <span>Detailed</span>
+            </button>
+          </div>
+
           <button
             onClick={() => setIsDeployMode(!isDeployMode)}
-            className={`flex items-center gap-1 px-3 py-1 rounded text-xs font-bold border transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold border transition-all ${
               isDeployMode
                 ? 'bg-cyan-400 text-slate-950 border-cyan-300 animate-pulse shadow-[0_0_12px_rgba(6,182,212,0.5)]'
                 : 'bg-slate-800/90 text-cyan-300 border-slate-700 hover:bg-slate-700'
             }`}
           >
             <Radio className="w-3.5 h-3.5" />
-            <span>{isDeployMode ? 'Click Map to Place' : 'Deploy Relay'}</span>
+            <span>{isDeployMode ? 'Click Map' : 'Deploy Relay'}</span>
           </button>
 
           {/* Full-view / Expand Map toggle */}
@@ -390,46 +431,65 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 ATRIUM
               </text>
 
-              {/* 4 Clean Sector Watermarks */}
-              <g transform="translate(50, 56)">
-                <text fill="#38bdf8" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                  SECTOR A • NORTH WING
-                </text>
-                <text y="16" fill="#64748b" fontSize="9.5" fontFamily="JetBrains Mono">
-                  Structure Intact // Stable 94%
-                </text>
-              </g>
+              {/* Sector Watermarks: Minimalist in simple mode vs Rich Structural Diagnostics in detailed mode */}
+              {detailMode === 'simple' ? (
+                <g id="simple-sector-marks">
+                  <text x="50" y="55" fill="#38bdf8" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                    SEC A // NORTH WING
+                  </text>
+                  <text x="420" y="55" fill="#f87171" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                    SEC B // COLLAPSE
+                  </text>
+                  <text x="50" y="335" fill="#34d399" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                    SEC D // STAGING HQ
+                  </text>
+                  <text x="420" y="335" fill="#fbbf24" opacity="0.4" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                    SEC C // BASEMENT
+                  </text>
+                </g>
+              ) : (
+                <g id="detailed-sector-marks">
+                  <g transform="translate(50, 56)">
+                    <text fill="#38bdf8" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                      SECTOR A • NORTH WING
+                    </text>
+                    <text y="16" fill="#64748b" fontSize="9.5" fontFamily="JetBrains Mono">
+                      Structure Intact // Stable 94% • 0 Anomalies
+                    </text>
+                  </g>
 
-              <g transform="translate(420, 56)">
-                <text fill="#f87171" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                  SECTOR B • MAIN COLLAPSE
-                </text>
-                <text y="16" fill="#ef4444" fontSize="9.5" fontFamily="JetBrains Mono">
-                  Pancake Rubble // Unstable 68%
-                </text>
-              </g>
+                  <g transform="translate(420, 56)">
+                    <text fill="#f87171" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                      SECTOR B • MAIN COLLAPSE
+                    </text>
+                    <text y="16" fill="#ef4444" fontSize="9.5" fontFamily="JetBrains Mono">
+                      Pancake Rubble // Unstable 68% • High Debris
+                    </text>
+                  </g>
 
-              <g transform="translate(50, 340)">
-                <text fill="#34d399" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                  SECTOR D • STAGING & HQ
-                </text>
-                <text y="16" fill="#64748b" fontSize="9.5" fontFamily="JetBrains Mono">
-                  Command Base // Ground Entry
-                </text>
-              </g>
+                  <g transform="translate(50, 340)">
+                    <text fill="#34d399" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                      SECTOR D • STAGING & HQ
+                    </text>
+                    <text y="16" fill="#64748b" fontSize="9.5" fontFamily="JetBrains Mono">
+                      Command Base // Ground Entry • Triaged Safe
+                    </text>
+                  </g>
 
-              <g transform="translate(420, 340)">
-                <text fill="#fbbf24" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
-                  SECTOR C • METRO BASEMENT
-                </text>
-                <text y="16" fill="#f59e0b" fontSize="9.5" fontFamily="JetBrains Mono">
-                  Subterranean Voids // Critical 35%
-                </text>
-              </g>
+                  <g transform="translate(420, 340)">
+                    <text fill="#fbbf24" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold" letterSpacing="0.5">
+                      SECTOR C • METRO BASEMENT
+                    </text>
+                    <text y="16" fill="#f59e0b" fontSize="9.5" fontFamily="JetBrains Mono">
+                      Subterranean Voids // Critical 35% • Moisture
+                    </text>
+                  </g>
+                </g>
+              )}
             </g>
 
             {/* ========================================================= */}
-            {/* 2. ROUTES & CORRIDORS (Clean Vector Paths)                */}
+            {/* 2. ROUTES & CORRIDORS                                     */}
             {/* ========================================================= */}
             {layers.routes && (
               <g id="routes-layer">
@@ -452,37 +512,48 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         d={pathD}
                         fill="none"
                         stroke={strokeColor}
-                        strokeWidth={isBlocked ? 2.5 : 3.5}
+                        strokeWidth={detailMode === 'detailed' ? (isBlocked ? 2.5 : 3.5) : (isBlocked ? 2 : 2.5)}
                         strokeDasharray={strokeDash}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         opacity={isBlocked ? 0.7 : 0.85}
                       />
-                      {/* Clean badge only for blocked or newly discovered corridors */}
-                      {(isBlocked || isNew) && (
-                        <g transform={`translate(${midPoint.x - 36}, ${midPoint.y - 9})`}>
-                          <rect
-                            x="0"
-                            y="0"
-                            width="72"
-                            height="18"
-                            rx="4"
-                            fill={isBlocked ? '#2d0c13' : '#062e24'}
-                            stroke={strokeColor}
-                            strokeWidth="1"
-                          />
-                          <text
-                            x="36"
-                            y="13"
-                            textAnchor="middle"
-                            fill={isBlocked ? '#fca5a5' : '#34d399'}
-                            fontSize="8.5"
-                            fontFamily="JetBrains Mono"
-                            fontWeight="bold"
-                          >
-                            {isBlocked ? '⛔ BLOCKED' : '✨ NEW VOID'}
-                          </text>
-                        </g>
+                      {/* Badge: in simple mode only if blocked; in detailed mode show clearance tags */}
+                      {detailMode === 'simple' ? (
+                        isBlocked && (
+                          <g transform={`translate(${midPoint.x - 32}, ${midPoint.y - 8})`}>
+                            <rect x="0" y="0" width="64" height="16" rx="3" fill="#2d0c13" stroke={strokeColor} strokeWidth="1" />
+                            <text x="32" y="11.5" textAnchor="middle" fill="#fca5a5" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
+                              ⛔ BLOCKED
+                            </text>
+                          </g>
+                        )
+                      ) : (
+                        (isBlocked || isNew || isHazardous) && (
+                          <g transform={`translate(${midPoint.x - 38}, ${midPoint.y - 9})`}>
+                            <rect
+                              x="0"
+                              y="0"
+                              width="76"
+                              height="18"
+                              rx="3"
+                              fill={isBlocked ? '#2d0c13' : isHazardous ? '#2a1a06' : '#062e24'}
+                              stroke={strokeColor}
+                              strokeWidth="1"
+                            />
+                            <text
+                              x="38"
+                              y="13"
+                              textAnchor="middle"
+                              fill={isBlocked ? '#fca5a5' : isHazardous ? '#fde68a' : '#34d399'}
+                              fontSize="8"
+                              fontFamily="JetBrains Mono"
+                              fontWeight="bold"
+                            >
+                              {isBlocked ? '⛔ BLOCKED' : isHazardous ? '⚠️ TIGHT CRAWL' : '✨ NEW VOID'}
+                            </text>
+                          </g>
+                        )
                       )}
                     </g>
                   );
@@ -491,72 +562,82 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             )}
 
             {/* ========================================================= */}
-            {/* 3. RF MESH NETWORK & RELAYS (Subtle & Crisp)              */}
+            {/* 3. RF MESH NETWORK & RELAYS                               */}
             {/* ========================================================= */}
             {layers.mesh && (
               <g id="mesh-layer">
-                {/* Mesh Link Lines between Beacons */}
-                {beacons.map((bcn, idx) => {
-                  if (idx === 0) return null;
-                  const prevBcn = beacons[idx - 1];
-                  return (
-                    <line
-                      key={`bcn-link-${bcn.id}-${prevBcn.id}`}
-                      x1={bcn.x}
-                      y1={bcn.y}
-                      x2={prevBcn.x}
-                      y2={prevBcn.y}
-                      stroke="#10b981"
-                      strokeWidth="1.5"
-                      strokeDasharray="4,4"
-                      opacity="0.45"
-                    />
-                  );
-                })}
-
-                {/* Mesh Link Lines from Connected Robots to Nearest Beacon */}
-                {robots
-                  .filter((r) => r.commsStatus === 'connected')
-                  .map((r) => {
-                    let closest = beacons[0];
-                    let minDist = 99999;
-                    beacons.forEach((b) => {
-                      const d = Math.hypot(b.x - r.position.x, b.y - r.position.y);
-                      if (d < minDist) {
-                        minDist = d;
-                        closest = b;
-                      }
-                    });
-                    if (!closest || minDist > 280) return null;
+                {/* Mesh Link Lines between Beacons (Detailed Mode Only) */}
+                {detailMode === 'detailed' &&
+                  beacons.map((bcn, idx) => {
+                    if (idx === 0) return null;
+                    const prevBcn = beacons[idx - 1];
+                    const midX = (bcn.x + prevBcn.x) / 2;
+                    const midY = (bcn.y + prevBcn.y) / 2;
                     return (
-                      <line
-                        key={`robot-mesh-${r.id}`}
-                        x1={r.position.x}
-                        y1={r.position.y}
-                        x2={closest.x}
-                        y2={closest.y}
-                        stroke="#00f0ff"
-                        strokeWidth="1"
-                        strokeDasharray="3,3"
-                        opacity="0.3"
-                      />
+                      <g key={`bcn-link-${bcn.id}-${prevBcn.id}`}>
+                        <line
+                          x1={bcn.x}
+                          y1={bcn.y}
+                          x2={prevBcn.x}
+                          y2={prevBcn.y}
+                          stroke="#10b981"
+                          strokeWidth="1.5"
+                          strokeDasharray="4,4"
+                          opacity="0.5"
+                        />
+                        <rect x={midX - 22} y={midY - 7} width="44" height="14" rx="2" fill="#04201b" stroke="#10b981" strokeWidth="0.8" />
+                        <text x={midX} y={midY + 3.5} textAnchor="middle" fill="#6ee7b7" fontSize="7.5" fontFamily="JetBrains Mono">
+                          -64 dBm
+                        </text>
+                      </g>
                     );
                   })}
 
-                {/* RF Mesh Coverage Radii */}
-                {beacons.map((bcn) => (
-                  <circle
-                    key={`rad-${bcn.id}`}
-                    cx={bcn.x}
-                    cy={bcn.y}
-                    r={Math.min(bcn.radius, 90)}
-                    fill="rgba(16, 185, 129, 0.03)"
-                    stroke="#10b981"
-                    strokeWidth="1"
-                    strokeDasharray="4,4"
-                    opacity="0.3"
-                  />
-                ))}
+                {/* Mesh Link Lines from Connected Robots to Nearest Beacon (Detailed Mode Only) */}
+                {detailMode === 'detailed' &&
+                  robots
+                    .filter((r) => r.commsStatus === 'connected')
+                    .map((r) => {
+                      let closest = beacons[0];
+                      let minDist = 99999;
+                      beacons.forEach((b) => {
+                        const d = Math.hypot(b.x - r.position.x, b.y - r.position.y);
+                        if (d < minDist) {
+                          minDist = d;
+                          closest = b;
+                        }
+                      });
+                      if (!closest || minDist > 280) return null;
+                      return (
+                        <line
+                          key={`robot-mesh-${r.id}`}
+                          x1={r.position.x}
+                          y1={r.position.y}
+                          x2={closest.x}
+                          y2={closest.y}
+                          stroke="#00f0ff"
+                          strokeWidth="1"
+                          strokeDasharray="3,3"
+                          opacity="0.35"
+                        />
+                      );
+                    })}
+
+                {/* RF Mesh Coverage Radii (Detailed Mode Only) */}
+                {detailMode === 'detailed' &&
+                  beacons.map((bcn) => (
+                    <circle
+                      key={`rad-${bcn.id}`}
+                      cx={bcn.x}
+                      cy={bcn.y}
+                      r={Math.min(bcn.radius, 90)}
+                      fill="rgba(16, 185, 129, 0.03)"
+                      stroke="#10b981"
+                      strokeWidth="1"
+                      strokeDasharray="4,4"
+                      opacity="0.3"
+                    />
+                  ))}
 
                 {/* Relay Beacon Pins */}
                 {beacons.map((bcn) => (
@@ -576,18 +657,23 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     }
                     onMouseLeave={() => setHoveredEntity(null)}
                   >
-                    <circle cx={bcn.x} cy={bcn.y} r="8" fill="#042f2e" stroke="#10b981" strokeWidth="1.5" />
+                    <circle cx={bcn.x} cy={bcn.y} r={detailMode === 'detailed' ? '8' : '7'} fill="#042f2e" stroke="#10b981" strokeWidth="1.5" />
                     <circle cx={bcn.x} cy={bcn.y} r="3" fill="#34d399" />
-                    <text x={bcn.x} y={bcn.y + 17} textAnchor="middle" fill="#6ee7b7" fontSize="8.5" fontFamily="JetBrains Mono">
+                    <text x={bcn.x} y={bcn.y + 16} textAnchor="middle" fill="#6ee7b7" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
                       {bcn.label.split(' ')[0]}
                     </text>
+                    {detailMode === 'detailed' && (
+                      <text x={bcn.x} y={bcn.y + 25} textAnchor="middle" fill="#94a3b8" fontSize="7" fontFamily="JetBrains Mono">
+                        {bcn.batteryHours}h
+                      </text>
+                    )}
                   </g>
                 ))}
               </g>
             )}
 
             {/* ========================================================= */}
-            {/* 4. HAZARDS (Clean Warning Markers)                         */}
+            {/* 4. HAZARDS                                                */}
             {/* ========================================================= */}
             {layers.hazards && (
               <g id="hazards-layer">
@@ -603,7 +689,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     ? 'rgba(245, 158, 11, 0.08)'
                     : 'rgba(234, 179, 8, 0.08)';
                   const iconChar = isGas ? '☣' : isStructural ? '⚠' : '⚡';
-                  const shortTitle = isGas ? 'Methane 520PPM' : isStructural ? 'Column Tilt 18°' : '480V Arc';
+                  const simpleTitle = isGas ? 'Gas' : isStructural ? 'Collapse' : 'Arc';
+                  const detailedTitle = isGas ? 'Methane 520PPM' : isStructural ? 'Column Tilt 18°' : '480V Arc';
 
                   return (
                     <g
@@ -623,21 +710,24 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       }
                       onMouseLeave={() => setHoveredEntity(null)}
                     >
-                      {/* Perimeter radius circle */}
-                      <circle
-                        cx={haz.location.x}
-                        cy={haz.location.y}
-                        r={Math.min(haz.location.radius, 38)}
-                        fill={fillCol}
-                        stroke={strokeCol}
-                        strokeWidth="1"
-                        strokeDasharray="4,4"
-                      />
+                      {/* Perimeter radius circle in detailed mode */}
+                      {detailMode === 'detailed' && (
+                        <circle
+                          cx={haz.location.x}
+                          cy={haz.location.y}
+                          r={Math.min(haz.location.radius, 38)}
+                          fill={fillCol}
+                          stroke={strokeCol}
+                          strokeWidth="1"
+                          strokeDasharray="4,4"
+                        />
+                      )}
+
                       {/* Pin Center */}
                       <circle
                         cx={haz.location.x}
                         cy={haz.location.y}
-                        r="12"
+                        r={detailMode === 'detailed' ? '12' : '10'}
                         fill="#160c12"
                         stroke={strokeCol}
                         strokeWidth={isSelected ? '2.5' : '1.8'}
@@ -646,34 +736,62 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         x={haz.location.x}
                         y={haz.location.y + 4}
                         textAnchor="middle"
-                        fontSize="11"
+                        fontSize={detailMode === 'detailed' ? '11' : '10'}
                         fill="#ffffff"
                       >
                         {iconChar}
                       </text>
 
-                      {/* Clean Small Pill Label */}
-                      <rect
-                        x={haz.location.x - 44}
-                        y={haz.location.y + 16}
-                        width="88"
-                        height="16"
-                        rx="3"
-                        fill="#12080e"
-                        stroke={strokeCol}
-                        strokeWidth="1"
-                      />
-                      <text
-                        x={haz.location.x}
-                        y={haz.location.y + 28}
-                        textAnchor="middle"
-                        fill={isGas ? '#fca5a5' : '#fde68a'}
-                        fontSize="8.5"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="bold"
-                      >
-                        {iconChar} {shortTitle}
-                      </text>
+                      {/* Pill Label: Minimalist in simple mode vs full specs in detailed mode */}
+                      {detailMode === 'simple' ? (
+                        <g>
+                          <rect
+                            x={haz.location.x - 22}
+                            y={haz.location.y + 13}
+                            width="44"
+                            height="14"
+                            rx="2.5"
+                            fill="#12080e"
+                            stroke={strokeCol}
+                            strokeWidth="0.8"
+                          />
+                          <text
+                            x={haz.location.x}
+                            y={haz.location.y + 23.5}
+                            textAnchor="middle"
+                            fill={isGas ? '#fca5a5' : '#fde68a'}
+                            fontSize="8"
+                            fontFamily="JetBrains Mono"
+                            fontWeight="bold"
+                          >
+                            {iconChar} {simpleTitle}
+                          </text>
+                        </g>
+                      ) : (
+                        <g>
+                          <rect
+                            x={haz.location.x - 52}
+                            y={haz.location.y + 16}
+                            width="104"
+                            height="18"
+                            rx="3"
+                            fill="#12080e"
+                            stroke={strokeCol}
+                            strokeWidth="1"
+                          />
+                          <text
+                            x={haz.location.x}
+                            y={haz.location.y + 28}
+                            textAnchor="middle"
+                            fill={isGas ? '#fca5a5' : '#fde68a'}
+                            fontSize="8"
+                            fontFamily="JetBrains Mono"
+                            fontWeight="bold"
+                          >
+                            {iconChar} {detailedTitle}
+                          </text>
+                        </g>
+                      )}
                     </g>
                   );
                 })}
@@ -681,7 +799,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             )}
 
             {/* ========================================================= */}
-            {/* 5. SURVIVORS (Clean Glowing Beacon Pins)                  */}
+            {/* 5. SURVIVORS                                              */}
             {/* ========================================================= */}
             <g id="survivors-layer">
               {survivors.map((surv) => {
@@ -719,7 +837,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       <circle
                         cx={surv.location.x}
                         cy={surv.location.y}
-                        r="20"
+                        r={detailMode === 'detailed' ? '20' : '16'}
                         fill="none"
                         stroke="#ef4444"
                         strokeWidth="1.5"
@@ -732,55 +850,102 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     <circle
                       cx={surv.location.x}
                       cy={surv.location.y}
-                      r="13"
+                      r={detailMode === 'detailed' ? '13' : '11'}
                       fill={fillCol}
                       stroke={strokeCol}
-                      strokeWidth={isSelected ? '3' : '2'}
+                      strokeWidth={isSelected ? '2.5' : '1.8'}
                     />
                     <text
                       x={surv.location.x}
                       y={surv.location.y + 4}
                       textAnchor="middle"
-                      fontSize="11"
+                      fontSize={detailMode === 'detailed' ? '11' : '10'}
                     >
                       ❤️
                     </text>
 
-                    {/* Small Clean Pill Badge Above */}
-                    <rect
-                      x={surv.location.x - 26}
-                      y={surv.location.y - 24}
-                      width="52"
-                      height="16"
-                      rx="3"
-                      fill="#0b0f19"
-                      stroke={strokeCol}
-                      strokeWidth="1"
-                    />
-                    <text
-                      x={surv.location.x}
-                      y={surv.location.y - 12}
-                      textAnchor="middle"
-                      fill={textCol}
-                      fontSize="9"
-                      fontFamily="JetBrains Mono"
-                      fontWeight="bold"
-                    >
-                      {surv.id}
-                    </text>
+                    {/* Pill Badge: Simple vs Detailed */}
+                    {detailMode === 'simple' ? (
+                      <g>
+                        <rect
+                          x={surv.location.x - 20}
+                          y={surv.location.y - 21}
+                          width="40"
+                          height="14"
+                          rx="2.5"
+                          fill="#0b0f19"
+                          stroke={strokeCol}
+                          strokeWidth="1"
+                        />
+                        <text
+                          x={surv.location.x}
+                          y={surv.location.y - 10.5}
+                          textAnchor="middle"
+                          fill={textCol}
+                          fontSize="8"
+                          fontFamily="JetBrains Mono"
+                          fontWeight="bold"
+                        >
+                          {surv.id}
+                        </text>
+                      </g>
+                    ) : (
+                      <g>
+                        <rect
+                          x={surv.location.x - 55}
+                          y={surv.location.y - 26}
+                          width="110"
+                          height="20"
+                          rx="3"
+                          fill="#0b0f19"
+                          stroke={strokeCol}
+                          strokeWidth="1"
+                        />
+                        <text
+                          x={surv.location.x}
+                          y={surv.location.y - 16}
+                          textAnchor="middle"
+                          fill={textCol}
+                          fontSize="8"
+                          fontFamily="JetBrains Mono"
+                          fontWeight="bold"
+                        >
+                          {surv.id} • HR:{surv.vitals.heartRate} | {surv.vitals.spO2}%
+                        </text>
+                        <text
+                          x={surv.location.x}
+                          y={surv.location.y - 8}
+                          textAnchor="middle"
+                          fill="#94a3b8"
+                          fontSize="7"
+                          fontFamily="JetBrains Mono"
+                        >
+                          {surv.location.depthMeters}m depth • {surv.triage.toUpperCase()}
+                        </text>
+                        {surv.id === 'SURV-01' && (
+                          <g transform={`translate(${surv.location.x - 42}, ${surv.location.y + 16})`}>
+                            <rect width="84" height="13" rx="2" fill="#2d0a14" stroke="#f43f5e" strokeWidth="0.8" />
+                            <text x="42" y="9.5" textAnchor="middle" fill="#fda4af" fontSize="7" fontFamily="JetBrains Mono">
+                              🔊 180 Hz VOID TAP
+                            </text>
+                          </g>
+                        )}
+                      </g>
+                    )}
                   </g>
                 );
               })}
             </g>
 
             {/* ========================================================= */}
-            {/* 6. ROBOTS (Clean Fleet Pins)                              */}
+            {/* 6. ROBOTS                                                 */}
             {/* ========================================================= */}
             <g id="robots-layer">
               {robots.map((robot) => {
                 const isSelected = selectedRobotId === robot.id;
                 const isDisconnected = robot.commsStatus === 'disconnected';
                 const isDegraded = robot.commsStatus === 'degraded';
+                const shortName = robot.name.split('-')[0] || robot.callsign;
 
                 if (isDisconnected) {
                   // GHOST MODE: Last known pin + clean dashed line + ghost pin
@@ -808,10 +973,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       }
                       onMouseLeave={() => setHoveredEntity(null)}
                     >
-                      {/* Last known position dot */}
                       <circle cx={lkp.x} cy={lkp.y} r="4" fill="#f43f5e" />
 
-                      {/* Clean trajectory line */}
                       <line
                         x1={lkp.x}
                         y1={lkp.y}
@@ -822,11 +985,23 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         strokeDasharray="4,3"
                       />
 
-                      {/* Ghost Pin */}
+                      {detailMode === 'detailed' && (
+                        <ellipse
+                          cx={robot.position.x}
+                          cy={robot.position.y}
+                          rx="32"
+                          ry="22"
+                          fill="rgba(244, 63, 94, 0.05)"
+                          stroke="#f43f5e"
+                          strokeWidth="0.8"
+                          strokeDasharray="3,3"
+                        />
+                      )}
+
                       <circle
                         cx={robot.position.x}
                         cy={robot.position.y}
-                        r="14"
+                        r={detailMode === 'detailed' ? '14' : '12'}
                         fill="#1f0a12"
                         stroke="#f43f5e"
                         strokeWidth={isSelected ? '2.5' : '1.8'}
@@ -835,40 +1010,77 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                         x={robot.position.x}
                         y={robot.position.y + 4.5}
                         textAnchor="middle"
-                        fontSize="12"
+                        fontSize={detailMode === 'detailed' ? '12' : '11'}
                       >
                         👻
                       </text>
 
-                      {/* Small Ghost Pill */}
-                      <rect
-                        x={robot.position.x - 45}
-                        y={robot.position.y + 18}
-                        width="90"
-                        height="16"
-                        rx="3"
-                        fill="#15050c"
-                        stroke="#f43f5e"
-                        strokeWidth="1"
-                      />
-                      <text
-                        x={robot.position.x}
-                        y={robot.position.y + 30}
-                        textAnchor="middle"
-                        fill="#fca5a5"
-                        fontSize="8.5"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="bold"
-                      >
-                        {robot.name.split('-')[0]} [Lost]
-                      </text>
+                      {/* Ghost Pill */}
+                      {detailMode === 'simple' ? (
+                        <g>
+                          <rect
+                            x={robot.position.x - 34}
+                            y={robot.position.y + 15}
+                            width="68"
+                            height="15"
+                            rx="3"
+                            fill="#15050c"
+                            stroke="#f43f5e"
+                            strokeWidth="1"
+                          />
+                          <text
+                            x={robot.position.x}
+                            y={robot.position.y + 26}
+                            textAnchor="middle"
+                            fill="#fca5a5"
+                            fontSize="8"
+                            fontFamily="JetBrains Mono"
+                            fontWeight="bold"
+                          >
+                            {shortName} [Lost]
+                          </text>
+                        </g>
+                      ) : (
+                        <g>
+                          <rect
+                            x={robot.position.x - 52}
+                            y={robot.position.y + 16}
+                            width="104"
+                            height="20"
+                            rx="3"
+                            fill="#15050c"
+                            stroke="#f43f5e"
+                            strokeWidth="1"
+                          />
+                          <text
+                            x={robot.position.x}
+                            y={robot.position.y + 26}
+                            textAnchor="middle"
+                            fill="#fca5a5"
+                            fontSize="8"
+                            fontFamily="JetBrains Mono"
+                            fontWeight="bold"
+                          >
+                            {robot.name} ⚠️ GHOST
+                          </text>
+                          <text
+                            x={robot.position.x}
+                            y={robot.position.y + 34}
+                            textAnchor="middle"
+                            fill="#fda4af"
+                            fontSize="6.8"
+                            fontFamily="JetBrains Mono"
+                          >
+                            {robot.storeAndForwardBacklog} Pkts Buffered
+                          </text>
+                        </g>
+                      )}
                     </g>
                   );
                 }
 
                 // CONNECTED OR DEGRADED ROBOT
                 const strokeColor = isDegraded ? '#f59e0b' : '#00f0ff';
-                const shortName = robot.name.split('-')[0] || robot.callsign;
 
                 return (
                   <g
@@ -889,12 +1101,11 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     }
                     onMouseLeave={() => setHoveredEntity(null)}
                   >
-                    {/* Selection Ring */}
                     {isSelected && (
                       <circle
                         cx={robot.position.x}
                         cy={robot.position.y}
-                        r="19"
+                        r={detailMode === 'detailed' ? '20' : '17'}
                         fill="none"
                         stroke={strokeColor}
                         strokeWidth="1.5"
@@ -903,11 +1114,22 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       />
                     )}
 
-                    {/* Robot Pin Body */}
+                    {/* Forward LiDAR fan in detailed mode */}
+                    {detailMode === 'detailed' && (
+                      <path
+                        d={`M ${robot.position.x} ${robot.position.y} L ${robot.position.x + 22} ${robot.position.y - 14} A 26 26 0 0 1 ${robot.position.x + 22} ${robot.position.y + 14} Z`}
+                        fill="rgba(0, 240, 255, 0.08)"
+                        stroke="#00f0ff"
+                        strokeWidth="0.6"
+                        strokeDasharray="2,2"
+                        opacity="0.6"
+                      />
+                    )}
+
                     <circle
                       cx={robot.position.x}
                       cy={robot.position.y}
-                      r="14"
+                      r={detailMode === 'detailed' ? '14' : '12'}
                       fill="#071322"
                       stroke={strokeColor}
                       strokeWidth={isSelected ? '2.5' : '1.8'}
@@ -916,37 +1138,85 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       x={robot.position.x}
                       y={robot.position.y + 4.5}
                       textAnchor="middle"
-                      fontSize="12"
+                      fontSize={detailMode === 'detailed' ? '12' : '10.5'}
                     >
                       {getRobotEmoji(robot.type)}
                     </text>
 
-                    {/* Clean Pill Label Below */}
-                    <rect
-                      x={robot.position.x - 38}
-                      y={robot.position.y + 18}
-                      width="76"
-                      height="16"
-                      rx="3"
-                      fill="#060c18"
-                      stroke={strokeColor}
-                      strokeWidth="1"
-                    />
-                    <text
-                      x={robot.position.x}
-                      y={robot.position.y + 30}
-                      textAnchor="middle"
-                      fill="#e2e8f0"
-                      fontSize="8.5"
-                      fontFamily="JetBrains Mono"
-                      fontWeight="bold"
-                    >
-                      {shortName} {Math.round(robot.battery)}%
-                    </text>
+                    {/* Pill Label */}
+                    {detailMode === 'simple' ? (
+                      <g>
+                        <rect
+                          x={robot.position.x - 30}
+                          y={robot.position.y + 15}
+                          width="60"
+                          height="14"
+                          rx="2.5"
+                          fill="#060c18"
+                          stroke={strokeColor}
+                          strokeWidth="1"
+                        />
+                        <text
+                          x={robot.position.x}
+                          y={robot.position.y + 25}
+                          textAnchor="middle"
+                          fill="#e2e8f0"
+                          fontSize="7.8"
+                          fontFamily="JetBrains Mono"
+                          fontWeight="bold"
+                        >
+                          {shortName} {Math.round(robot.battery)}%
+                        </text>
+                      </g>
+                    ) : (
+                      <g>
+                        <rect
+                          x={robot.position.x - 48}
+                          y={robot.position.y + 17}
+                          width="96"
+                          height="20"
+                          rx="3"
+                          fill="#060c18"
+                          stroke={strokeColor}
+                          strokeWidth="1"
+                        />
+                        <text
+                          x={robot.position.x}
+                          y={robot.position.y + 27}
+                          textAnchor="middle"
+                          fill="#f8fafc"
+                          fontSize="7.8"
+                          fontFamily="JetBrains Mono"
+                          fontWeight="bold"
+                        >
+                          {robot.name} • {Math.round(robot.battery)}%
+                        </text>
+                        <text
+                          x={robot.position.x}
+                          y={robot.position.y + 35}
+                          textAnchor="middle"
+                          fill="#38bdf8"
+                          fontSize="6.8"
+                          fontFamily="JetBrains Mono"
+                        >
+                          {robot.signalStrength}% RSSI • 0.4 m/s
+                        </text>
+                      </g>
+                    )}
                   </g>
                 );
               })}
             </g>
+
+            {/* Detailed Mode HUD overlay watermark */}
+            {detailMode === 'detailed' && (
+              <g transform="translate(480, 565)">
+                <rect x="0" y="0" width="270" height="20" rx="4" fill="#07101e" stroke="#1e3a5f" strokeWidth="1" />
+                <text x="135" y="14" textAnchor="middle" fill="#38bdf8" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
+                  🔬 DEEP TELEMETRY // 6 SWARM UNITS // RSSI -64dBm
+                </text>
+              </g>
+            )}
 
 
             {/* ========================================================= */}

@@ -8,9 +8,14 @@ import {
   Navigation,
   ShieldAlert,
   ArrowRight,
+  X,
 } from 'lucide-react';
 
-export const HazardAndRoutePanel: React.FC = () => {
+interface HazardAndRoutePanelProps {
+  onClose?: () => void;
+}
+
+export const HazardAndRoutePanel: React.FC<HazardAndRoutePanelProps> = ({ onClose }) => {
   const {
     hazards,
     routes,
@@ -36,38 +41,49 @@ export const HazardAndRoutePanel: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#070b14] border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full bg-[#080705] border border-amber-950/60 rounded-xl overflow-hidden shadow-xl">
       {/* Header Tabs */}
-      <div className="p-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
-        <div className="flex items-center gap-1">
+      <div className="p-2.5 bg-gradient-to-r from-amber-950/40 via-slate-900/90 to-slate-900/90 border-b border-amber-900/40 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setActiveTab('hazards')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold transition-all ${
               activeTab === 'hazards'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <AlertTriangle className="w-3.5 h-3.5" />
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
             <span>Hazards ({hazards.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('routes')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold transition-all ${
               activeTab === 'routes'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Navigation className="w-3.5 h-3.5" />
+            <Navigation className="w-3.5 h-3.5 text-cyan-400" />
             <span>Corridors ({routes.length})</span>
           </button>
         </div>
 
-        <span className="text-[10px] font-mono text-slate-500">
-          AUTOPATH v2.4
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/60 text-amber-400 border border-amber-800/60 hidden sm:inline-block">
+            AUTOPATH v2.4
+          </span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Close Panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Tab Content */}

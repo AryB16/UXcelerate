@@ -51,17 +51,17 @@ export const SurvivorQueue: React.FC<SurvivorQueueProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#070b14] border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+    <div className="flex flex-col h-full bg-[#090508] border border-rose-950/60 rounded-xl overflow-hidden shadow-xl">
       {/* Header */}
-      <div className="p-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-3 bg-gradient-to-r from-rose-950/45 via-slate-900/90 to-slate-900/90 border-b border-rose-900/40 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Heart className="w-4 h-4 text-rose-400" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-100 tactical-font">
+          <Heart className="w-4 h-4 text-rose-400 animate-pulse" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-rose-100 tactical-font">
             Survivor Triage Queue ({survivors.length})
           </h2>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800 hidden sm:inline-block">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-700/60 hidden sm:inline-block">
             START PROTOCOL
           </span>
           {onClose && (

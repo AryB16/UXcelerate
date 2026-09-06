@@ -14,12 +14,16 @@ import {
   Terminal,
   Bot,
   Heart,
+  Columns,
+  X,
 } from 'lucide-react';
 
 const MissionControlDeck: React.FC = () => {
   const {
     robots,
     survivors,
+    hazards,
+    routes,
     selectRobot,
     toggleSimPaused,
     setIsCaseStudyOpen,
@@ -29,7 +33,7 @@ const MissionControlDeck: React.FC = () => {
     tourStep,
   } = useMission();
 
-  const [rightPanelTab, setRightPanelTab] = useState<'survivors' | 'hazards' | 'logs'>('survivors');
+  const [rightPanelMode, setRightPanelMode] = useState<'triage' | 'hazards' | 'logs' | 'split'>('triage');
   const [isLeftRosterOpen, setIsLeftRosterOpen] = useState<boolean>(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState<boolean>(true);
   const [mobileTab, setMobileTab] = useState<'map' | 'roster' | 'triage'>('map');
@@ -51,8 +55,11 @@ const MissionControlDeck: React.FC = () => {
     if (isTourOpen) {
       setIsLeftRosterOpen(true);
       setIsRightPanelOpen(true);
+      if (tourStep === 3) {
+        setRightPanelMode('triage');
+      }
     }
-  }, [isTourOpen]);
+  }, [isTourOpen, tourStep]);
 
   // Determine if a section should be spotlighted or blurred during the interactive tour
   const getTourSpotlightStyle = (section: 'header' | 'left' | 'center' | 'right' | 'footer') => {
@@ -153,53 +160,116 @@ const MissionControlDeck: React.FC = () => {
           />
         </div>
 
-        {/* RIGHT COLUMN: Triage, Hazards & Incident Log */}
+        {/* RIGHT COLUMN: Dedicated Triage, Hazards & Incident Log */}
         <div
           className={`${
             mobileTab === 'triage' ? 'flex' : 'hidden'
-          } ${isRightPanelOpen ? 'md:flex md:col-span-3' : 'md:hidden'} h-full min-h-0 flex-col gap-2 ${getTourSpotlightStyle('right')}`}
+          } ${isRightPanelOpen ? 'md:flex md:col-span-3' : 'md:hidden'} h-full min-h-0 flex-col gap-1.5 ${getTourSpotlightStyle('right')}`}
         >
-          {/* Top Half: Survivor Triage Queue */}
-          <div className="flex-1 min-h-0">
-            <SurvivorQueue onClose={() => setIsRightPanelOpen(false)} />
-          </div>
-
-          {/* Bottom Half: Switcher between Hazards/Corridors and Incident Log */}
-          <div className="flex-1 min-h-0 flex flex-col">
-            <div className="flex items-center gap-1 mb-1 font-mono text-[10px] bg-slate-900/60 p-1 rounded border border-slate-800">
+          {/* Top-Level Panel Switcher: Distinct Separation of Triage vs Hazards vs Logs */}
+          <div className="flex items-center justify-between p-1 bg-[#090e1a] border border-slate-800 rounded-xl shadow-md shrink-0">
+            <div className="flex items-center gap-1 flex-1 font-mono text-[10px]">
               <button
-                onClick={() => setRightPanelTab('survivors')}
-                className={`flex-1 py-1 rounded transition-colors flex items-center justify-center gap-1 ${
-                  rightPanelTab === 'survivors'
-                    ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40'
-                    : 'text-slate-400 hover:text-white'
+                onClick={() => setRightPanelMode('triage')}
+                className={`flex-1 py-1 px-1.5 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                  rightPanelMode === 'triage'
+                    ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.25)]'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
+                title="Survivor Medical Triage (START Protocol)"
               >
-                <AlertTriangle className="w-3 h-3" />
-                <span>Hazards & Paths</span>
+                <Heart className="w-3 h-3 text-rose-400" />
+                <span>Triage ({survivors.length})</span>
               </button>
 
               <button
-                onClick={() => setRightPanelTab('logs')}
-                className={`flex-1 py-1 rounded transition-colors flex items-center justify-center gap-1 ${
-                  rightPanelTab === 'logs'
-                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                    : 'text-slate-400 hover:text-white'
+                onClick={() => setRightPanelMode('hazards')}
+                className={`flex-1 py-1 px-1.5 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                  rightPanelMode === 'hazards'
+                    ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.25)]'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
+                title="Hazards & Structural Paths"
               >
-                <Terminal className="w-3 h-3" />
-                <span>Live Event Log</span>
+                <AlertTriangle className="w-3 h-3 text-amber-400" />
+                <span>Hazards ({hazards.length})</span>
+              </button>
+
+              <button
+                onClick={() => setRightPanelMode('logs')}
+                className={`py-1 px-2 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                  rightPanelMode === 'logs'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/50 shadow-[0_0_8px_rgba(6,182,212,0.25)]'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+                title="Live Incident & Comms Log"
+              >
+                <Terminal className="w-3 h-3 text-cyan-400" />
+                <span className="hidden xl:inline">Logs</span>
+              </button>
+
+              <button
+                onClick={() => setRightPanelMode('split')}
+                className={`py-1 px-1.5 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                  rightPanelMode === 'split'
+                    ? 'bg-slate-700 text-slate-100 font-bold border border-slate-500 shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+                title="Split View (Triage + Hazards Together)"
+              >
+                <Columns className="w-3 h-3 text-slate-300" />
+                <span className="hidden xl:inline">Split</span>
               </button>
             </div>
 
+            <button
+              onClick={() => setIsRightPanelOpen(false)}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-1"
+              title="Close Right Panel"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Panel Content Based on Selection */}
+          {rightPanelMode === 'triage' && (
             <div className="flex-1 min-h-0">
-              {rightPanelTab === 'survivors' ? (
-                <HazardAndRoutePanel />
-              ) : (
-                <TacticalLogFeed />
-              )}
+              <SurvivorQueue onClose={() => setIsRightPanelOpen(false)} />
             </div>
-          </div>
+          )}
+
+          {rightPanelMode === 'hazards' && (
+            <div className="flex-1 min-h-0">
+              <HazardAndRoutePanel onClose={() => setIsRightPanelOpen(false)} />
+            </div>
+          )}
+
+          {rightPanelMode === 'logs' && (
+            <div className="flex-1 min-h-0">
+              <TacticalLogFeed />
+            </div>
+          )}
+
+          {rightPanelMode === 'split' && (
+            <div className="flex-1 min-h-0 flex flex-col gap-1.5">
+              {/* Top Half: Survivor Medical Triage */}
+              <div className="flex-1 min-h-0">
+                <SurvivorQueue />
+              </div>
+
+              {/* Distinct Physical & Visual Separator */}
+              <div className="flex items-center gap-2 px-2 py-0.5 bg-slate-900/80 border-y border-slate-800 text-[10px] font-mono text-amber-400 font-bold tracking-wider uppercase shrink-0">
+                <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
+                <span>Environmental Hazards & Pathways</span>
+                <div className="h-px flex-1 bg-amber-500/20"></div>
+              </div>
+
+              {/* Bottom Half: Environmental Hazards & Structural Pathways */}
+              <div className="flex-1 min-h-0">
+                <HazardAndRoutePanel />
+              </div>
+            </div>
+          )}
         </div>
 
       </main>
@@ -220,10 +290,10 @@ const MissionControlDeck: React.FC = () => {
         <button
           onClick={() => setIsRightPanelOpen(true)}
           className="hidden md:flex fixed bottom-9 right-3 z-30 items-center gap-2 px-3 py-1.5 rounded-lg bg-[#180a15]/95 border border-rose-500 text-rose-300 hover:text-white hover:bg-rose-950 font-mono text-xs shadow-2xl backdrop-blur transition-all"
-          title="Open Survivor Triage & Incident Log"
+          title="Open Survivor Triage & Hazards Panel"
         >
           <Heart className="w-3.5 h-3.5 text-rose-400" />
-          <span className="font-bold">Triage & Logs ({survivors.length})</span>
+          <span className="font-bold">Triage & Hazards ({survivors.length})</span>
         </button>
       )}
 
