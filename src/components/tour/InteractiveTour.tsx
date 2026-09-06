@@ -47,8 +47,8 @@ export const InteractiveTour: React.FC = () => {
       description:
         'Live GIS map of BITS Pilani Dubai Campus. The red perimeter designates the Sector 4 collapse boundary. Click any unit or survivor pin to inspect real-time data.',
       hint: 'Use mouse scroll to zoom or click "RECON FLY-IN" in the header to replay the orbital flyover.',
-      positionClasses: 'bottom-12 left-1/2 -translate-x-1/2',
-      widthClass: 'w-[420px]',
+      positionClasses: 'top-20 left-1/2 -translate-x-1/2',
+      widthClass: 'w-[440px]',
     },
     {
       step: 2,
@@ -60,7 +60,7 @@ export const InteractiveTour: React.FC = () => {
         '6 specialized robots: drone, K9 quadruped, snake crawler, and rovers. Monitor battery, mesh latency, and sensor telemetry. Click FPV to enter direct first-person pilot mode.',
       hint: 'Vulcan-X (K9-TITAN) is selected — note its real-time flash LiDAR and acoustic sensors in the bottom panel.',
       positionClasses: 'top-20 left-4 md:left-72',
-      widthClass: 'w-[420px]',
+      widthClass: 'w-[440px]',
     },
     {
       step: 3,
@@ -72,19 +72,20 @@ export const InteractiveTour: React.FC = () => {
         'Survivors are prioritized by medical vitals (Immediate, Delayed, Minor). Dispatch rescue teams, deploy RF mesh beacons, or trigger test simulations like secondary aftershocks.',
       hint: 'Click "Simulate Aftershock" anytime in the top bar to test dynamic route recalculation.',
       positionClasses: 'top-20 right-4 md:right-72',
-      widthClass: 'w-[420px]',
+      widthClass: 'w-[440px]',
     },
   ];
 
   const current = tourSteps[tourStep] || tourSteps[0];
 
   return (
-    <div className="fixed inset-0 z-50 pointer-events-none">
-      {/* NO dark overlay over the screen! The non-target elements are blurred/dimmed by CSS directly. */}
+    <div className="fixed inset-0 z-[100] pointer-events-none">
+      {/* Subtle non-blocking tactical vignette backdrop so the card stands out unmistakably */}
+      <div className="absolute inset-0 bg-black/40 pointer-events-none backdrop-blur-[1px] transition-opacity duration-300" />
 
       {/* Tutorial Floating Card */}
       <div
-        className={`pointer-events-auto fixed ${current.positionClasses} ${current.widthClass} max-w-[92vw] bg-[#090e1a]/95 backdrop-blur-md border border-cyan-400/80 rounded-md p-5 md:p-6 shadow-2xl animate-fade-in text-slate-100 font-sans z-50`}
+        className={`pointer-events-auto fixed ${current.positionClasses} ${current.widthClass} max-w-[92vw] bg-[#090e1a]/98 backdrop-blur-md border-2 border-cyan-400/90 rounded-lg p-5 md:p-6 shadow-[0_0_50px_rgba(6,182,212,0.45)] animate-fade-in text-slate-100 font-sans z-[100]`}
       >
         {/* Directional Callout Banner */}
         <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md bg-cyan-950/90 border border-cyan-400/60 text-cyan-300 font-mono text-[11px] font-bold tracking-wider mb-3.5 shadow-inner">

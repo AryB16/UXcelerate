@@ -87,11 +87,17 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   const [filterHazards, setFilterHazards] = useState<boolean>(true);
   const [filterRoutes, setFilterRoutes] = useState<boolean>(true);
   const [currentZoom, setCurrentZoom] = useState<number>(16);
-  const [flyinStage, setFlyinStage] = useState<'idle' | 'dubai' | 'diac' | 'bpdc'>('idle');
+  const [flyinStage, setFlyinStage] = useState<'idle' | 'dubai' | 'diac' | 'bpdc'>('dubai');
   const [altMeter, setAltMeter] = useState<number>(64000);
   const [targetAlt, setTargetAlt] = useState<number>(64000);
   const [opticalZoom, setOpticalZoom] = useState<string>('1.0x');
   const flyinTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Maintain latest startTour reference
+  const startTourRef = useRef(startTour);
+  useEffect(() => {
+    startTourRef.current = startTour;
+  }, [startTour]);
 
   // References
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -101,7 +107,87 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   const routesLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const perimeterLayerRef = useRef<L.Rectangle | null>(null);
   const perimeterLabelRef = useRef<L.Marker | null>(null);
-  const hasTourStartedRef = useRef<boolean>(false);
+
+  const disableMapInteractions = (map: L.Map) => {
+    try {
+      map.dragging.disable();
+      map.touchZoom.disable();
+      map.doubleClickZoom.disable();
+      map.scrollWheelZoom.disable();
+      map.boxZoom.disable();
+      map.keyboard.disable();
+    } catch {
+      // ignore
+    }
+  };
+
+  const enableMapInteractions = (map: L.Map) => {
+    try {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.doubleClickZoom.enable();
+      map.scrollWheelZoom.enable();
+      map.boxZoom.enable();
+      map.keyboard.enable();
+    } catch {
+      // ignore
+    }
+  };
+
+  // Unified Multi-Stage Satellite Fly-In (Dubai Coastline -> DIAC Corridor -> BPDC Campus Lock)
+  const executeFlyInSequence = (launchTour = true, targetMap?: L.Map) => {
+    const map = targetMap || mapInstanceRef.current;
+    if (!map) return;
+
+    flyinTimeoutsRef.current.forEach((t) => clearTimeout(t));
+    flyinTimeoutsRef.current = [];
+
+    disableMapInteractions(map);
+
+    // Stage 1: High-Altitude UAE & Dubai Coastline Orbital Surveillance (Zoom 10.0)
+    setFlyinStage('dubai');
+    setTargetAlt(64000);
+    setAltMeter(64000);
+    setOpticalZoom('1.0x WIDE');
+    map.setView([25.1950, 55.3000], 10, { animate: false });
+    soundManager.playTacticalClick();
+
+    // Stage 2: Ingress Vector over Dubai International Academic City (DIAC) (Zoom 13.8)
+    const t1 = setTimeout(() => {
+      const activeMap = mapInstanceRef.current;
+      if (!activeMap) return;
+      setFlyinStage('diac');
+      setTargetAlt(7200);
+      setOpticalZoom('8.5x RECON');
+      soundManager.playTacticalClick();
+      activeMap.flyTo([25.1275, 55.4080], 13.8, { duration: 1.8, easeLinearity: 0.25 });
+    }, 1300);
+
+    // Stage 3: Low-Altitude Pinpoint Target Lock into BITS Pilani Dubai Campus (Zoom 16.8)
+    const t2 = setTimeout(() => {
+      const activeMap = mapInstanceRef.current;
+      if (!activeMap) return;
+      setFlyinStage('bpdc');
+      setTargetAlt(320);
+      setOpticalZoom('32.0x FLIR');
+      soundManager.playTargetLock();
+      activeMap.flyTo([CENTER_LAT, CENTER_LNG], 16.8, { duration: 2.0, easeLinearity: 0.25 });
+    }, 3200);
+
+    // Stage 4: Affirmative target lock hold, dissolve HUD, restore controls, launch tour
+    const t3 = setTimeout(() => {
+      setFlyinStage('idle');
+      soundManager.playSonarPing();
+      if (mapInstanceRef.current) {
+        enableMapInteractions(mapInstanceRef.current);
+      }
+      if (launchTour) {
+        startTourRef.current();
+      }
+    }, 5400);
+
+    flyinTimeoutsRef.current.push(t1, t2, t3);
+  };
 
   // Initialize Map
   useEffect(() => {
@@ -175,33 +261,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
       mapInstanceRef.current = map;
 
-      // Automatically launch the cinematic satellite fly-in on site refresh
-      const t1 = setTimeout(() => {
-        setFlyinStage('diac');
-        setTargetAlt(7200);
-        setOpticalZoom('8.5x RECON');
-        soundManager.playTacticalClick();
-        map.flyTo([25.1275, 55.4080], 13.8, { duration: 2.2, easeLinearity: 0.2 });
-      }, 1600);
-
-      const t2 = setTimeout(() => {
-        setFlyinStage('bpdc');
-        setTargetAlt(320);
-        setOpticalZoom('32.0x FLIR');
-        soundManager.playTargetLock();
-        map.flyTo([CENTER_LAT, CENTER_LNG], 17.0, { duration: 2.5, easeLinearity: 0.25 });
-      }, 4000);
-
-      const t3 = setTimeout(() => {
-        setFlyinStage('idle');
-        soundManager.playSonarPing();
-        if (!hasTourStartedRef.current) {
-          hasTourStartedRef.current = true;
-          startTour();
-        }
-      }, 7200);
-
-      flyinTimeoutsRef.current.push(t1, t2, t3);
+      // Automatically launch the cinematic satellite fly-in on site load/refresh
+      executeFlyInSequence(true, map);
     }
 
     return () => {
@@ -212,6 +273,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         perimeterLabelRef.current = null;
       }
       if (mapInstanceRef.current) {
+        enableMapInteractions(mapInstanceRef.current);
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
@@ -513,73 +575,34 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     return () => clearInterval(interval);
   }, [flyinStage, targetAlt]);
 
-  // Cinematic Multi-Stage Satellite Fly-In (Dubai Coastline -> DIAC Corridor -> BPDC Campus Lock)
+  // Manual replay for Cinematic Multi-Stage Satellite Fly-In
   const runCinematicFlyIn = () => {
-    if (!mapInstanceRef.current) return;
-    const map = mapInstanceRef.current;
-
-    flyinTimeoutsRef.current.forEach((t) => clearTimeout(t));
-    flyinTimeoutsRef.current = [];
-
-    soundManager.playTacticalClick();
-
-    // Stage 1: High-Altitude UAE & Dubai Coastline Orbital Surveillance (Zoom 10)
-    setFlyinStage('dubai');
-    setTargetAlt(64000);
-    setAltMeter(64000);
-    setOpticalZoom('1.0x WIDE');
-    map.flyTo([25.1950, 55.3000], 10, { duration: 2.2, easeLinearity: 0.2 });
-
-    // Stage 2: Ingress Vector over Dubai International Academic City (DIAC) (Zoom 13.8)
-    const t1 = setTimeout(() => {
-      setFlyinStage('diac');
-      setTargetAlt(7200);
-      setOpticalZoom('8.5x RECON');
-      soundManager.playTacticalClick();
-      map.flyTo([25.1275, 55.4080], 13.8, { duration: 2.2, easeLinearity: 0.2 });
-    }, 2400);
-
-    // Stage 3: Low-Altitude Pinpoint Target Lock into BITS Pilani Dubai Campus (Zoom 17.0)
-    const t2 = setTimeout(() => {
-      setFlyinStage('bpdc');
-      setTargetAlt(320);
-      setOpticalZoom('32.0x FLIR');
-      soundManager.playTargetLock();
-      map.flyTo([CENTER_LAT, CENTER_LNG], 17.0, { duration: 2.5, easeLinearity: 0.25 });
-    }, 4800);
-
-    // Stage 4: Affirmative target lock hold, then hand over to active interactive deck
-    const t3 = setTimeout(() => {
-      setFlyinStage('idle');
-      soundManager.playSonarPing();
-    }, 8000);
-
-    flyinTimeoutsRef.current.push(t1, t2, t3);
+    executeFlyInSequence(true);
   };
 
   const handleSkipFlyIn = () => {
     flyinTimeoutsRef.current.forEach((t) => clearTimeout(t));
     flyinTimeoutsRef.current = [];
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([CENTER_LAT, CENTER_LNG], 16.5, { duration: 0.5 });
+      enableMapInteractions(mapInstanceRef.current);
+      mapInstanceRef.current.flyTo([CENTER_LAT, CENTER_LNG], 16.5, { duration: 0.35 });
     }
     setFlyinStage('idle');
     soundManager.playTacticalClick();
-    if (!hasTourStartedRef.current) {
-      hasTourStartedRef.current = true;
-      setTimeout(() => startTour(), 400);
-    }
+    startTourRef.current();
   };
 
   // Keyboard shortcut: ESC to skip fly-in anytime
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && flyinStage !== 'idle') {
+        e.preventDefault();
+        e.stopPropagation();
         handleSkipFlyIn();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [flyinStage]);
 
 
