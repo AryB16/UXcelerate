@@ -30,7 +30,10 @@ export const CaseStudyModal: React.FC = () => {
   if (!isCaseStudyOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 md:p-6 animate-fade-in">
+    <div
+      style={{ zIndex: 99990 }}
+      className="fixed inset-0 z-[99990] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 md:p-6 animate-fade-in"
+    >
       <div className="relative w-full max-w-6xl bg-[#080d1a] border border-cyan-500/50 rounded-md overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         
         {/* Modal Header */}

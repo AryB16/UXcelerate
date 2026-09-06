@@ -9,6 +9,10 @@ import {
   Compass,
   Crosshair,
   Shield,
+  ArrowLeftRight,
+  Eye,
+  Map as MapIcon,
+  Maximize2,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 import { RobotTypeIcon } from '../common/TacticalIcons';
@@ -31,6 +35,8 @@ export const RobotFpvModal: React.FC = () => {
   const [gimbalPitch, setGimbalPitch] = useState<number>(-12);
   const [lastAction, setLastAction] = useState<string>('SYSTEM READY');
   const [isArmExtended, setIsArmExtended] = useState<boolean>(false);
+  const [primaryView, setPrimaryView] = useState<'camera' | 'map'>('camera');
+  const [showMinimap, setShowMinimap] = useState<boolean>(true);
 
   const robot = robots.find((r) => r.id === fpvRobotId);
 
@@ -96,10 +102,408 @@ export const RobotFpvModal: React.FC = () => {
     return directions[index];
   };
 
-  const thermalScale = Math.max(0.7, Math.min(1.8, 28 / Math.max(10, Number(distMeters))));
+  const thermalScale = Math.max(0.7, Math.min(2.2, 36 / Math.max(10, Number(distMeters))));
+
+  // Reusable Tactical Blueprint Map SVG
+  const renderTacticalBlueprintSvg = () => (
+    <svg viewBox="0 0 800 640" className="w-full h-full">
+      {/* Blueprint Background Grid */}
+      <defs>
+        <pattern id="tacticalGridMain" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0f172a" strokeWidth="0.8" />
+        </pattern>
+
+        {/* Terrain: Rubble Mound Stipple / Gravel Pattern */}
+        <pattern id="fpvTerrainRubble" width="16" height="16" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="4" r="1" fill="#b45309" opacity="0.3" />
+          <polygon points="10,2 13,5 9,6" fill="#d97706" opacity="0.25" />
+          <polygon points="4,12 7,10 6,14" fill="#92400e" opacity="0.3" />
+          <circle cx="12" cy="12" r="1.5" fill="#f59e0b" opacity="0.2" />
+          <line x1="2" y1="9" x2="5" y2="8" stroke="#78350f" strokeWidth="0.8" opacity="0.4" />
+        </pattern>
+
+        {/* Terrain: Concrete Slab Fracture Pattern */}
+        <pattern id="fpvSlabFracture" width="30" height="30" patternUnits="userSpaceOnUse">
+          <line x1="0" y1="15" x2="12" y2="10" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
+          <line x1="12" y1="10" x2="24" y2="18" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
+          <line x1="12" y1="10" x2="16" y2="0" stroke="#94a3b8" strokeWidth="0.7" opacity="0.2" />
+        </pattern>
+
+        {/* Terrain Elevation Gradient for Collapse Slopes */}
+        <radialGradient id="fpvRubbleGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#d97706" stopOpacity="0.26" />
+          <stop offset="50%" stopColor="#b45309" stopOpacity="0.16" />
+          <stop offset="100%" stopColor="#451a03" stopOpacity="0" />
+        </radialGradient>
+
+        {/* Terrain Water Silt */}
+        <pattern id="fpvWaterSilt" width="24" height="12" patternUnits="userSpaceOnUse">
+          <path d="M 0 6 Q 6 2 12 6 T 24 6" fill="none" stroke="#06b6d4" strokeWidth="0.8" opacity="0.2" />
+        </pattern>
+      </defs>
+      <rect width="800" height="640" fill="url(#tacticalGridMain)" />
+
+      {/* Blueprint Sectors */}
+      <g id="sectors">
+        {/* Sector Alpha - North Wing ER */}
+        <rect x="40" y="40" width="340" height="260" fill="rgba(6, 182, 212, 0.05)" stroke="#0e7490" strokeWidth="1.5" strokeDasharray="5,5" />
+        <text x="52" y="60" fill="#22d3ee" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+          SECTOR ALPHA // NORTH WING ER (STABILIZED)
+        </text>
+
+        {/* Sector Beta - Main Tower Collapse */}
+        <rect x="420" y="40" width="340" height="260" fill="rgba(244, 63, 94, 0.05)" stroke="#be123c" strokeWidth="1.5" strokeDasharray="5,5" />
+        <text x="432" y="60" fill="#fb7185" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+          SECTOR BETA // MAIN TOWER COLLAPSE (UNSTABLE)
+        </text>
+
+        {/* Sector Gamma - Metro Void & Basement */}
+        <rect x="420" y="340" width="340" height="260" fill="rgba(245, 158, 11, 0.05)" stroke="#b45309" strokeWidth="1.5" strokeDasharray="5,5" />
+        <text x="432" y="360" fill="#fcd34d" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+          SECTOR GAMMA // METRO VOID & BASEMENT (CRITICAL TILT)
+        </text>
+
+        {/* Sector Delta - South Courtyard / Staging */}
+        <rect x="40" y="340" width="340" height="260" fill="rgba(16, 185, 129, 0.05)" stroke="#047857" strokeWidth="1.5" strokeDasharray="5,5" />
+        <text x="52" y="360" fill="#6ee7b7" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+          SECTOR DELTA // SOUTH COURTYARD (STAGING)
+        </text>
+      </g>
+
+      {/* Topographic Contours & Debris Fields */}
+      <g id="fpv-terrain" opacity="0.8">
+        {/* Contour Lines */}
+        <path d="M 40 180 C 140 160, 220 220, 360 210 S 520 120, 680 140 S 760 220, 760 250" fill="none" stroke="#334155" strokeWidth="0.8" strokeDasharray="4,3" />
+        <path d="M 440 80 C 490 60, 580 65, 660 85 S 730 160, 710 230 S 610 270, 520 250 S 430 180, 440 80 Z" fill="none" stroke="#ca8a04" strokeWidth="1" strokeDasharray="5,2" />
+        
+        {/* Rubble Mound Peak */}
+        <path d="M 480 110 C 520 90, 590 100, 640 120 S 670 180, 640 210 S 560 235, 510 215 S 465 155, 480 110 Z" fill="url(#fpvRubbleGrad)" stroke="#eab308" strokeWidth="1.1" />
+        <text x="540" y="115" fill="#fde047" fontSize="7" fontFamily="JetBrains Mono" fontWeight="bold">+6.5m PEAK</text>
+
+        {/* Rubble Stipple Poly */}
+        <polygon points="460,85 550,65 680,95 720,170 690,240 580,260 470,220 445,150" fill="url(#fpvTerrainRubble)" stroke="rgba(217, 119, 6, 0.35)" strokeWidth="0.8" />
+
+        {/* Concrete Slabs */}
+        <polygon points="475,130 525,115 540,145 490,160" fill="#1e293b" stroke="#64748b" strokeWidth="1.1" />
+        <polygon points="475,130 525,115 540,145 490,160" fill="url(#fpvSlabFracture)" />
+        <polygon points="550,180 610,165 625,200 565,215" fill="#1e293b" stroke="#64748b" strokeWidth="1.1" />
+        <polygon points="550,180 610,165 625,200 565,215" fill="url(#fpvSlabFracture)" />
+
+        {/* Metro Void Depression */}
+        <ellipse cx="580" cy="470" rx="55" ry="35" fill="#020617" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="2,2" />
+        <text x="580" y="473" textAnchor="middle" fill="#38bdf8" fontSize="7.5" fontFamily="JetBrains Mono" fontWeight="bold">-6.2m METRO BED</text>
+
+        {/* Water Sump Basin in Delta */}
+        <path d="M 120 440 C 180 430, 240 450, 270 480 S 260 540, 220 560 S 130 550, 110 510 S 100 450, 120 440 Z" fill="url(#fpvWaterSilt)" stroke="#0891b2" strokeWidth="1" strokeDasharray="3,2" />
+        <text x="180" y="495" textAnchor="middle" fill="#22d3ee" fontSize="7" fontFamily="JetBrains Mono">FLOODED SUMP</text>
+      </g>
+
+      {/* Main Structural Corridors & Voids */}
+      <g id="corridors">
+        {/* Corridor Alpha-1 */}
+        <line x1="260" y1="150" x2="450" y2="170" stroke="#00e5ff" strokeWidth="8" strokeLinecap="round" opacity="0.45" />
+        <line x1="260" y1="150" x2="450" y2="170" stroke="#080e1b" strokeWidth="4" strokeLinecap="round" />
+        <text x="355" y="154" textAnchor="middle" fill="#22d3ee" fontSize="8" fontFamily="JetBrains Mono">
+          CORRIDOR ALPHA-1 [CLEARED]
+        </text>
+
+        {/* Corridor Beta (Partially Blocked) */}
+        <line x1="450" y1="170" x2="530" y2="160" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" opacity="0.5" />
+        <line x1="450" y1="170" x2="530" y2="160" stroke="#080e1b" strokeWidth="4" strokeLinecap="round" />
+        <text x="490" y="152" textAnchor="middle" fill="#fca5a5" fontSize="8" fontFamily="JetBrains Mono">
+          ⛔ BLOCKED (JOIST COLLAPSE)
+        </text>
+
+        {/* Vertical Conduits */}
+        <line x1="450" y1="170" x2="450" y2="320" stroke="#38bdf8" strokeWidth="6" strokeLinecap="round" opacity="0.4" />
+        <line x1="450" y1="320" x2="590" y2="440" stroke="#f59e0b" strokeWidth="6" strokeLinecap="round" opacity="0.4" />
+      </g>
+
+      {/* Hazards */}
+      <g id="hazards">
+        {hazards?.map((haz) => (
+          <g key={haz.id} transform={`translate(${haz.location.x}, ${haz.location.y})`}>
+            <circle r="16" fill="rgba(245, 158, 11, 0.12)" stroke="#f59e0b" strokeWidth="1" strokeDasharray="3,3" />
+            <circle r="8" fill="#78350f" stroke="#f59e0b" strokeWidth="1.5" />
+            <text y="3" textAnchor="middle" fontSize="9">
+              {haz.type === 'gas_leak' ? '☣' : '⚠'}
+            </text>
+            <rect x="-35" y="12" width="70" height="13" rx="2" fill="#0b0f19" stroke="#f59e0b" strokeWidth="0.8" />
+            <text y="21.5" textAnchor="middle" fill="#fde68a" fontSize="7" fontFamily="JetBrains Mono" fontWeight="bold">
+              {haz.title}
+            </text>
+          </g>
+        ))}
+      </g>
+
+      {/* Survivors */}
+      <g id="survivors">
+        {survivors?.map((surv) => {
+          const isCrit = surv.triage === 'immediate';
+          const strokeCol = isCrit ? '#ef4444' : '#f59e0b';
+          return (
+            <g key={surv.id} transform={`translate(${surv.location.x}, ${surv.location.y})`}>
+              {isCrit && (
+                <circle r="18" fill="none" stroke="#ef4444" strokeWidth="1.5" opacity="0.4" className="animate-ping" />
+              )}
+              <circle r="12" fill={isCrit ? '#2a0c16' : '#221606'} stroke={strokeCol} strokeWidth="1.8" />
+              <text y="4" textAnchor="middle" fontSize="10">❤️</text>
+              <rect x="-24" y="-21" width="48" height="13" rx="2" fill="#0b0f19" stroke={strokeCol} strokeWidth="0.8" />
+              <text y="-12" textAnchor="middle" fill={isCrit ? '#fca5a5' : '#fde68a'} fontSize="7.5" fontFamily="JetBrains Mono" fontWeight="bold">
+                {surv.id}
+              </text>
+            </g>
+          );
+        })}
+      </g>
+
+      {/* Other Swarm Robots */}
+      <g id="other-robots">
+        {robots
+          .filter((r) => r.id !== robot.id)
+          .map((r) => (
+            <g key={r.id} transform={`translate(${r.position.x}, ${r.position.y})`}>
+              <circle r="11" fill="#081426" stroke="#475569" strokeWidth="1.5" />
+              <text y="3.5" textAnchor="middle" fontSize="9">🤖</text>
+              <rect x="-24" y="14" width="48" height="12" rx="2" fill="#0b0f19" stroke="#475569" strokeWidth="0.8" />
+              <text y="22.5" textAnchor="middle" fill="#94a3b8" fontSize="7" fontFamily="JetBrains Mono">
+                {r.name.split('-')[0]}
+              </text>
+            </g>
+          ))}
+      </g>
+
+      {/* Active Controllable Robot */}
+      {(() => {
+        const rad = (teleopHeading * Math.PI) / 180;
+        const coneRadius = 75;
+        const angleSpan = Math.PI / 3.5;
+        const x1 = robot.position.x + coneRadius * Math.sin(rad - angleSpan);
+        const y1 = robot.position.y - coneRadius * Math.cos(rad - angleSpan);
+        const x2 = robot.position.x + coneRadius * Math.sin(rad + angleSpan);
+        const y2 = robot.position.y - coneRadius * Math.cos(rad + angleSpan);
+
+        return (
+          <g id="active-robot-teleop">
+            {/* Active Heading / Sensor Vision Cone */}
+            <path
+              d={`M ${robot.position.x} ${robot.position.y} L ${x1} ${y1} A ${coneRadius} ${coneRadius} 0 0 1 ${x2} ${y2} Z`}
+              fill="rgba(6, 182, 212, 0.28)"
+              stroke="#06b6d4"
+              strokeWidth="1.8"
+              strokeDasharray="4,2"
+            />
+            {/* Direction Center Beam */}
+            <line
+              x1={robot.position.x}
+              y1={robot.position.y}
+              x2={robot.position.x + 48 * Math.sin(rad)}
+              y2={robot.position.y - 48 * Math.cos(rad)}
+              stroke="#38bdf8"
+              strokeWidth="2.5"
+            />
+
+            {/* Concentric Pulse Rings */}
+            <circle
+              cx={robot.position.x}
+              cy={robot.position.y}
+              r="24"
+              fill="none"
+              stroke="#00f0ff"
+              strokeWidth="1"
+              opacity="0.35"
+              className="animate-pulse"
+            />
+
+            {/* Robot Main Chassis Pin */}
+            <circle
+              cx={robot.position.x}
+              cy={robot.position.y}
+              r="15"
+              fill="#0284c7"
+              stroke="#22d3ee"
+              strokeWidth="2.5"
+              className="shadow-lg"
+            />
+            <text
+              x={robot.position.x}
+              y={robot.position.y + 4.5}
+              textAnchor="middle"
+              fontSize="11"
+            >
+              🤖
+            </text>
+
+            {/* Prominent Active Callsign Badge */}
+            <g transform={`translate(${robot.position.x - 38}, ${robot.position.y - 34})`}>
+              <rect width="76" height="17" rx="3" fill="#041224" stroke="#22d3ee" strokeWidth="1.5" />
+              <text x="38" y="11.5" textAnchor="middle" fill="#e0f2fe" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
+                {robot.name} [DRIVE]
+              </text>
+            </g>
+          </g>
+        );
+      })()}
+    </svg>
+  );
+
+  // Reusable Camera Multispectral Feed Renderer
+  const renderCameraFeedContent = (isPrimary: boolean) => (
+    <div className="w-full h-full relative overflow-hidden bg-black flex items-center justify-center select-none scanline">
+      {/* FLIR THERMAL RADIOMETRIC VIEW */}
+      {activeFeed === 'flir' && (
+        <div className="w-full h-full bg-[#080c14] relative flex items-center justify-center">
+          {/* Vignette & Thermal Scan Grid */}
+          <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/40 to-black/80 pointer-events-none" />
+          <div className="absolute inset-4 border border-slate-700/40 rounded pointer-events-none" />
+          
+          {/* Real Radiometric White-Hot Human Body Heat Signature */}
+          <div
+            className="relative flex items-center justify-center transition-transform duration-200"
+            style={{ transform: `scale(${isPrimary ? thermalScale * 1.4 : thermalScale})` }}
+          >
+            <div className="w-36 h-36 rounded-full bg-amber-500/20 blur-2xl" />
+            <div className="w-24 h-24 rounded-full bg-amber-300/40 blur-xl" />
+            <div className="w-12 h-12 rounded-full bg-white/95 blur-xs animate-pulse" />
+            
+            {/* Target acquisition box */}
+            <div className="absolute -inset-4 border border-dashed border-amber-400/80 rounded pointer-events-none" />
+            <div className="absolute -top-8 px-2 py-0.5 rounded bg-black/90 border border-amber-400 text-amber-300 text-[9px] font-mono whitespace-nowrap shadow-lg">
+              ● SPOT [37.1°C] BIO-PROX ({distMeters}m)
+            </div>
+          </div>
+
+          {/* Radiometric Temperature Bar on Right */}
+          <div className="absolute top-4 right-4 text-right font-mono text-[9px] text-slate-300 bg-black/85 p-2 rounded border border-slate-800 shadow-xl">
+            <div className="text-amber-400 font-bold">T_MAX: 38.4°C</div>
+            <div className="text-slate-400">T_MIN: 19.2°C</div>
+            <div className="text-cyan-400">PAL: WHITE-HOT</div>
+            <div className="w-4 h-20 mt-1.5 ml-auto rounded bg-gradient-to-b from-white via-amber-400 to-slate-900 border border-slate-700" />
+          </div>
+
+          {/* Biometric Vital Telemetry Overlay */}
+          {isPrimary && (
+            <div className="absolute bottom-4 left-4 font-mono text-[10px] text-slate-300 bg-black/80 px-3 py-1.5 rounded border border-slate-800 backdrop-blur shadow-lg flex items-center gap-3">
+              <span className="text-rose-400 font-bold flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                SURVIVOR #1 LOCATED
+              </span>
+              <span className="text-slate-600">|</span>
+              <span>EST. SPO2: 94%</span>
+              <span className="text-slate-600">|</span>
+              <span>PULSE: 112 BPM</span>
+              <span className="text-slate-600">|</span>
+              <span>DEPTH: 1.8m VOID</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 3D LIDAR MESH VIEW */}
+      {activeFeed === 'lidar' && (
+        <div className="w-full h-full bg-[#030712] relative flex items-center justify-center">
+          <div className="w-72 h-72 rounded-full border border-cyan-500/20 flex items-center justify-center">
+            <div className="w-52 h-52 rounded-full border border-cyan-500/30 flex items-center justify-center">
+              <div className="w-32 h-32 rounded-full border border-cyan-500/40 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+              </div>
+            </div>
+          </div>
+          <div className="absolute w-72 h-72 rounded-full border-t-2 border-cyan-400 radar-sweep opacity-70" />
+          
+          {/* Range rings markings */}
+          <span className="absolute top-1/2 left-[calc(50%+40px)] text-[8px] font-mono text-cyan-500/80">5m</span>
+          <span className="absolute top-1/2 left-[calc(50%+70px)] text-[8px] font-mono text-cyan-500/80">10m</span>
+          <span className="absolute top-1/2 left-[calc(50%+110px)] text-[8px] font-mono text-cyan-500/80">15m</span>
+
+          <div className="absolute bottom-4 left-4 text-cyan-300 font-mono text-[10px] bg-black/85 px-3 py-1.5 rounded border border-cyan-500/40 shadow-lg">
+            <div>CLEARANCE: {Math.max(0.5, (Number(distMeters) * 0.35)).toFixed(2)}m (FORWARD VOID)</div>
+            <div className="text-[9px] text-slate-400">SLAM DENSITY: 1.42M PTS/SEC</div>
+          </div>
+        </div>
+      )}
+
+      {/* OPTICAL NIGHT VISION VIEW */}
+      {activeFeed === 'optical' && (
+        <div className="w-full h-full bg-[#041209] relative flex items-center justify-center">
+          <div className="text-emerald-500/20 text-4xl select-none font-mono tracking-widest font-bold">NV-NIR 850nm</div>
+          <div className="absolute inset-0 bg-emerald-500/5 mix-blend-color-dodge pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
+          
+          <div className="absolute top-4 right-4 px-2.5 py-1 bg-black/85 border border-emerald-500/60 text-emerald-400 text-[10px] font-mono rounded shadow-lg">
+            <div>OPTICAL GAIN: +18dB</div>
+            <div>EXPOSURE: 1/60s • ISO 12800</div>
+          </div>
+
+          <div className="absolute bottom-4 left-4 px-2.5 py-1 bg-black/85 border border-emerald-500/40 text-emerald-300 text-[9.5px] font-mono rounded">
+            TARGET ILLUMINATION: 850nm IR FLOOD
+          </div>
+        </div>
+      )}
+
+      {/* ACOUSTIC & GAS SPECTROGRAM VIEW */}
+      {activeFeed === 'spectrogram' && (
+        <div className="w-full h-full bg-[#050912] relative flex flex-col justify-center items-center p-6">
+          <div className="w-full max-w-lg h-32 flex items-end gap-1.5 px-3 py-2 border border-emerald-500/30 rounded bg-slate-950/90 shadow-inner">
+            {[28, 42, 65, 88, 100, 76, 52, 28, 38, 58, 82, 94, 68, 42, 18, 33, 62, 85, 45, 20].map((val, i) => (
+              <div
+                key={i}
+                className={`flex-1 rounded-t transition-all duration-150 ${
+                  i === 4 || i === 11 || i === 17 ? 'bg-amber-400 shadow-[0_0_8px_#f59e0b]' : 'bg-emerald-500/80'
+                }`}
+                style={{ height: `${val}%` }}
+              />
+            ))}
+          </div>
+          <div className="flex items-center justify-between w-full max-w-lg mt-3 text-[10px] font-mono px-1">
+            <span className="text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/40">
+              ● 180 Hz VOID RESONANCE (SURVIVOR TAPPING)
+            </span>
+            <span className="text-amber-400 font-bold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/40">
+              CH4 GAS: 520 PPM (SAFE &lt; 1000)
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Universal Crosshair Overlay */}
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+        <Crosshair className="w-12 h-12 text-cyan-400/40" />
+      </div>
+
+      {/* Artificial Horizon Pitch Ladder on Primary Camera View */}
+      {isPrimary && (
+        <div className="absolute inset-y-0 right-1/4 flex flex-col justify-center items-center pointer-events-none select-none text-cyan-400/50 font-mono text-[9px] gap-6">
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-px bg-cyan-400/50" />
+            <span>+20°</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-8 h-px bg-cyan-400/70" />
+            <span>+10°</span>
+          </div>
+          <div className="flex items-center gap-2 text-cyan-300">
+            <div className="w-12 h-0.5 bg-cyan-400" />
+            <span className="font-bold">0° [HORIZON]</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-8 h-px bg-cyan-400/70" />
+            <span>-10°</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-px bg-cyan-400/50" />
+            <span>-20°</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
+    <div
+      style={{ zIndex: 99990 }}
+      className="fixed inset-0 z-[99990] flex items-center justify-center bg-black/90 backdrop-blur-md p-2 md:p-4 animate-fade-in"
+    >
       <div className="relative w-full max-w-5xl bg-[#060a12] border border-cyan-500/40 rounded-md overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         
         {/* Cockpit Top Bar */}
@@ -155,8 +559,9 @@ export const RobotFpvModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Dedicated Sensor Feed Mode Toolbar Strip (Zero overlap with video HUD) */}
-        <div className="px-4 py-2 bg-[#050b14] border-b border-slate-800 flex items-center justify-between text-xs font-mono select-none">
+        {/* Dedicated Sensor Feed Mode & View Controls Toolbar */}
+        <div className="px-4 py-2 bg-[#050b14] border-b border-slate-800 flex items-center justify-between text-xs font-mono select-none gap-2 flex-wrap">
+          {/* Sensor Selectors */}
           <div className="flex items-center gap-1.5 overflow-x-auto">
             <span className="text-slate-400 font-semibold mr-1 hidden sm:inline">MULTISPECTRAL SENSORS:</span>
             <button
@@ -164,7 +569,7 @@ export const RobotFpvModal: React.FC = () => {
                 soundManager.playTacticalClick();
                 setActiveFeed('flir');
               }}
-              className={`px-3 py-1 rounded-sm text-xs font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-sm text-xs font-bold transition-all ${
                 activeFeed === 'flir'
                   ? 'bg-rose-500/20 text-rose-300 border border-rose-500/60'
                   : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
@@ -177,7 +582,7 @@ export const RobotFpvModal: React.FC = () => {
                 soundManager.playTacticalClick();
                 setActiveFeed('lidar');
               }}
-              className={`px-3 py-1 rounded-sm text-xs font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-sm text-xs font-bold transition-all ${
                 activeFeed === 'lidar'
                   ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/60'
                   : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
@@ -190,7 +595,7 @@ export const RobotFpvModal: React.FC = () => {
                 soundManager.playTacticalClick();
                 setActiveFeed('optical');
               }}
-              className={`px-3 py-1 rounded-sm text-xs font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-sm text-xs font-bold transition-all ${
                 activeFeed === 'optical'
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/60'
                   : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
@@ -203,7 +608,7 @@ export const RobotFpvModal: React.FC = () => {
                 soundManager.playTacticalClick();
                 setActiveFeed('spectrogram');
               }}
-              className={`px-3 py-1 rounded-sm text-xs font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-sm text-xs font-bold transition-all ${
                 activeFeed === 'spectrogram'
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/60'
                   : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
@@ -213,19 +618,50 @@ export const RobotFpvModal: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] text-slate-400">
-            <span className="hidden md:inline">ENCODER: HEVC/H.265</span>
-            <span className="text-cyan-400 font-bold bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800">
-              1080p @ 60 FPS
-            </span>
+          {/* View Mode Switching Controls (Swap Camera / Map & Toggle Minimap) */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                soundManager.playTacticalClick();
+                setPrimaryView((prev) => (prev === 'camera' ? 'map' : 'camera'));
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 text-[11px] font-bold transition-all shadow cursor-pointer"
+              title="Toggle between full-screen camera and full-screen map"
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{primaryView === 'camera' ? 'Swap to Map Primary' : 'Swap to Camera Primary'}</span>
+            </button>
+
+            {primaryView === 'camera' && (
+              <button
+                onClick={() => {
+                  soundManager.playTacticalClick();
+                  setShowMinimap(!showMinimap);
+                }}
+                className={`px-2 py-1 rounded text-[11px] font-mono border transition-colors cursor-pointer ${
+                  showMinimap
+                    ? 'bg-slate-900 text-slate-300 border-slate-700 hover:text-white'
+                    : 'bg-cyan-950 text-cyan-300 border-cyan-600 hover:bg-cyan-900'
+                }`}
+                title={showMinimap ? 'Hide map overlay completely' : 'Show map overlay'}
+              >
+                {showMinimap ? 'Hide Map Overlay' : 'Show Map Overlay'}
+              </button>
+            )}
+
+            <div className="hidden lg:flex items-center gap-1.5 text-[10px] text-slate-400 border-l border-slate-800 pl-2">
+              <span className="text-cyan-400 font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800">
+                1080p @ 60 FPS
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Cockpit Main Body */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-0 overflow-y-auto">
           
-          {/* Main Tactical Map Display (3 Columns) */}
-          <div className="lg:col-span-3 relative bg-[#040813] flex flex-col items-center justify-center min-h-[420px] p-2 border-r border-slate-800/80">
+          {/* Main Display Viewport (3 Columns) */}
+          <div className="lg:col-span-3 relative bg-[#040813] flex flex-col items-center justify-center min-h-[420px] md:min-h-[500px] border-r border-slate-800/80 overflow-hidden">
             
             {/* Offline Simulation Overlay if Disconnected */}
             {robot.commsStatus === 'disconnected' && (
@@ -240,7 +676,7 @@ export const RobotFpvModal: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => restoreComms(robot.id)}
-                    className="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold transition-all"
+                    className="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold transition-all cursor-pointer"
                   >
                     Restore Mesh Link (Flush {robot.storeAndForwardBacklog} Pkts)
                   </button>
@@ -248,357 +684,116 @@ export const RobotFpvModal: React.FC = () => {
               </div>
             )}
 
-            {/* Main Overhead Tactical Blueprint Map Canvas */}
-            <div className="w-full h-full relative bg-[#040813] overflow-hidden flex items-center justify-center select-none rounded-md border border-slate-800/60 shadow-inner">
-              
-              {/* Full Tactical SVG Floorplan */}
-              <svg viewBox="0 0 800 640" className="w-full h-full">
-                {/* Blueprint Background Grid */}
-                <defs>
-                  <pattern id="tacticalGridMain" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0f172a" strokeWidth="0.8" />
-                  </pattern>
+            {/* === CASE 1: CAMERA IS PRIMARY (Default & High-Priority UX) === */}
+            {primaryView === 'camera' && (
+              <div className="w-full h-full relative flex items-center justify-center">
+                {/* Main Full-Scale Camera Feed */}
+                {renderCameraFeedContent(true)}
 
-                  {/* Terrain: Rubble Mound Stipple / Gravel Pattern */}
-                  <pattern id="fpvTerrainRubble" width="16" height="16" patternUnits="userSpaceOnUse">
-                    <circle cx="3" cy="4" r="1" fill="#b45309" opacity="0.3" />
-                    <polygon points="10,2 13,5 9,6" fill="#d97706" opacity="0.25" />
-                    <polygon points="4,12 7,10 6,14" fill="#92400e" opacity="0.3" />
-                    <circle cx="12" cy="12" r="1.5" fill="#f59e0b" opacity="0.2" />
-                    <line x1="2" y1="9" x2="5" y2="8" stroke="#78350f" strokeWidth="0.8" opacity="0.4" />
-                  </pattern>
-
-                  {/* Terrain: Concrete Slab Fracture Pattern */}
-                  <pattern id="fpvSlabFracture" width="30" height="30" patternUnits="userSpaceOnUse">
-                    <line x1="0" y1="15" x2="12" y2="10" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
-                    <line x1="12" y1="10" x2="24" y2="18" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
-                    <line x1="12" y1="10" x2="16" y2="0" stroke="#94a3b8" strokeWidth="0.7" opacity="0.2" />
-                  </pattern>
-
-                  {/* Terrain Elevation Gradient for Collapse Slopes */}
-                  <radialGradient id="fpvRubbleGrad" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#d97706" stopOpacity="0.26" />
-                    <stop offset="50%" stopColor="#b45309" stopOpacity="0.16" />
-                    <stop offset="100%" stopColor="#451a03" stopOpacity="0" />
-                  </radialGradient>
-
-                  {/* Terrain Water Silt */}
-                  <pattern id="fpvWaterSilt" width="24" height="12" patternUnits="userSpaceOnUse">
-                    <path d="M 0 6 Q 6 2 12 6 T 24 6" fill="none" stroke="#06b6d4" strokeWidth="0.8" opacity="0.2" />
-                  </pattern>
-                </defs>
-                <rect width="800" height="640" fill="url(#tacticalGridMain)" />
-
-                {/* Blueprint Sectors */}
-                <g id="sectors">
-                  {/* Sector Alpha - North Wing ER */}
-                  <rect x="40" y="40" width="340" height="260" fill="rgba(6, 182, 212, 0.05)" stroke="#0e7490" strokeWidth="1.5" strokeDasharray="5,5" />
-                  <text x="52" y="60" fill="#22d3ee" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                    SECTOR ALPHA // NORTH WING ER (STABILIZED)
-                  </text>
-
-                  {/* Sector Beta - Main Tower Collapse */}
-                  <rect x="420" y="40" width="340" height="260" fill="rgba(244, 63, 94, 0.05)" stroke="#be123c" strokeWidth="1.5" strokeDasharray="5,5" />
-                  <text x="432" y="60" fill="#fb7185" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                    SECTOR BETA // MAIN TOWER COLLAPSE (UNSTABLE)
-                  </text>
-
-                  {/* Sector Gamma - Metro Void & Basement */}
-                  <rect x="420" y="340" width="340" height="260" fill="rgba(245, 158, 11, 0.05)" stroke="#b45309" strokeWidth="1.5" strokeDasharray="5,5" />
-                  <text x="432" y="360" fill="#fcd34d" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                    SECTOR GAMMA // METRO VOID & BASEMENT (CRITICAL TILT)
-                  </text>
-
-                  {/* Sector Delta - South Courtyard / Staging */}
-                  <rect x="40" y="340" width="340" height="260" fill="rgba(16, 185, 129, 0.05)" stroke="#047857" strokeWidth="1.5" strokeDasharray="5,5" />
-                  <text x="52" y="360" fill="#6ee7b7" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                    SECTOR DELTA // SOUTH COURTYARD (STAGING)
-                  </text>
-                </g>
-
-                {/* Topographic Contours & Debris Fields */}
-                <g id="fpv-terrain" opacity="0.8">
-                  {/* Contour Lines */}
-                  <path d="M 40 180 C 140 160, 220 220, 360 210 S 520 120, 680 140 S 760 220, 760 250" fill="none" stroke="#334155" strokeWidth="0.8" strokeDasharray="4,3" />
-                  <path d="M 440 80 C 490 60, 580 65, 660 85 S 730 160, 710 230 S 610 270, 520 250 S 430 180, 440 80 Z" fill="none" stroke="#ca8a04" strokeWidth="1" strokeDasharray="5,2" />
-                  
-                  {/* Rubble Mound Peak */}
-                  <path d="M 480 110 C 520 90, 590 100, 640 120 S 670 180, 640 210 S 560 235, 510 215 S 465 155, 480 110 Z" fill="url(#fpvRubbleGrad)" stroke="#eab308" strokeWidth="1.1" />
-                  <text x="540" y="115" fill="#fde047" fontSize="7" fontFamily="JetBrains Mono" fontWeight="bold">+6.5m PEAK</text>
-
-                  {/* Rubble Stipple Poly */}
-                  <polygon points="460,85 550,65 680,95 720,170 690,240 580,260 470,220 445,150" fill="url(#fpvTerrainRubble)" stroke="rgba(217, 119, 6, 0.35)" strokeWidth="0.8" />
-
-                  {/* Concrete Slabs */}
-                  <polygon points="475,130 525,115 540,145 490,160" fill="#1e293b" stroke="#64748b" strokeWidth="1.1" />
-                  <polygon points="475,130 525,115 540,145 490,160" fill="url(#fpvSlabFracture)" />
-                  <polygon points="550,180 610,165 625,200 565,215" fill="#1e293b" stroke="#64748b" strokeWidth="1.1" />
-                  <polygon points="550,180 610,165 625,200 565,215" fill="url(#fpvSlabFracture)" />
-
-                  {/* Metro Void Depression */}
-                  <ellipse cx="580" cy="470" rx="55" ry="35" fill="#020617" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="2,2" />
-                  <text x="580" y="473" textAnchor="middle" fill="#38bdf8" fontSize="7.5" fontFamily="JetBrains Mono" fontWeight="bold">-6.2m METRO BED</text>
-
-                  {/* Water Sump Basin in Delta */}
-                  <path d="M 120 440 C 180 430, 240 450, 270 480 S 260 540, 220 560 S 130 550, 110 510 S 100 450, 120 440 Z" fill="url(#fpvWaterSilt)" stroke="#0891b2" strokeWidth="1" strokeDasharray="3,2" />
-                  <text x="180" y="495" textAnchor="middle" fill="#22d3ee" fontSize="7" fontFamily="JetBrains Mono">FLOODED SUMP</text>
-                </g>
-
-                {/* Main Structural Corridors & Voids */}
-                <g id="corridors">
-                  {/* Corridor Alpha-1 */}
-                  <line x1="260" y1="150" x2="450" y2="170" stroke="#00e5ff" strokeWidth="8" strokeLinecap="round" opacity="0.45" />
-                  <line x1="260" y1="150" x2="450" y2="170" stroke="#080e1b" strokeWidth="4" strokeLinecap="round" />
-                  <text x="355" y="154" textAnchor="middle" fill="#22d3ee" fontSize="8" fontFamily="JetBrains Mono">
-                    CORRIDOR ALPHA-1 [CLEARED]
-                  </text>
-
-                  {/* Corridor Beta (Partially Blocked) */}
-                  <line x1="450" y1="170" x2="530" y2="160" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" opacity="0.5" />
-                  <line x1="450" y1="170" x2="530" y2="160" stroke="#080e1b" strokeWidth="4" strokeLinecap="round" />
-                  <text x="490" y="152" textAnchor="middle" fill="#fca5a5" fontSize="8" fontFamily="JetBrains Mono">
-                    ⛔ BLOCKED (JOIST COLLAPSE)
-                  </text>
-
-                  {/* Vertical Conduits */}
-                  <line x1="450" y1="170" x2="450" y2="320" stroke="#38bdf8" strokeWidth="6" strokeLinecap="round" opacity="0.4" />
-                  <line x1="450" y1="320" x2="590" y2="440" stroke="#f59e0b" strokeWidth="6" strokeLinecap="round" opacity="0.4" />
-                </g>
-
-                {/* Hazards */}
-                <g id="hazards">
-                  {hazards?.map((haz) => (
-                    <g key={haz.id} transform={`translate(${haz.location.x}, ${haz.location.y})`}>
-                      <circle r="16" fill="rgba(245, 158, 11, 0.12)" stroke="#f59e0b" strokeWidth="1" strokeDasharray="3,3" />
-                      <circle r="8" fill="#78350f" stroke="#f59e0b" strokeWidth="1.5" />
-                      <text y="3" textAnchor="middle" fontSize="9">
-                        {haz.type === 'gas_leak' ? '☣' : '⚠'}
-                      </text>
-                      <rect x="-35" y="12" width="70" height="13" rx="2" fill="#0b0f19" stroke="#f59e0b" strokeWidth="0.8" />
-                      <text y="21.5" textAnchor="middle" fill="#fde68a" fontSize="7" fontFamily="JetBrains Mono" fontWeight="bold">
-                        {haz.title}
-                      </text>
-                    </g>
-                  ))}
-                </g>
-
-                {/* Survivors */}
-                <g id="survivors">
-                  {survivors?.map((surv) => {
-                    const isCrit = surv.triage === 'immediate';
-                    const strokeCol = isCrit ? '#ef4444' : '#f59e0b';
-                    return (
-                      <g key={surv.id} transform={`translate(${surv.location.x}, ${surv.location.y})`}>
-                        {isCrit && (
-                          <circle r="18" fill="none" stroke="#ef4444" strokeWidth="1.5" opacity="0.4" className="animate-ping" />
-                        )}
-                        <circle r="12" fill={isCrit ? '#2a0c16' : '#221606'} stroke={strokeCol} strokeWidth="1.8" />
-                        <text y="4" textAnchor="middle" fontSize="10">❤️</text>
-                        <rect x="-24" y="-21" width="48" height="13" rx="2" fill="#0b0f19" stroke={strokeCol} strokeWidth="0.8" />
-                        <text y="-12" textAnchor="middle" fill={isCrit ? '#fca5a5' : '#fde68a'} fontSize="7.5" fontFamily="JetBrains Mono" fontWeight="bold">
-                          {surv.id}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </g>
-
-                {/* Other Swarm Robots */}
-                <g id="other-robots">
-                  {robots
-                    .filter((r) => r.id !== robot.id)
-                    .map((r) => (
-                      <g key={r.id} transform={`translate(${r.position.x}, ${r.position.y})`}>
-                        <circle r="11" fill="#081426" stroke="#475569" strokeWidth="1.5" />
-                        <text y="3.5" textAnchor="middle" fontSize="9">🤖</text>
-                        <rect x="-24" y="14" width="48" height="12" rx="2" fill="#0b0f19" stroke="#475569" strokeWidth="0.8" />
-                        <text y="22.5" textAnchor="middle" fill="#94a3b8" fontSize="7" fontFamily="JetBrains Mono">
-                          {r.name.split('-')[0]}
-                        </text>
-                      </g>
-                    ))}
-                </g>
-
-                {/* Active Controllable Robot */}
-                {(() => {
-                  const rad = (teleopHeading * Math.PI) / 180;
-                  const coneRadius = 75;
-                  const angleSpan = Math.PI / 3.5;
-                  const x1 = robot.position.x + coneRadius * Math.sin(rad - angleSpan);
-                  const y1 = robot.position.y - coneRadius * Math.cos(rad - angleSpan);
-                  const x2 = robot.position.x + coneRadius * Math.sin(rad + angleSpan);
-                  const y2 = robot.position.y - coneRadius * Math.cos(rad + angleSpan);
-
-                  return (
-                    <g id="active-robot-teleop">
-                      {/* Active Heading / Sensor Vision Cone */}
-                      <path
-                        d={`M ${robot.position.x} ${robot.position.y} L ${x1} ${y1} A ${coneRadius} ${coneRadius} 0 0 1 ${x2} ${y2} Z`}
-                        fill="rgba(6, 182, 212, 0.28)"
-                        stroke="#06b6d4"
-                        strokeWidth="1.8"
-                        strokeDasharray="4,2"
-                      />
-                      {/* Direction Center Beam */}
-                      <line
-                        x1={robot.position.x}
-                        y1={robot.position.y}
-                        x2={robot.position.x + 48 * Math.sin(rad)}
-                        y2={robot.position.y - 48 * Math.cos(rad)}
-                        stroke="#38bdf8"
-                        strokeWidth="2.5"
-                      />
-
-                      {/* Concentric Pulse Rings */}
-                      <circle
-                        cx={robot.position.x}
-                        cy={robot.position.y}
-                        r="24"
-                        fill="none"
-                        stroke="#00f0ff"
-                        strokeWidth="1"
-                        opacity="0.35"
-                        className="animate-pulse"
-                      />
-
-                      {/* Robot Main Chassis Pin */}
-                      <circle
-                        cx={robot.position.x}
-                        cy={robot.position.y}
-                        r="15"
-                        fill="#0284c7"
-                        stroke="#22d3ee"
-                        strokeWidth="2.5"
-                        className="shadow-lg"
-                      />
-                      <text
-                        x={robot.position.x}
-                        y={robot.position.y + 4.5}
-                        textAnchor="middle"
-                        fontSize="11"
-                      >
-                        🤖
-                      </text>
-
-                      {/* Prominent Active Callsign Badge */}
-                      <g transform={`translate(${robot.position.x - 38}, ${robot.position.y - 34})`}>
-                        <rect width="76" height="17" rx="3" fill="#041224" stroke="#22d3ee" strokeWidth="1.5" />
-                        <text x="38" y="11.5" textAnchor="middle" fill="#e0f2fe" fontSize="8" fontFamily="JetBrains Mono" fontWeight="bold">
-                          {robot.name} [DRIVE]
-                        </text>
-                      </g>
-                    </g>
-                  );
-                })()}
-              </svg>
-
-              {/* Top HUD Telemetry Banner */}
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/85 border border-cyan-500/60 px-4 py-1.5 rounded-md font-mono text-[11px] text-cyan-300 backdrop-blur shadow-xl z-10 pointer-events-none select-none">
-                <span className="font-bold text-white tracking-wider flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                  C2 DIRECT DRIVE
-                </span>
-                <span className="text-slate-600">|</span>
-                <span>HDG: {teleopHeading}° {getCompassDirection(teleopHeading)}</span>
-                <span className="text-slate-600">|</span>
-                <span>COORD: [{robot.position.x}, {robot.position.y}]</span>
-                <span className="text-slate-600">|</span>
-                <span className="text-rose-400 font-bold">BIO-PROX: {distMeters}m</span>
-              </div>
-
-              {/* Picture-in-Picture Multispectral Sensor Feed Monitor */}
-              <div className="absolute bottom-4 left-4 z-20 w-72 h-52 bg-[#050912]/95 border-2 border-cyan-500/70 rounded-md shadow-2xl overflow-hidden backdrop-blur flex flex-col select-none scanline">
-                {/* Monitor Header */}
-                <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-900/90 border-b border-cyan-500/40 text-[10px] font-mono text-cyan-300 font-bold shrink-0">
-                  <div className="flex items-center gap-1.5">
+                {/* Top HUD Telemetry Banner */}
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/85 border border-cyan-500/60 px-4 py-1.5 rounded-md font-mono text-[11px] text-cyan-300 backdrop-blur shadow-xl z-10 pointer-events-none select-none">
+                  <span className="font-bold text-white tracking-wider flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                    <span>REC // {activeFeed.toUpperCase()} CAMERA</span>
-                  </div>
-                  <span className="text-slate-400 font-normal">1080p @ 60 FPS</span>
+                    REC // {activeFeed.toUpperCase()} CAMERA
+                  </span>
+                  <span className="text-slate-600">|</span>
+                  <span>HDG: {teleopHeading}° {getCompassDirection(teleopHeading)}</span>
+                  <span className="text-slate-600">|</span>
+                  <span>COORD: [{robot.position.x}, {robot.position.y}]</span>
+                  <span className="text-slate-600">|</span>
+                  <span className="text-rose-400 font-bold">BIO-PROX: {distMeters}m</span>
                 </div>
 
-                {/* Monitor Display Body */}
-                <div className="flex-1 relative overflow-hidden bg-black flex items-center justify-center">
-                  {/* FLIR THERMAL RADIOMETRIC VIEW */}
-                  {activeFeed === 'flir' && (
-                    <div className="w-full h-full bg-[#080c14] relative flex items-center justify-center">
-                      <div className="absolute inset-2 border border-slate-700/40 rounded pointer-events-none" />
-                      {/* Real Radiometric White-Hot Human Body Heat Signature */}
-                      <div
-                        className="relative flex items-center justify-center transition-transform duration-200"
-                        style={{ transform: `scale(${thermalScale})` }}
-                      >
-                        <div className="w-24 h-24 rounded-full bg-amber-500/20 blur-xl" />
-                        <div className="w-16 h-16 rounded-full bg-amber-300/40 blur-lg" />
-                        <div className="w-8 h-8 rounded-full bg-white/95 blur-xs animate-pulse" />
-                        <div className="absolute -top-7 px-1.5 py-0.5 rounded bg-black/90 border border-amber-400 text-amber-300 text-[8px] font-mono">
-                          SPOT [37.1°C] ({distMeters}m)
-                        </div>
+                {/* Corner Minimap Picture-in-Picture (when showMinimap is enabled) */}
+                {showMinimap ? (
+                  <div className="absolute bottom-4 right-4 z-20 w-64 h-48 md:w-72 md:h-52 bg-[#050912]/95 border-2 border-cyan-500/70 rounded-md shadow-2xl overflow-hidden backdrop-blur flex flex-col select-none">
+                    {/* Minimap Header */}
+                    <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-900/90 border-b border-cyan-500/40 text-[10px] font-mono text-cyan-300 font-bold shrink-0">
+                      <div className="flex items-center gap-1.5">
+                        <MapIcon className="w-3 h-3 text-cyan-400" />
+                        <span>MINIMAP // BLUEPRINT</span>
                       </div>
-                      <div className="absolute top-2 right-2 text-right font-mono text-[8px] text-slate-300 bg-black/80 p-1 rounded border border-slate-800">
-                        <div>T_MAX: 38.4°C</div>
-                        <div>PAL: WHITE-HOT</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3D LIDAR MESH VIEW */}
-                  {activeFeed === 'lidar' && (
-                    <div className="w-full h-full bg-[#030712] relative flex items-center justify-center">
-                      <div className="w-40 h-40 rounded-full border border-cyan-500/20 flex items-center justify-center">
-                        <div className="w-28 h-28 rounded-full border border-cyan-500/30 flex items-center justify-center">
-                          <div className="w-16 h-16 rounded-full border border-cyan-500/40 flex items-center justify-center">
-                            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="absolute w-40 h-40 rounded-full border-t-2 border-cyan-400 radar-sweep opacity-60" />
-                      <div className="absolute bottom-2 left-2 text-cyan-300 font-mono text-[9px] bg-black/80 px-2 py-0.5 rounded border border-slate-800">
-                        CLEARANCE: {Math.max(0.5, (Number(distMeters) * 0.35)).toFixed(2)}m
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setPrimaryView('map')}
+                          className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                          title="Maximize Map to Primary View"
+                        >
+                          <Maximize2 className="w-2.5 h-2.5" />
+                          <span className="text-[9px]">Swap</span>
+                        </button>
+                        <button
+                          onClick={() => setShowMinimap(false)}
+                          className="p-0.5 rounded text-slate-400 hover:text-rose-300 hover:bg-slate-800 transition-colors cursor-pointer"
+                          title="Hide Map Overlay"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       </div>
                     </div>
-                  )}
 
-                  {/* OPTICAL NIGHT VISION VIEW */}
-                  {activeFeed === 'optical' && (
-                    <div className="w-full h-full bg-[#041209] relative flex items-center justify-center">
-                      <div className="text-emerald-500/20 text-3xl select-none font-mono tracking-widest">NV-NIR 850nm</div>
-                      <div className="absolute inset-0 bg-emerald-500/5 mix-blend-color-dodge pointer-events-none" />
-                      <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/80 border border-emerald-500/60 text-emerald-400 text-[8px] font-mono rounded">
-                        OPTICAL GAIN +18dB
-                      </div>
+                    {/* Minimap Body */}
+                    <div className="flex-1 relative overflow-hidden bg-[#040813]">
+                      {renderTacticalBlueprintSvg()}
                     </div>
-                  )}
+                  </div>
+                ) : (
+                  /* Discrete button to re-enable minimap if closed */
+                  <button
+                    onClick={() => setShowMinimap(true)}
+                    className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/85 hover:bg-cyan-950 border border-cyan-500/60 text-cyan-300 font-mono text-[10px] font-bold backdrop-blur shadow-xl transition-all cursor-pointer"
+                    title="Show Tactical Minimap"
+                  >
+                    <MapIcon className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Show Map Overlay</span>
+                  </button>
+                )}
+              </div>
+            )}
 
-                  {/* ACOUSTIC & GAS SPECTROGRAM VIEW */}
-                  {activeFeed === 'spectrogram' && (
-                    <div className="w-full h-full bg-[#050912] relative flex flex-col justify-center items-center p-3">
-                      <div className="w-full h-20 flex items-end gap-1 px-2 py-1 border border-emerald-500/30 rounded bg-slate-950/90">
-                        {[28, 42, 65, 88, 100, 76, 52, 28, 38, 58, 82, 94, 68, 42, 18].map((val, i) => (
-                          <div
-                            key={i}
-                            className={`flex-1 rounded-t ${
-                              i === 4 || i === 11 ? 'bg-amber-400' : 'bg-emerald-500/80'
-                            }`}
-                            style={{ height: `${val}%` }}
-                          />
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between w-full mt-1.5 text-[8px] font-mono">
-                        <span className="text-emerald-300">180 Hz TAPPING</span>
-                        <span className="text-amber-400 font-bold">CH4: 520 PPM</span>
-                      </div>
+            {/* === CASE 2: MAP IS PRIMARY (Optional Swapped Layout) === */}
+            {primaryView === 'map' && (
+              <div className="w-full h-full relative bg-[#040813] overflow-hidden flex items-center justify-center select-none">
+                {/* Full Tactical SVG Floorplan */}
+                {renderTacticalBlueprintSvg()}
+
+                {/* Top HUD Telemetry Banner */}
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/85 border border-cyan-500/60 px-4 py-1.5 rounded-md font-mono text-[11px] text-cyan-300 backdrop-blur shadow-xl z-10 pointer-events-none select-none">
+                  <span className="font-bold text-white tracking-wider flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                    TACTICAL FLOORPLAN // SECTOR 4
+                  </span>
+                  <span className="text-slate-600">|</span>
+                  <span>HDG: {teleopHeading}° {getCompassDirection(teleopHeading)}</span>
+                  <span className="text-slate-600">|</span>
+                  <span>COORD: [{robot.position.x}, {robot.position.y}]</span>
+                  <span className="text-slate-600">|</span>
+                  <span className="text-rose-400 font-bold">BIO-PROX: {distMeters}m</span>
+                </div>
+
+                {/* Corner Camera Feed Picture-in-Picture */}
+                <div className="absolute bottom-4 left-4 z-20 w-72 h-52 bg-[#050912]/95 border-2 border-cyan-500/70 rounded-md shadow-2xl overflow-hidden backdrop-blur flex flex-col select-none scanline">
+                  <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-900/90 border-b border-cyan-500/40 text-[10px] font-mono text-cyan-300 font-bold shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                      <span>REC // {activeFeed.toUpperCase()} CAMERA</span>
                     </div>
-                  )}
+                    <button
+                      onClick={() => setPrimaryView('camera')}
+                      className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Maximize Camera to Primary View"
+                    >
+                      <Eye className="w-2.5 h-2.5 text-cyan-400" />
+                      <span className="text-[9px]">Full Camera</span>
+                    </button>
+                  </div>
 
-                  {/* Crosshair Overlay */}
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <Crosshair className="w-8 h-8 text-cyan-400/50" />
+                  <div className="flex-1 relative overflow-hidden bg-black flex items-center justify-center">
+                    {renderCameraFeedContent(false)}
                   </div>
                 </div>
               </div>
-
-            </div>
+            )}
 
           </div>
 

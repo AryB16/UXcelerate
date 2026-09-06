@@ -609,7 +609,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   return (
     <div
       data-tour="tactical-map"
-      className={`relative flex flex-col w-full h-full bg-[#050914] text-slate-100 overflow-hidden font-sans ${
+      className={`relative flex flex-col w-full h-full bg-[#050914] text-slate-100 overflow-hidden font-sans isolate ${
         flyinStage === 'dubai' || flyinStage === 'diac' ? 'flyin-high-altitude' : ''
       }`}
     >

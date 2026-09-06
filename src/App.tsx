@@ -127,7 +127,10 @@ const MissionControlDeck: React.FC = () => {
     <div className="flex flex-col h-screen w-screen bg-[#0d1117] text-slate-100 overflow-hidden font-sans select-none relative">
       {/* Reactive Aftershock Reroute Decision Card */}
       {reroutePrompt && reroutePrompt.isOpen && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 max-w-xl w-[92vw] bg-[#0c1424]/95 border border-amber-500/80 rounded-md p-4 shadow-2xl backdrop-blur animate-in fade-in slide-in-from-top duration-300">
+        <div
+          style={{ zIndex: 99990 }}
+          className="fixed top-14 left-1/2 -translate-x-1/2 z-[99990] max-w-xl w-[92vw] bg-[#0c1424]/95 border border-amber-500/80 rounded-md p-4 shadow-2xl backdrop-blur animate-in fade-in slide-in-from-top duration-300"
+        >
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/40 shrink-0 mt-0.5">
               <AlertTriangle className="w-6 h-6 animate-pulse text-amber-400" />
@@ -204,7 +207,7 @@ const MissionControlDeck: React.FC = () => {
         <div
           className={`${
             mobileTab === 'map' ? 'flex' : 'hidden'
-          } md:flex flex-1 w-full h-full min-w-0 min-h-0 flex-col rounded-md overflow-hidden border border-slate-800/90 shadow-2xl relative ${getTourSpotlightStyle('center')}`}
+          } md:flex flex-1 w-full h-full min-w-0 min-h-0 flex-col rounded-md overflow-hidden border border-slate-800/90 shadow-2xl relative isolate ${getTourSpotlightStyle('center')}`}
         >
           <TacticalMap />
         </div>
