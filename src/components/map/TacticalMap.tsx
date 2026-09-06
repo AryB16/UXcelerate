@@ -18,6 +18,7 @@ import {
   Crosshair,
   AlertTriangle,
   Users,
+  Globe,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 import {
@@ -85,6 +86,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   const [filterHazards, setFilterHazards] = useState<boolean>(true);
   const [filterRoutes, setFilterRoutes] = useState<boolean>(true);
   const [currentZoom, setCurrentZoom] = useState<number>(16);
+  const [flyinStage, setFlyinStage] = useState<'idle' | 'dubai' | 'difc' | 'bpdc'>('idle');
+  const flyinTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // References
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -93,6 +96,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   const markersLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const routesLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const perimeterLayerRef = useRef<L.Rectangle | null>(null);
+  const perimeterLabelRef = useRef<L.Marker | null>(null);
 
   // Initialize Map
   useEffect(() => {
@@ -104,7 +108,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         zoom: 17,
         zoomControl: false,
         attributionControl: false,
-        minZoom: 13,
+        minZoom: 10,
         maxZoom: 19,
       });
 
@@ -130,12 +134,31 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
         fillOpacity: 0.18,
       }).addTo(map);
 
-      perimeter.bindTooltip('DISASTER PERIMETER // BITS PILANI DUBAI CAMPUS', {
-        permanent: false,
-        direction: 'top',
-        className: 'tactical-tooltip-perimeter',
-      });
       perimeterLayerRef.current = perimeter;
+
+      // Permanent Outside Label for Disaster Perimeter BPDC
+      // Pinned directly above the northern boundary line, completely outside the perimeter box
+      const centerLng = (BOUNDS_WEST + BOUNDS_EAST) / 2;
+      const perimeterLabel = L.marker([BOUNDS_NORTH, centerLng], {
+        icon: L.divIcon({
+          className: 'tactical-perimeter-label-icon',
+          html: `
+            <div class="disaster-perimeter-outside-label">
+              <div class="dp-tag-pill">
+                <span class="dp-ping-dot"></span>
+                <span class="dp-title">DISASTER PERIMETER // BPDC</span>
+                <span class="dp-badge">SECTOR 4</span>
+              </div>
+              <div class="dp-sub">BITS PILANI DUBAI CAMPUS • RESTRICTED C2 ZONE</div>
+              <div class="dp-pointer">▼</div>
+            </div>
+          `,
+          iconSize: [0, 0],
+          iconAnchor: [0, 0],
+        }),
+        interactive: false,
+      }).addTo(map);
+      perimeterLabelRef.current = perimeterLabel;
 
       // Layer groups for markers and routes
       routesLayerGroupRef.current = L.layerGroup().addTo(map);
@@ -149,6 +172,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     }
 
     return () => {
+      flyinTimeoutsRef.current.forEach((t) => clearTimeout(t));
+      flyinTimeoutsRef.current = [];
+      if (perimeterLabelRef.current) {
+        perimeterLabelRef.current.remove();
+        perimeterLabelRef.current = null;
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -439,6 +468,76 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     }
   };
 
+  // Cinematic Multi-Stage Satellite Fly-In (Dubai -> DIFC -> BITS Pilani Dubai Campus)
+  const runCinematicFlyIn = () => {
+    if (!mapInstanceRef.current) return;
+    const map = mapInstanceRef.current;
+
+    flyinTimeoutsRef.current.forEach((t) => clearTimeout(t));
+    flyinTimeoutsRef.current = [];
+
+    soundManager.playTacticalClick();
+
+    // Stage 1: High-Altitude Dubai Reconnaissance (Persian Gulf Coastline & Metropolis)
+    setFlyinStage('dubai');
+    map.flyTo([25.2048, 55.2708], 11, { duration: 2.0, easeLinearity: 0.25 });
+
+    // Stage 2: Zooming into DIFC & Downtown Dubai Central Corridor
+    const t1 = setTimeout(() => {
+      setFlyinStage('difc');
+      soundManager.playTacticalClick();
+      map.flyTo([25.2048, 55.2708], 13.8, { duration: 2.0, easeLinearity: 0.25 });
+    }, 2200);
+
+    // Stage 3: Low-Altitude Swoop into BITS Pilani Dubai Campus (DIAC Sector 4)
+    const t2 = setTimeout(() => {
+      setFlyinStage('bpdc');
+      soundManager.playSonarPing();
+      map.flyTo([CENTER_LAT, CENTER_LNG], 16.5, { duration: 2.4, easeLinearity: 0.25 });
+    }, 4500);
+
+    // Stage 4: Settle and hand over to active interactive deck
+    const t3 = setTimeout(() => {
+      setFlyinStage('idle');
+      soundManager.playTacticalClick();
+    }, 7200);
+
+    flyinTimeoutsRef.current.push(t1, t2, t3);
+  };
+
+  const handleSkipFlyIn = () => {
+    flyinTimeoutsRef.current.forEach((t) => clearTimeout(t));
+    flyinTimeoutsRef.current = [];
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([CENTER_LAT, CENTER_LNG], 16.5, { duration: 0.5 });
+    }
+    setFlyinStage('idle');
+    soundManager.playTacticalClick();
+  };
+
+  // Keyboard shortcut: ESC to skip fly-in anytime
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && flyinStage !== 'idle') {
+        handleSkipFlyIn();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [flyinStage]);
+
+  // Trigger once on initial session load
+  useEffect(() => {
+    const hasSeen = sessionStorage.getItem('aegis_bpdc_flyin_seen');
+    if (!hasSeen && mapInstanceRef.current) {
+      sessionStorage.setItem('aegis_bpdc_flyin_seen', 'true');
+      const timer = setTimeout(() => {
+        runCinematicFlyIn();
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
 
   return (
     <div
@@ -489,6 +588,14 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             >
               Satellite
             </button>
+            <button
+              onClick={runCinematicFlyIn}
+              className="px-2.5 py-0.5 rounded text-[10px] font-bold transition-all flex items-center gap-1.5 text-cyan-300 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.35)] ml-1 cursor-pointer"
+              title="Trigger Cinematic Satellite Fly-In (Dubai -> DIFC -> BITS Pilani Dubai Campus)"
+            >
+              <Globe className="w-3 h-3 text-cyan-400 animate-spin-slow" />
+              <span>RECON FLY-IN</span>
+            </button>
           </div>
 
 
@@ -499,6 +606,92 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
       <div className="relative flex-1 w-full h-full min-h-0">
         {/* Leaflet DOM Node Container */}
         <div ref={mapContainerRef} className="w-full h-full" style={{ background: '#050914' }} />
+
+        {/* Cinematic Recon Fly-In HUD Overlay */}
+        {flyinStage !== 'idle' && (
+          <div className="cinematic-recon-hud">
+            {/* Corner Targeting Brackets */}
+            <div className="recon-corner recon-corner-tl" />
+            <div className="recon-corner recon-corner-tr" />
+            <div className="recon-corner recon-corner-bl" />
+            <div className="recon-corner recon-corner-br" />
+
+            {/* Center Target Lock Reticle */}
+            <div className="recon-crosshair-center">
+              <div className="recon-reticle-ring" />
+              <div className="recon-reticle-ring-inner" />
+              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+              <div className="recon-scan-line" />
+            </div>
+
+            {/* Top Mission HUD Telemetry */}
+            <div className="flex items-start justify-between z-10 select-none">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+                  <span className="text-xs font-bold tracking-widest text-cyan-300 bg-cyan-950/90 px-2.5 py-1 rounded border border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+                    {flyinStage === 'dubai'
+                      ? 'SATELLITE RECON // THEATRE: DUBAI METROPOLIS'
+                      : flyinStage === 'difc'
+                      ? 'TRANSIT CORRIDOR // DIFC & DOWNTOWN SECTOR'
+                      : 'TARGET LOCKED // BITS PILANI DUBAI CAMPUS (BPDC)'}
+                  </span>
+                </div>
+                <div className="text-[10.5px] text-slate-200 bg-black/75 px-2.5 py-1 rounded border border-slate-700/70 max-w-lg backdrop-blur shadow-lg">
+                  {flyinStage === 'dubai' && (
+                    <span>HIGH-ALTITUDE OPTICAL DOWNLINK ACTIVE • RECON OVER THEATRE & GULF COASTLINE</span>
+                  )}
+                  {flyinStage === 'difc' && (
+                    <span>TRANSIT VECTOR CONFIRMED • TRAVERSING DOWNTOWN AXIS TOWARDS DIAC SECTOR 4</span>
+                  )}
+                  {flyinStage === 'bpdc' && (
+                    <span className="text-rose-400 font-bold">DISASTER PERIMETER ACQUIRED • SECTOR 4 COLLAPSE EPICENTER CONFIRMED</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Skip Button */}
+              <button
+                onClick={handleSkipFlyIn}
+                className="pointer-events-auto px-3.5 py-1.5 rounded bg-slate-900/95 hover:bg-slate-800 text-slate-200 hover:text-white border border-cyan-500/50 hover:border-cyan-400 text-xs font-bold font-mono transition-all shadow-[0_0_12px_rgba(0,0,0,0.8)] cursor-pointer"
+              >
+                SKIP INTRO [ESC]
+              </button>
+            </div>
+
+            {/* Bottom Live Flight Telemetry Ticker */}
+            <div className="flex items-end justify-between z-10 text-[10px] text-cyan-300/90 select-none">
+              <div className="bg-black/80 px-3 py-1.5 rounded border border-cyan-500/40 backdrop-blur flex items-center gap-4 shadow-lg">
+                <div>
+                  <span className="text-slate-400">COORDS: </span>
+                  <span className="font-bold text-slate-100">
+                    {flyinStage === 'bpdc'
+                      ? '25.1312° N, 55.4190° E'
+                      : '25.2048° N, 55.2708° E'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">ALTITUDE: </span>
+                  <span className="font-bold text-amber-400">
+                    {flyinStage === 'dubai'
+                      ? '42,000m (ORBIT)'
+                      : flyinStage === 'difc'
+                      ? '8,400m (DESCENT)'
+                      : '380m (TACTICAL)'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">OPTICAL: </span>
+                  <span className="font-bold text-emerald-400">8K MULTISPECTRAL FLIR</span>
+                </div>
+              </div>
+
+              <div className="text-right text-[9px] text-slate-400 hidden sm:block font-mono bg-black/60 px-2 py-1 rounded border border-slate-800">
+                AEGIS-USAR // SATELLITE COMMAND DOWNLINK • PROTOCOL 9
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Top-Left Floating Filter Buttons */}
         <div className="absolute top-3 left-3 z-30 flex items-center gap-1.5 bg-[#08101e]/90 p-1 rounded-md border border-cyan-500/30 backdrop-blur shadow-lg font-mono text-[10px]">
