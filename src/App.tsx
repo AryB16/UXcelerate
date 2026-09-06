@@ -14,7 +14,6 @@ import {
   Terminal,
   Bot,
   Heart,
-  X,
 } from 'lucide-react';
 
 const MissionControlDeck: React.FC = () => {

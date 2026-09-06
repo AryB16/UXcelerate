@@ -9,8 +9,6 @@ import {
   Radio,
   Heart,
   Eye,
-  ArrowUp,
-  ArrowDown,
 } from 'lucide-react';
 
 export const InteractiveTour: React.FC = () => {

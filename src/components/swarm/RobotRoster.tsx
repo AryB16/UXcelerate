@@ -8,7 +8,6 @@ import {
   Signal,
   Eye,
   Radio,
-  Navigation,
   Bot,
   Compass,
   RotateCw,

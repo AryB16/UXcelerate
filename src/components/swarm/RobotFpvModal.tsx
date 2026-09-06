@@ -2,19 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useMission } from '../../store/MissionContext';
 import {
   X,
-  Eye,
   Radio,
   Wifi,
   WifiOff,
   Battery,
-  AlertTriangle,
   Compass,
-  Maximize2,
   Crosshair,
-  Volume2,
-  Flame,
   Shield,
-  RotateCcw,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 
@@ -70,7 +64,7 @@ export const RobotFpvModal: React.FC = () => {
       <div className="relative w-full max-w-5xl bg-[#060a12] border border-cyan-500/40 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(6,182,212,0.25)] flex flex-col max-h-[92vh]">
         
         {/* Cockpit Top Bar */}
-        <div className="flex items-center justify-between px-4 py-3 bg-slate-900/90 border-b border-cyan-500/30 font-mono">
+        <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900/90 border-b border-cyan-500/30 font-mono select-none">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse" />
             <div>
@@ -84,7 +78,7 @@ export const RobotFpvModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Center telemetry telemetry chips */}
+          {/* Center telemetry chips */}
           <div className="hidden md:flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1.5 text-slate-300">
               <Battery className="w-4 h-4 text-emerald-400" />
@@ -95,7 +89,7 @@ export const RobotFpvModal: React.FC = () => {
               {robot.commsStatus === 'disconnected' ? (
                 <span className="text-rose-400 font-bold flex items-center gap-1">
                   <WifiOff className="w-4 h-4 text-rose-500 animate-ping" />
-                  GHOST OFFLINE ({robot.storeAndForwardBacklog} PKTS QUEUED)
+                  GHOST OFFLINE ({robot.storeAndForwardBacklog} PKTS BUFFERED)
                 </span>
               ) : (
                 <span className="text-emerald-400 flex items-center gap-1">
@@ -114,9 +108,76 @@ export const RobotFpvModal: React.FC = () => {
           <button
             onClick={closeFpv}
             className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            title="Return to Tactical Map (ESC)"
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Dedicated Sensor Feed Mode Toolbar Strip (Zero overlap with video HUD) */}
+        <div className="px-4 py-2 bg-[#050b14] border-b border-slate-800 flex items-center justify-between text-xs font-mono select-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            <span className="text-slate-400 font-semibold mr-1 hidden sm:inline">MULTISPECTRAL SENSORS:</span>
+            <button
+              onClick={() => {
+                soundManager.playTacticalClick();
+                setActiveFeed('flir');
+              }}
+              className={`px-3 py-1 rounded text-xs font-bold transition-all ${
+                activeFeed === 'flir'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/60 shadow-[0_0_10px_rgba(244,63,94,0.25)]'
+                  : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+              }`}
+            >
+              FLIR Thermal (37.1°C)
+            </button>
+            <button
+              onClick={() => {
+                soundManager.playTacticalClick();
+                setActiveFeed('lidar');
+              }}
+              className={`px-3 py-1 rounded text-xs font-bold transition-all ${
+                activeFeed === 'lidar'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/60 shadow-[0_0_10px_rgba(6,182,212,0.25)]'
+                  : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+              }`}
+            >
+              3D LiDAR Radar
+            </button>
+            <button
+              onClick={() => {
+                soundManager.playTacticalClick();
+                setActiveFeed('optical');
+              }}
+              className={`px-3 py-1 rounded text-xs font-bold transition-all ${
+                activeFeed === 'optical'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
+                  : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+              }`}
+            >
+              Night Optical (NIR)
+            </button>
+            <button
+              onClick={() => {
+                soundManager.playTacticalClick();
+                setActiveFeed('spectrogram');
+              }}
+              className={`px-3 py-1 rounded text-xs font-bold transition-all ${
+                activeFeed === 'spectrogram'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/60 shadow-[0_0_10px_rgba(245,158,11,0.25)]'
+                  : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+              }`}
+            >
+              Acoustic & Hazmat
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] text-slate-400">
+            <span className="hidden md:inline">ENCODER: HEVC/H.265</span>
+            <span className="text-cyan-400 font-bold bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800">
+              1080p @ 60 FPS
+            </span>
+          </div>
         </div>
 
         {/* Cockpit Main Body */}
@@ -125,50 +186,6 @@ export const RobotFpvModal: React.FC = () => {
           {/* Main Simulated Camera / Sensor Stream (3 Columns) */}
           <div className="lg:col-span-3 relative bg-black flex flex-col items-center justify-center min-h-[380px] p-4 border-r border-slate-800/80 scanline">
             
-            {/* Feed Mode Switcher */}
-            <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-lg border border-slate-700 text-xs font-mono">
-              <button
-                onClick={() => setActiveFeed('flir')}
-                className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  activeFeed === 'flir'
-                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                FLIR Thermal
-              </button>
-              <button
-                onClick={() => setActiveFeed('lidar')}
-                className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  activeFeed === 'lidar'
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                3D LiDAR Mesh
-              </button>
-              <button
-                onClick={() => setActiveFeed('optical')}
-                className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  activeFeed === 'optical'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Night Optical
-              </button>
-              <button
-                onClick={() => setActiveFeed('spectrogram')}
-                className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  activeFeed === 'spectrogram'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Acoustic & Hazmat
-              </button>
-            </div>
-
             {/* Offline Simulation Overlay if Disconnected */}
             {robot.commsStatus === 'disconnected' && (
               <div className="absolute inset-0 z-30 bg-black/85 flex flex-col items-center justify-center p-6 text-center border border-rose-500/30">
@@ -210,10 +227,10 @@ export const RobotFpvModal: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* FLIR Radiometric Calibration Overlay */}
-                  <div className="absolute top-4 right-14 text-right font-mono text-[10px] text-slate-400 leading-tight">
+                  {/* FLIR Radiometric Calibration Overlay (Top-Right) */}
+                  <div className="absolute top-4 right-14 text-right font-mono text-[10px] text-slate-300 bg-black/80 p-2 rounded-lg border border-slate-800 leading-tight backdrop-blur shadow-lg">
                     <div>T_MAX: <span className="text-white font-bold">38.4°C</span></div>
-                    <div>T_MIN: <span className="text-slate-500">14.1°C</span></div>
+                    <div>T_MIN: <span className="text-slate-400">14.1°C</span></div>
                     <div>EMISSIVITY: <span className="text-cyan-400">ε 0.98</span></div>
                     <div>PALETTE: <span className="text-amber-400">WHITE-HOT</span></div>
                   </div>
@@ -245,7 +262,7 @@ export const RobotFpvModal: React.FC = () => {
                   <div className="absolute top-1/4 left-1/3 w-3 h-3 rounded-full bg-cyan-400 blur-[1px]" />
                   <div className="absolute top-1/3 left-1/2 w-4 h-4 rounded-full bg-cyan-300 blur-[1px]" />
                   <div className="absolute bottom-1/3 right-1/3 w-5 h-5 rounded-full bg-cyan-400 blur-[1px]" />
-                  <div className="absolute bottom-6 left-6 text-cyan-300 font-mono text-xs">
+                  <div className="absolute bottom-6 left-6 text-cyan-300 font-mono text-xs bg-black/80 px-2.5 py-1 rounded border border-slate-800 backdrop-blur">
                     OBSTACLE RADAR: FORWARD CLEARANCE 1.42m
                   </div>
                 </div>
@@ -256,7 +273,7 @@ export const RobotFpvModal: React.FC = () => {
                 <div className="w-full h-full bg-[#041209] relative flex items-center justify-center">
                   <div className="text-emerald-500/20 text-7xl select-none font-mono tracking-widest">NV-NIR 850nm</div>
                   <div className="absolute inset-0 bg-emerald-500/5 mix-blend-color-dodge pointer-events-none" />
-                  <div className="absolute top-4 right-6 px-2 py-1 bg-black/90 border border-emerald-500/60 text-emerald-400 text-xs font-mono">
+                  <div className="absolute top-4 right-6 px-2.5 py-1.5 bg-black/80 border border-emerald-500/60 text-emerald-400 text-xs font-mono rounded-lg backdrop-blur shadow-lg">
                     OPTICAL GAIN: +18dB // AUTO-EXPOSURE
                   </div>
                 </div>
@@ -292,12 +309,12 @@ export const RobotFpvModal: React.FC = () => {
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                 <Crosshair className="w-14 h-14 text-cyan-400/60" />
                 
-                {/* Clean Top-Left Recording & Live Stream Badge (Zero Overlap with Top-Right telemetry) */}
-                <div className="absolute top-4 left-4 flex items-center gap-2 font-mono text-xs text-rose-400 bg-black/80 px-3 py-1.5 rounded-lg border border-rose-500/40 backdrop-blur shadow-xl">
+                {/* Clean Top-Left Recording & Live Stream Badge */}
+                <div className="absolute top-4 left-4 flex items-center gap-2 font-mono text-xs text-rose-400 bg-black/80 px-3 py-1.5 rounded-lg border border-rose-500/50 backdrop-blur shadow-xl">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
                   <span className="font-bold text-white tracking-wider">REC</span>
                   <span className="text-slate-500">•</span>
-                  <span className="text-cyan-300 text-[11px] font-semibold">LIVE SLAM FEED [1080p @ 60FPS]</span>
+                  <span className="text-cyan-300 text-[11px] font-semibold">LIVE SLAM FEED</span>
                 </div>
 
                 <div className="absolute bottom-4 right-4 text-slate-300 bg-black/75 px-2.5 py-1 rounded-md border border-slate-800 font-mono text-[10px] backdrop-blur">

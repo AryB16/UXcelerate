@@ -6,9 +6,7 @@ import {
   Activity,
   AlertOctagon,
   Clock,
-  Layers,
   Send,
-  UserCheck,
   CheckCircle2,
   X,
 } from 'lucide-react';

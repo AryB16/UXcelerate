@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMission } from '../../store/MissionContext';
 import {
   X,
   BookOpen,
   Users,
-  Compass,
   Layers,
   Palette,
   CheckCircle2,
@@ -12,14 +11,21 @@ import {
   Radio,
   Cpu,
   Heart,
-  AlertTriangle,
-  ArrowRight,
 } from 'lucide-react';
 
 export const CaseStudyModal: React.FC = () => {
-  const { isCaseStudyOpen, setIsCaseStudyOpen, activeCaseStudyTab, setActiveCaseStudyTab } = useMission();
+  const { isCaseStudyOpen, setIsCaseStudyOpen, activeCaseStudyTab } = useMission();
 
   const [currentTab, setCurrentTab] = useState<string>(activeCaseStudyTab || 'summary');
+
+  useEffect(() => {
+    if (!isCaseStudyOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsCaseStudyOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCaseStudyOpen, setIsCaseStudyOpen]);
 
   if (!isCaseStudyOpen) return null;
 

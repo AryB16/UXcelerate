@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   Info,
   CheckCircle2,
-  Filter,
 } from 'lucide-react';
 
 export const TacticalLogFeed: React.FC = () => {

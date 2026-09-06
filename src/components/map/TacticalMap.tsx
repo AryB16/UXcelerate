@@ -11,11 +11,7 @@ import {
   Maximize2,
   Minimize2,
   X,
-  Heart,
-  AlertTriangle,
   Send,
-  WifiOff,
-  Navigation,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 

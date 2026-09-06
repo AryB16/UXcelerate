@@ -6,9 +6,6 @@ import {
   Flame,
   Zap,
   Navigation,
-  CheckCircle,
-  XCircle,
-  Sparkles,
   ShieldAlert,
   ArrowRight,
 } from 'lucide-react';

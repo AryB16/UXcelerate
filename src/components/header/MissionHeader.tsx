@@ -1,7 +1,6 @@
 import React from 'react';
 import { useMission } from '../../store/MissionContext';
 import {
-  ShieldAlert,
   Wifi,
   WifiOff,
   Radio,
