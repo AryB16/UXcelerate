@@ -161,23 +161,23 @@ export const RobotFpvModal: React.FC = () => {
                 onClick={() => setActiveFeed('spectrogram')}
                 className={`px-2.5 py-1 rounded font-medium transition-colors ${
                   activeFeed === 'spectrogram'
-                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Spectrogram & Gas
+                Acoustic & Hazmat
               </button>
             </div>
 
             {/* Offline Simulation Overlay if Disconnected */}
             {robot.commsStatus === 'disconnected' && (
-              <div className="absolute inset-0 z-30 bg-black/75 flex flex-col items-center justify-center p-6 text-center">
+              <div className="absolute inset-0 z-30 bg-black/85 flex flex-col items-center justify-center p-6 text-center border border-rose-500/30">
                 <WifiOff className="w-12 h-12 text-rose-500 mb-3 animate-bounce" />
                 <h3 className="text-lg font-bold text-rose-400 font-mono tracking-wider">
-                  DIRECT VIDEO FEED SEVERED
+                  DIRECT VIDEO CARRIER SEVERED
                 </h3>
                 <p className="text-xs text-slate-300 font-mono max-w-md mt-1 mb-4">
-                  Robot is operating on Autonomous Void Exploration Protocol. Local LiDAR & Thermal frames are being stored in on-board flash buffer.
+                  Robot operating under Autonomous Void Protocol (INSARAG-AVP). Local LiDAR & FLIR frames are continuously buffered to on-board flash NVRAM.
                 </p>
                 <div className="flex items-center gap-3">
                   <button
@@ -193,27 +193,37 @@ export const RobotFpvModal: React.FC = () => {
             {/* Simulated Multispectral Visualizations */}
             <div className="w-full h-full relative flex items-center justify-center overflow-hidden rounded-lg">
               
-              {/* FLIR THERMAL VIEW */}
+              {/* FLIR THERMAL RADIOMETRIC VIEW (Real-World White-Hot / Ironbow) */}
               {activeFeed === 'flir' && (
-                <div className="w-full h-full bg-gradient-to-tr from-purple-950 via-slate-950 to-indigo-950 relative flex items-center justify-center">
-                  {/* Rubble outline contours */}
-                  <div className="absolute inset-4 border border-purple-800/40 rounded" />
+                <div className="w-full h-full bg-[#080c14] relative flex items-center justify-center">
+                  {/* Rubble structural contours */}
+                  <div className="absolute inset-6 border border-slate-700/50 rounded pointer-events-none" />
+                  <div className="absolute top-10 left-12 w-64 h-32 border-b border-r border-slate-800 pointer-events-none" />
                   
-                  {/* Simulated Human Body Heat Signature */}
+                  {/* Real Radiometric White-Hot Human Body Heat Signature */}
                   <div className="relative flex items-center justify-center">
-                    <div className="w-32 h-32 rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-yellow-300 opacity-80 blur-xl animate-pulse" />
-                    <div className="w-16 h-16 rounded-full bg-yellow-200 opacity-90 blur-md" />
-                    <div className="absolute -top-8 px-2 py-0.5 rounded bg-black/80 border border-amber-400 text-amber-300 text-[10px] font-mono">
-                      HOTSPOT: 37.1°C (HUMAN BIO-THERMAL)
+                    <div className="w-36 h-36 rounded-full bg-amber-500/20 blur-2xl" />
+                    <div className="w-24 h-24 rounded-full bg-amber-300/40 blur-xl" />
+                    <div className="w-12 h-12 rounded-full bg-white/95 blur-xs animate-pulse" />
+                    <div className="absolute -top-10 px-2.5 py-1 rounded bg-black/90 border border-amber-400 text-amber-300 text-[10px] font-mono tracking-wide">
+                      SPOT [37.1°C] // BIO-THERMAL SIGNATURE
                     </div>
                   </div>
 
-                  {/* Temperature scale bar on the right */}
-                  <div className="absolute right-4 top-16 bottom-16 w-4 rounded bg-gradient-to-t from-blue-600 via-yellow-400 to-rose-600 flex flex-col justify-between items-center text-[8px] font-mono text-white p-0.5 shadow">
-                    <span>45°</span>
-                    <span>37°</span>
-                    <span>20°</span>
-                    <span>0°</span>
+                  {/* FLIR Radiometric Calibration Overlay */}
+                  <div className="absolute top-4 right-14 text-right font-mono text-[10px] text-slate-400 leading-tight">
+                    <div>T_MAX: <span className="text-white font-bold">38.4°C</span></div>
+                    <div>T_MIN: <span className="text-slate-500">14.1°C</span></div>
+                    <div>EMISSIVITY: <span className="text-cyan-400">ε 0.98</span></div>
+                    <div>PALETTE: <span className="text-amber-400">WHITE-HOT</span></div>
+                  </div>
+
+                  {/* Technical Radiometric Scale Bar */}
+                  <div className="absolute right-4 top-14 bottom-14 w-3.5 rounded bg-gradient-to-t from-slate-900 via-amber-700 to-white flex flex-col justify-between items-center text-[7px] font-mono text-slate-950 font-bold p-0.5 border border-slate-700">
+                    <span className="text-black">40°</span>
+                    <span className="text-amber-300">37°</span>
+                    <span className="text-white">25°</span>
+                    <span className="text-white">10°</span>
                   </div>
                 </div>
               )}
@@ -243,30 +253,37 @@ export const RobotFpvModal: React.FC = () => {
 
               {/* OPTICAL NIGHT VISION VIEW */}
               {activeFeed === 'optical' && (
-                <div className="w-full h-full bg-emerald-950/40 relative flex items-center justify-center">
-                  <div className="text-emerald-400/30 text-8xl select-none font-mono">NV-NIR</div>
+                <div className="w-full h-full bg-[#041209] relative flex items-center justify-center">
+                  <div className="text-emerald-500/20 text-7xl select-none font-mono tracking-widest">NV-NIR 850nm</div>
                   <div className="absolute inset-0 bg-emerald-500/5 mix-blend-color-dodge pointer-events-none" />
-                  <div className="absolute top-6 right-6 px-2 py-1 bg-black/80 border border-emerald-500 text-emerald-400 text-xs font-mono">
-                    GAIN: +18dB // 850nm NIR ILLUMINATOR ON
+                  <div className="absolute top-4 right-6 px-2 py-1 bg-black/90 border border-emerald-500/60 text-emerald-400 text-xs font-mono">
+                    OPTICAL GAIN: +18dB // AUTO-EXPOSURE
                   </div>
                 </div>
               )}
 
-              {/* SPECTROGRAM & GAS ANALYSIS VIEW */}
+              {/* ACOUSTIC & GAS SPECTROGRAM VIEW (Phosphor Green / Amber) */}
               {activeFeed === 'spectrogram' && (
-                <div className="w-full h-full bg-slate-950 relative flex flex-col justify-center items-center p-6">
-                  <div className="w-full max-w-md h-32 flex items-end gap-1 px-4 py-2 border border-purple-500/30 rounded bg-purple-950/20">
-                    {[32, 45, 68, 92, 100, 78, 55, 30, 42, 60, 85, 95, 70, 45, 20].map((val, i) => (
+                <div className="w-full h-full bg-[#050912] relative flex flex-col justify-center items-center p-6">
+                  <div className="w-full max-w-md h-32 flex items-end gap-1 px-4 py-2 border border-emerald-500/30 rounded bg-slate-950/90 shadow-inner">
+                    {[28, 42, 65, 88, 100, 76, 52, 28, 38, 58, 82, 94, 68, 42, 18].map((val, i) => (
                       <div
                         key={i}
-                        className="flex-1 bg-purple-400/80 rounded-t"
+                        className={`flex-1 rounded-t transition-all ${
+                          i === 4 || i === 11 ? 'bg-amber-400' : 'bg-emerald-500/80'
+                        }`}
                         style={{ height: `${val}%` }}
                       />
                     ))}
                   </div>
                   <div className="flex items-center justify-between w-full max-w-md mt-3 text-xs font-mono">
-                    <span className="text-purple-300">ACOUSTIC PEAK: 180 Hz (RHYTHMIC TAPPING)</span>
-                    <span className="text-amber-400 font-bold">CH4: 520 PPM (ELEVATED)</span>
+                    <span className="text-emerald-300 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      GEOPHONE: 180 Hz VOID TAPPING (INSARAG PATTERN)
+                    </span>
+                    <span className="text-amber-400 font-bold bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/40">
+                      CH4: 520 PPM (10.4% LEL)
+                    </span>
                   </div>
                 </div>
               )}

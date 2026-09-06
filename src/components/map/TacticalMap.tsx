@@ -134,7 +134,7 @@ export const TacticalMap: React.FC = () => {
             onClick={() => toggleLayer('routes')}
             className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
               layers.routes
-                ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
                 : 'bg-slate-800/50 text-slate-500 border-slate-700/50'
             }`}
           >

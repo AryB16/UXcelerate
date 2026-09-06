@@ -177,10 +177,10 @@ export const MissionHeader: React.FC = () => {
           {/* UX Case Study & Evaluation Deck Button */}
           <button
             onClick={() => setIsCaseStudyOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium text-xs shadow-[0_0_15px_rgba(6,182,212,0.35)] transition-all transform hover:scale-[1.02]"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs tracking-wider border border-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)] transition-all font-mono uppercase"
           >
-            <BookOpen className="w-4 h-4" />
-            <span className="font-semibold tracking-wide">UX Case Study</span>
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>UX Case Study</span>
           </button>
 
         </div>
