@@ -255,6 +255,34 @@ export const RobotFpvModal: React.FC = () => {
                   <pattern id="tacticalGridMain" width="40" height="40" patternUnits="userSpaceOnUse">
                     <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0f172a" strokeWidth="0.8" />
                   </pattern>
+
+                  {/* Terrain: Rubble Mound Stipple / Gravel Pattern */}
+                  <pattern id="fpvTerrainRubble" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <circle cx="3" cy="4" r="1" fill="#b45309" opacity="0.3" />
+                    <polygon points="10,2 13,5 9,6" fill="#d97706" opacity="0.25" />
+                    <polygon points="4,12 7,10 6,14" fill="#92400e" opacity="0.3" />
+                    <circle cx="12" cy="12" r="1.5" fill="#f59e0b" opacity="0.2" />
+                    <line x1="2" y1="9" x2="5" y2="8" stroke="#78350f" strokeWidth="0.8" opacity="0.4" />
+                  </pattern>
+
+                  {/* Terrain: Concrete Slab Fracture Pattern */}
+                  <pattern id="fpvSlabFracture" width="30" height="30" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="15" x2="12" y2="10" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
+                    <line x1="12" y1="10" x2="24" y2="18" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
+                    <line x1="12" y1="10" x2="16" y2="0" stroke="#94a3b8" strokeWidth="0.7" opacity="0.2" />
+                  </pattern>
+
+                  {/* Terrain Elevation Gradient for Collapse Slopes */}
+                  <radialGradient id="fpvRubbleGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#d97706" stopOpacity="0.26" />
+                    <stop offset="50%" stopColor="#b45309" stopOpacity="0.16" />
+                    <stop offset="100%" stopColor="#451a03" stopOpacity="0" />
+                  </radialGradient>
+
+                  {/* Terrain Water Silt */}
+                  <pattern id="fpvWaterSilt" width="24" height="12" patternUnits="userSpaceOnUse">
+                    <path d="M 0 6 Q 6 2 12 6 T 24 6" fill="none" stroke="#06b6d4" strokeWidth="0.8" opacity="0.2" />
+                  </pattern>
                 </defs>
                 <rect width="800" height="640" fill="url(#tacticalGridMain)" />
 
@@ -283,6 +311,34 @@ export const RobotFpvModal: React.FC = () => {
                   <text x="52" y="360" fill="#6ee7b7" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
                     SECTOR DELTA // SOUTH COURTYARD (STAGING)
                   </text>
+                </g>
+
+                {/* Topographic Contours & Debris Fields */}
+                <g id="fpv-terrain" opacity="0.8">
+                  {/* Contour Lines */}
+                  <path d="M 40 180 C 140 160, 220 220, 360 210 S 520 120, 680 140 S 760 220, 760 250" fill="none" stroke="#334155" strokeWidth="0.8" strokeDasharray="4,3" />
+                  <path d="M 440 80 C 490 60, 580 65, 660 85 S 730 160, 710 230 S 610 270, 520 250 S 430 180, 440 80 Z" fill="none" stroke="#ca8a04" strokeWidth="1" strokeDasharray="5,2" />
+                  
+                  {/* Rubble Mound Peak */}
+                  <path d="M 480 110 C 520 90, 590 100, 640 120 S 670 180, 640 210 S 560 235, 510 215 S 465 155, 480 110 Z" fill="url(#fpvRubbleGrad)" stroke="#eab308" strokeWidth="1.1" />
+                  <text x="540" y="115" fill="#fde047" fontSize="7" fontFamily="JetBrains Mono" fontWeight="bold">+6.5m PEAK</text>
+
+                  {/* Rubble Stipple Poly */}
+                  <polygon points="460,85 550,65 680,95 720,170 690,240 580,260 470,220 445,150" fill="url(#fpvTerrainRubble)" stroke="rgba(217, 119, 6, 0.35)" strokeWidth="0.8" />
+
+                  {/* Concrete Slabs */}
+                  <polygon points="475,130 525,115 540,145 490,160" fill="#1e293b" stroke="#64748b" strokeWidth="1.1" />
+                  <polygon points="475,130 525,115 540,145 490,160" fill="url(#fpvSlabFracture)" />
+                  <polygon points="550,180 610,165 625,200 565,215" fill="#1e293b" stroke="#64748b" strokeWidth="1.1" />
+                  <polygon points="550,180 610,165 625,200 565,215" fill="url(#fpvSlabFracture)" />
+
+                  {/* Metro Void Depression */}
+                  <ellipse cx="580" cy="470" rx="55" ry="35" fill="#020617" stroke="#0284c7" strokeWidth="1.2" strokeDasharray="2,2" />
+                  <text x="580" y="473" textAnchor="middle" fill="#38bdf8" fontSize="7.5" fontFamily="JetBrains Mono" fontWeight="bold">-6.2m METRO BED</text>
+
+                  {/* Water Sump Basin in Delta */}
+                  <path d="M 120 440 C 180 430, 240 450, 270 480 S 260 540, 220 560 S 130 550, 110 510 S 100 450, 120 440 Z" fill="url(#fpvWaterSilt)" stroke="#0891b2" strokeWidth="1" strokeDasharray="3,2" />
+                  <text x="180" y="495" textAnchor="middle" fill="#22d3ee" fontSize="7" fontFamily="JetBrains Mono">FLOODED SUMP</text>
                 </g>
 
                 {/* Main Structural Corridors & Voids */}

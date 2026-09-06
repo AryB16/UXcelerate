@@ -10,6 +10,7 @@ import {
   Minimize2,
   X,
   AlertTriangle,
+  Mountain,
 } from 'lucide-react';
 import { soundManager } from '../../utils/sound';
 
@@ -194,6 +195,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <span className={`w-1.5 h-1.5 rounded-full ${layers.routes ? 'bg-sky-400' : 'bg-slate-600'}`}></span>
             <span>Routes</span>
           </button>
+
+          <button
+            onClick={() => toggleLayer('terrain')}
+            className={`px-2 py-0.5 rounded-sm transition-all flex items-center gap-1.5 ${
+              layers.terrain
+                ? 'bg-amber-500/20 text-amber-300 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Elevation Contours, Rubble Mounds, Cratering & Debris Slopes"
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${layers.terrain ? 'bg-amber-400' : 'bg-slate-600'}`}></span>
+            <span>Terrain</span>
+          </button>
         </div>
 
         {/* Right: Actions & Expand */}
@@ -316,6 +330,44 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <pattern id="tacGrid" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" opacity="0.5" />
             </pattern>
+
+            {/* Terrain: Rubble Mound Stipple / Gravel Pattern */}
+            <pattern id="terrainRubbleStipple" width="16" height="16" patternUnits="userSpaceOnUse">
+              <circle cx="3" cy="4" r="1" fill="#b45309" opacity="0.3" />
+              <polygon points="10,2 13,5 9,6" fill="#d97706" opacity="0.25" />
+              <polygon points="4,12 7,10 6,14" fill="#92400e" opacity="0.3" />
+              <circle cx="12" cy="12" r="1.5" fill="#f59e0b" opacity="0.2" />
+              <line x1="2" y1="9" x2="5" y2="8" stroke="#78350f" strokeWidth="0.8" opacity="0.4" />
+            </pattern>
+
+            {/* Terrain: Mud / Sump / Water Silt Shading */}
+            <pattern id="terrainWaterSilt" width="24" height="12" patternUnits="userSpaceOnUse">
+              <path d="M 0 6 Q 6 2 12 6 T 24 6" fill="none" stroke="#06b6d4" strokeWidth="0.8" opacity="0.22" />
+              <path d="M 0 12 Q 6 8 12 12 T 24 12" fill="none" stroke="#0284c7" strokeWidth="0.6" opacity="0.18" />
+            </pattern>
+
+            {/* Terrain: Concrete Slab Fracture Pattern */}
+            <pattern id="terrainSlabFracture" width="30" height="30" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="15" x2="12" y2="10" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
+              <line x1="12" y1="10" x2="24" y2="18" stroke="#94a3b8" strokeWidth="0.9" opacity="0.25" />
+              <line x1="12" y1="10" x2="16" y2="0" stroke="#94a3b8" strokeWidth="0.7" opacity="0.2" />
+              <line x1="24" y1="18" x2="30" y2="14" stroke="#94a3b8" strokeWidth="0.7" opacity="0.2" />
+            </pattern>
+
+            {/* Terrain Elevation Gradient for Collapse Slopes */}
+            <radialGradient id="rubbleMoundGrad" cx="50%" cy="50%" r="50%" fx="40%" fy="40%">
+              <stop offset="0%" stopColor="#d97706" stopOpacity="0.28" />
+              <stop offset="45%" stopColor="#b45309" stopOpacity="0.18" />
+              <stop offset="80%" stopColor="#78350f" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#451a03" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Terrain Depression / Sinkhole Radial Gradient */}
+            <radialGradient id="sinkholeGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#020617" stopOpacity="0.85" />
+              <stop offset="60%" stopColor="#0f172a" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
+            </radialGradient>
 
             {/* Glowing marker filter */}
             <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
@@ -582,6 +634,220 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                 </g>
               )}
             </g>
+
+            {/* ========================================================= */}
+            {/* 1B. TERRAIN, TOPOGRAPHY & DEBRIS FIELD LAYER              */}
+            {/* ========================================================= */}
+            {layers.terrain && (
+              <g id="terrain-layer" className="transition-opacity duration-300">
+                {/* 1. Topographic Elevation Contour Lines */}
+                <g id="terrain-contours" opacity="0.65">
+                  {/* Outer Low Grade Contours (+1.0m, +2.0m) */}
+                  <path
+                    d="M 40 180 C 140 160, 220 220, 360 210 S 520 120, 680 140 S 760 220, 760 250"
+                    fill="none"
+                    stroke="#475569"
+                    strokeWidth="0.9"
+                    strokeDasharray="4,3"
+                  />
+                  <text x="180" y="172" fill="#64748b" fontSize="6.5" fontFamily="JetBrains Mono">+1.0m EL</text>
+                  <text x="640" y="132" fill="#64748b" fontSize="6.5" fontFamily="JetBrains Mono">+2.0m EL</text>
+
+                  <path
+                    d="M 50 240 C 160 220, 260 260, 380 250 S 560 170, 700 190 S 750 270, 750 290"
+                    fill="none"
+                    stroke="#475569"
+                    strokeWidth="0.8"
+                    strokeDasharray="2,2"
+                  />
+
+                  {/* Mid-Elevation Ridge (+3.5m, +5.0m) around Sector Beta Collapse Pile */}
+                  <path
+                    d="M 440 80 C 490 60, 580 65, 660 85 S 730 160, 710 230 S 610 270, 520 250 S 430 180, 440 80 Z"
+                    fill="none"
+                    stroke="#ca8a04"
+                    strokeWidth="1.1"
+                    strokeDasharray="5,2"
+                  />
+                  <text x="670" y="95" fill="#eab308" fontSize="6.5" fontFamily="JetBrains Mono">+3.5m RIDGE</text>
+
+                  {/* High Peak Rubble Mound (+6.5m EL) - Summit */}
+                  <path
+                    d="M 480 110 C 520 90, 590 100, 640 120 S 670 180, 640 210 S 560 235, 510 215 S 465 155, 480 110 Z"
+                    fill="url(#rubbleMoundGrad)"
+                    stroke="#eab308"
+                    strokeWidth="1.3"
+                  />
+                  <text x="540" y="115" fill="#fde047" fontSize="7" fontFamily="JetBrains Mono" fontWeight="bold">+6.5m PEAK</text>
+
+                  {/* Subterranean Depression / Metro Void Contours (-2.0m, -4.5m, -6.0m) in Sector Gamma */}
+                  <path
+                    d="M 440 370 C 500 350, 640 360, 710 390 S 740 480, 720 540 S 610 570, 520 560 S 430 460, 440 370 Z"
+                    fill="none"
+                    stroke="#0284c7"
+                    strokeWidth="0.9"
+                    strokeDasharray="3,3"
+                  />
+                  <text x="630" y="375" fill="#38bdf8" fontSize="6.5" fontFamily="JetBrains Mono">-2.0m DEPRESSION</text>
+
+                  <path
+                    d="M 480 400 C 530 380, 630 390, 670 420 S 690 490, 660 525 S 570 545, 510 530 S 460 460, 480 400 Z"
+                    fill="url(#sinkholeGrad)"
+                    stroke="#0369a1"
+                    strokeWidth="1.2"
+                  />
+                  <text x="545" y="415" fill="#7dd3fc" fontSize="7" fontFamily="JetBrains Mono" fontWeight="bold">-4.5m VOID CHASM</text>
+
+                  <ellipse
+                    cx="580"
+                    cy="470"
+                    rx="55"
+                    ry="35"
+                    fill="#020617"
+                    stroke="#0284c7"
+                    strokeWidth="1.4"
+                    strokeDasharray="2,2"
+                  />
+                  <text x="580" y="473" textAnchor="middle" fill="#38bdf8" fontSize="7.5" fontFamily="JetBrains Mono" fontWeight="bold">
+                    -6.2m METRO BED
+                  </text>
+                </g>
+
+                {/* 2. Pancake Collapse Rubble Mounds & Concrete Slabs */}
+                <g id="terrain-rubble-fields">
+                  {/* Primary Collapse Ridge in Sector Beta */}
+                  <polygon
+                    points="460,85 550,65 680,95 720,170 690,240 580,260 470,220 445,150"
+                    fill="url(#terrainRubbleStipple)"
+                    stroke="rgba(217, 119, 6, 0.4)"
+                    strokeWidth="1"
+                  />
+
+                  {/* Concrete Slabs (Tilted Slabs & Structural Debris) */}
+                  <g id="tilted-concrete-slabs">
+                    {/* Slab 1 (Sector Beta north) */}
+                    <polygon
+                      points="475,130 525,115 540,145 490,160"
+                      fill="#1e293b"
+                      stroke="#64748b"
+                      strokeWidth="1.2"
+                      opacity="0.9"
+                    />
+                    <polygon
+                      points="475,130 525,115 540,145 490,160"
+                      fill="url(#terrainSlabFracture)"
+                      opacity="0.8"
+                    />
+                    <text x="507" y="140" textAnchor="middle" fill="#94a3b8" fontSize="6" fontFamily="JetBrains Mono">
+                      SLAB 14° TILT
+                    </text>
+
+                    {/* Slab 2 (Sector Beta near Corridor) */}
+                    <polygon
+                      points="550,180 610,165 625,200 565,215"
+                      fill="#1e293b"
+                      stroke="#64748b"
+                      strokeWidth="1.2"
+                      opacity="0.9"
+                    />
+                    <polygon
+                      points="550,180 610,165 625,200 565,215"
+                      fill="url(#terrainSlabFracture)"
+                      opacity="0.8"
+                    />
+                    <text x="587" y="193" textAnchor="middle" fill="#94a3b8" fontSize="6" fontFamily="JetBrains Mono">
+                      SLAB 22° TILT
+                    </text>
+
+                    {/* Slab 3 (Sector Gamma Metro Entry) */}
+                    <polygon
+                      points="450,420 500,405 515,435 465,450"
+                      fill="#1e293b"
+                      stroke="#64748b"
+                      strokeWidth="1.2"
+                      opacity="0.9"
+                    />
+                    <polygon
+                      points="450,420 500,405 515,435 465,450"
+                      fill="url(#terrainSlabFracture)"
+                      opacity="0.8"
+                    />
+                    <text x="482" y="430" textAnchor="middle" fill="#94a3b8" fontSize="6" fontFamily="JetBrains Mono">
+                      OVERHANG
+                    </text>
+                  </g>
+
+                  {/* Debris field micro-clusters */}
+                  {[
+                    { cx: 480, cy: 95, r: 18 },
+                    { cx: 620, cy: 110, r: 24 },
+                    { cx: 670, cy: 190, r: 20 },
+                    { cx: 530, cy: 230, r: 16 },
+                    { cx: 490, cy: 280, r: 14 },
+                    { cx: 380, cy: 210, r: 15 },
+                  ].map((cluster, i) => (
+                    <circle
+                      key={`debris-cluster-${i}`}
+                      cx={cluster.cx}
+                      cy={cluster.cy}
+                      r={cluster.r}
+                      fill="url(#terrainRubbleStipple)"
+                      stroke="#d97706"
+                      strokeWidth="0.8"
+                      strokeDasharray="2,2"
+                      opacity="0.75"
+                    />
+                  ))}
+                </g>
+
+                {/* 3. Flooded Sump / Water Mud Basin in Sector Delta / Lower Utility */}
+                <g id="terrain-water-sump">
+                  <path
+                    d="M 120 440 C 180 430, 240 450, 270 480 S 260 540, 220 560 S 130 550, 110 510 S 100 450, 120 440 Z"
+                    fill="rgba(6, 182, 212, 0.08)"
+                    stroke="#0891b2"
+                    strokeWidth="1.2"
+                    strokeDasharray="4,2"
+                  />
+                  <path
+                    d="M 120 440 C 180 430, 240 450, 270 480 S 260 540, 220 560 S 130 550, 110 510 S 100 450, 120 440 Z"
+                    fill="url(#terrainWaterSilt)"
+                  />
+                  <text x="180" y="495" textAnchor="middle" fill="#22d3ee" fontSize="7.5" fontFamily="JetBrains Mono" fontWeight="bold">
+                    FLOODED SUMP (0.8m WATER)
+                  </text>
+                  <text x="180" y="507" textAnchor="middle" fill="#67e8f9" fontSize="6.5" fontFamily="JetBrains Mono">
+                    AMPHIBIOUS ROVER CLEARED
+                  </text>
+                </g>
+
+                {/* 4. Terrain Passability / Slope Gradient Markers */}
+                <g id="terrain-slope-vectors" opacity="0.85">
+                  {/* Steep Slope Incline Indicators (Sector Beta) */}
+                  <g transform="translate(630, 150)">
+                    <rect x="-24" y="-7" width="48" height="14" rx="2" fill="#1c1306" stroke="#d97706" strokeWidth="0.8" />
+                    <text x="0" y="3" textAnchor="middle" fill="#fbbf24" fontSize="6.5" fontFamily="JetBrains Mono" fontWeight="bold">
+                      ▲ 34° GRADE
+                    </text>
+                  </g>
+
+                  <g transform="translate(490, 190)">
+                    <rect x="-22" y="-7" width="44" height="14" rx="2" fill="#1c1306" stroke="#d97706" strokeWidth="0.8" />
+                    <text x="0" y="3" textAnchor="middle" fill="#fbbf24" fontSize="6.5" fontFamily="JetBrains Mono" fontWeight="bold">
+                      ▲ 26° GRADE
+                    </text>
+                  </g>
+
+                  {/* Deep Vertical Drop Indicator (Sector Gamma Metro Void) */}
+                  <g transform="translate(580, 430)">
+                    <rect x="-26" y="-7" width="52" height="14" rx="2" fill="#031628" stroke="#0284c7" strokeWidth="0.8" />
+                    <text x="0" y="3" textAnchor="middle" fill="#38bdf8" fontSize="6.5" fontFamily="JetBrains Mono" fontWeight="bold">
+                      ▼ -4.2m DROP
+                    </text>
+                  </g>
+                </g>
+              </g>
+            )}
 
             {/* ========================================================= */}
             {/* 2. ROUTES & CORRIDORS (Tactical Dual-Line Conduits)       */}
@@ -1608,6 +1874,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-0.5 rounded-sm bg-rose-500" />
               <span>Blocked</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-1.5 rounded-sm border border-amber-500/60 bg-amber-500/20" />
+              <span>Terrain</span>
             </div>
           </div>
         </div>

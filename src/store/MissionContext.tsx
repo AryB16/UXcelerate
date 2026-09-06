@@ -20,6 +20,7 @@ export interface MapLayersState {
   routes: boolean;
   vitals: boolean;
   staleness: boolean;
+  terrain: boolean;
 }
 
 interface MissionContextType {
@@ -100,6 +101,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     routes: true,
     vitals: true,
     staleness: true,
+    terrain: true,
   });
 
   const [selectedRobotId, setSelectedRobotId] = useState<string | null>(null);
