@@ -312,7 +312,7 @@ const MissionControlDeck: React.FC = () => {
 
       {/* Organized Left Side Strip: Quick Robot Fleet Summary */}
       {!isLeftRosterOpen && (
-        <aside className="hidden md:flex fixed top-24 left-3 z-30 flex-col w-56 bg-[#111722]/95 border border-slate-700/80 hover:border-cyan-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-left duration-200">
+        <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-3 z-30 flex-col w-56 bg-[#111722]/95 border border-slate-700/80 hover:border-cyan-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-left duration-200">
           {/* Header click opens panel */}
           <button
             onClick={() => setIsLeftRosterOpen(true)}
@@ -385,7 +385,7 @@ const MissionControlDeck: React.FC = () => {
 
       {/* Organized Right Side Strip: Quick Survivors & Rescue Queue Summary */}
       {!isRightPanelOpen && (
-        <aside className="hidden md:flex fixed top-24 right-3 z-30 flex-col w-56 bg-[#111722]/95 border border-slate-700/80 hover:border-rose-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-right duration-200">
+        <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-3 z-30 flex-col w-56 bg-[#111722]/95 border border-slate-700/80 hover:border-rose-500/80 rounded-md shadow-2xl backdrop-blur select-none transition-all animate-in fade-in slide-in-from-right duration-200">
           {/* Header click opens panel */}
           <button
             onClick={() => setIsRightPanelOpen(true)}
