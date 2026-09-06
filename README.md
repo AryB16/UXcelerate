@@ -22,7 +22,7 @@
 ---
 
 ### 🌐 **[👉 LAUNCH LIVE PRODUCTION MISSION CONTROL 👈](https://uxcelerate.vercel.app/)**
-*(Zero installation required. Runs directly in any modern browser on desktop or mobile.)*
+*uxcelerate.vercel.app*
 
 </div>
 
