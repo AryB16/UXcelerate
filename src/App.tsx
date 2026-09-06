@@ -27,6 +27,14 @@ const MissionControlDeck: React.FC = () => {
   } = useMission();
 
   const [rightPanelTab, setRightPanelTab] = useState<'survivors' | 'hazards' | 'logs'>('survivors');
+  const [isMapExpanded, setIsMapExpanded] = useState<boolean>(false);
+
+  // If tour opens, reset map expansion so panels can be spotlighted
+  useEffect(() => {
+    if (isTourOpen) {
+      setIsMapExpanded(false);
+    }
+  }, [isTourOpen]);
 
   // Determine if a section should be spotlighted or blurred during the interactive tour
   const getTourSpotlightStyle = (section: 'header' | 'left' | 'center' | 'right' | 'footer') => {
@@ -69,6 +77,8 @@ const MissionControlDeck: React.FC = () => {
       if (e.key === ' ' && !isFpvOpen && !isTourOpen) {
         e.preventDefault();
         toggleSimPaused();
+      } else if ((e.key === 'm' || e.key === 'M') && !isFpvOpen && !isTourOpen) {
+        setIsMapExpanded((prev) => !prev);
       } else if (e.key >= '1' && e.key <= '6' && !isFpvOpen && !isTourOpen) {
         const idx = parseInt(e.key, 10) - 1;
         if (robots[idx]) {
@@ -81,7 +91,7 @@ const MissionControlDeck: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [robots, selectRobot, toggleSimPaused, setIsCaseStudyOpen, isFpvOpen, isTourOpen]);
+  }, [robots, selectRobot, toggleSimPaused, setIsCaseStudyOpen, isFpvOpen, isTourOpen, setIsMapExpanded]);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#05080f] text-slate-100 overflow-hidden font-sans select-none">
@@ -90,21 +100,27 @@ const MissionControlDeck: React.FC = () => {
         <MissionHeader />
       </div>
 
-      {/* Main 3-Column Command Deck Layout */}
+      {/* Main Command Deck Layout */}
       <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-2 p-2 min-h-0 overflow-hidden">
         
-        {/* LEFT COLUMN: Swarm Tele-Ops Roster (3 of 12 cols on desktop) */}
-        <div className={`hidden md:flex md:col-span-3 h-full min-h-0 ${getTourSpotlightStyle('left')}`}>
-          <RobotRoster />
+        {/* LEFT COLUMN: Swarm Tele-Ops Roster (3 of 12 cols, hidden when map expanded) */}
+        {!isMapExpanded && (
+          <div className={`hidden md:flex md:col-span-3 h-full min-h-0 ${getTourSpotlightStyle('left')}`}>
+            <RobotRoster />
+          </div>
+        )}
+
+        {/* CENTER COLUMN: Tactical Disaster Map (6 cols or full 12 cols when expanded) */}
+        <div className={`col-span-1 ${isMapExpanded ? 'md:col-span-12' : 'md:col-span-6'} h-full min-h-0 flex flex-col ${getTourSpotlightStyle('center')}`}>
+          <TacticalMap
+            isExpanded={isMapExpanded}
+            onToggleExpand={() => setIsMapExpanded((prev) => !prev)}
+          />
         </div>
 
-        {/* CENTER COLUMN: Tactical Disaster Map (6 of 12 cols on desktop) */}
-        <div className={`col-span-1 md:col-span-6 h-full min-h-0 flex flex-col ${getTourSpotlightStyle('center')}`}>
-          <TacticalMap />
-        </div>
-
-        {/* RIGHT COLUMN: Triage, Hazards & Incident Log (3 of 12 cols on desktop) */}
-        <div className={`hidden md:flex md:col-span-3 h-full min-h-0 flex-col gap-2 ${getTourSpotlightStyle('right')}`}>
+        {/* RIGHT COLUMN: Triage, Hazards & Incident Log (3 of 12 cols, hidden when map expanded) */}
+        {!isMapExpanded && (
+          <div className={`hidden md:flex md:col-span-3 h-full min-h-0 flex-col gap-2 ${getTourSpotlightStyle('right')}`}>
           
           {/* Top Half: Survivor Triage Queue */}
           <div className="flex-1 min-h-0">
@@ -147,8 +163,8 @@ const MissionControlDeck: React.FC = () => {
               )}
             </div>
           </div>
-
         </div>
+      )}
 
       </main>
 
@@ -157,7 +173,8 @@ const MissionControlDeck: React.FC = () => {
         <div className="flex items-center gap-4">
           <span>KEYBOARD SHORTCUTS:</span>
           <span><kbd className="px-1 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">1-6</kbd> Select Robot</span>
-          <span><kbd className="px-1 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">SPACE</kbd> Pause/Resume Sim</span>
+          <span><kbd className="px-1 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">M</kbd> Expand/Restore Map</span>
+          <span><kbd className="px-1 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">SPACE</kbd> Pause Sim</span>
           <span><kbd className="px-1 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">W A S D</kbd> Direct Tele-Op in FPV</span>
           <span><kbd className="px-1 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">?</kbd> Open UX Case Study</span>
         </div>

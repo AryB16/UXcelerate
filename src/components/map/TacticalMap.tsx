@@ -7,18 +7,27 @@ import {
   RotateCcw,
   Radio,
   Eye,
-  AlertTriangle,
-  Flame,
-  Heart,
-  Navigation,
-  Sparkles,
   Signal,
-  Compass,
-  MapPin,
-  Shield,
+  Maximize2,
+  Minimize2,
+  X,
+  Heart,
+  AlertTriangle,
+  Send,
+  WifiOff,
+  Navigation,
 } from 'lucide-react';
+import { soundManager } from '../../utils/sound';
 
-export const TacticalMap: React.FC = () => {
+interface TacticalMapProps {
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+}
+
+export const TacticalMap: React.FC<TacticalMapProps> = ({
+  isExpanded = false,
+  onToggleExpand,
+}) => {
   const {
     sectors,
     robots,
@@ -37,6 +46,7 @@ export const TacticalMap: React.FC = () => {
     deployBeaconAt,
     openFpv,
     restoreComms,
+    dispatchRobotToSurvivor,
   } = useMission();
 
   const [zoom, setZoom] = useState<number>(1);
@@ -45,10 +55,21 @@ export const TacticalMap: React.FC = () => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
+  // Hover state for sleek, clean tooltip
+  const [hoveredEntity, setHoveredEntity] = useState<{
+    type: 'robot' | 'survivor' | 'hazard' | 'beacon';
+    id: string;
+    x: number;
+    y: number;
+    title: string;
+    subtitle: string;
+    badge?: string;
+  } | null>(null);
+
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const handleZoomIn = () => setZoom((z) => Math.min(2.4, z + 0.15));
-  const handleZoomOut = () => setZoom((z) => Math.max(0.65, z - 0.15));
+  const handleZoomOut = () => setZoom((z) => Math.max(0.75, z - 0.15));
   const handleReset = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -73,143 +94,155 @@ export const TacticalMap: React.FC = () => {
     const clickX = (e.clientX - rect.left - pan.x) / zoom;
     const clickY = (e.clientY - rect.top - pan.y) / zoom;
 
-    deployBeaconAt(clickX, clickY, `Beacon #${beacons.length + 1} (Tactical Drop)`);
+    deployBeaconAt(clickX, clickY, `Relay #${beacons.length + 1}`);
+    soundManager.playTacticalClick();
     setIsDeployMode(false);
   };
 
+  const getRobotEmoji = (type: string) => {
+    switch (type) {
+      case 'aerial_drone': return '🛸';
+      case 'heavy_quadruped': return '🐕';
+      case 'snake_crawler': return '🐍';
+      case 'tracked_rover': return '🚜';
+      case 'wall_climber': return '🦎';
+      case 'amphibious': return '🌊';
+      default: return '🤖';
+    }
+  };
+
+  // Selected entities for the docked inspector panel
+  const selectedRobot = robots.find((r) => r.id === selectedRobotId);
+  const selectedSurvivor = survivors.find((s) => s.id === selectedSurvivorId);
+  const selectedHazard = hazards.find((h) => h.id === selectedHazardId);
+
   return (
-    <div className="relative w-full h-full bg-[#070c16] rounded-xl border-2 border-cyan-500/30 overflow-hidden flex flex-col shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+    <div className="relative w-full h-full bg-[#060a13] rounded-xl border border-slate-800 overflow-hidden flex flex-col shadow-2xl">
       
-      {/* Top Map Action & Layer Controls Bar */}
-      <div className="flex flex-wrap items-center justify-between px-3 py-2 bg-[#0a1120] border-b border-cyan-500/30 z-10 gap-2">
-        
-        {/* Layer Toggles */}
-        <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-mono">
-          <span className="text-cyan-400 font-bold flex items-center gap-1 mr-1 text-xs">
-            <Layers className="w-4 h-4 text-cyan-400" /> LAYERS:
+      {/* Top Map Toolbar: Clean, intuitive, legible */}
+      <div className="flex items-center justify-between px-3 py-2 bg-[#0a1020]/95 border-b border-slate-800 z-10 text-xs font-mono select-none">
+        {/* Layer Controls */}
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          <span className="text-slate-400 font-semibold mr-1 flex items-center gap-1 hidden sm:flex">
+            <Layers className="w-3.5 h-3.5 text-cyan-400" /> Layers:
           </span>
 
           <button
-            onClick={() => toggleLayer('blueprint')}
-            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
-              layers.blueprint
-                ? 'bg-blue-500/25 text-blue-200 border-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.3)]'
-                : 'bg-slate-900 text-slate-500 border-slate-700'
-            }`}
-          >
-            Pre-CAD Grid
-          </button>
-
-          <button
             onClick={() => toggleLayer('slam')}
-            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
               layers.slam
-                ? 'bg-cyan-500/25 text-cyan-200 border-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.3)]'
-                : 'bg-slate-900 text-slate-500 border-slate-700'
+                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
-            LiDAR SLAM
+            <span>Blueprint</span>
           </button>
 
           <button
             onClick={() => toggleLayer('mesh')}
-            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
               layers.mesh
-                ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]'
-                : 'bg-slate-900 text-slate-500 border-slate-700'
+                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
-            RF Mesh Links
+            <span>RF Mesh</span>
           </button>
 
           <button
             onClick={() => toggleLayer('hazards')}
-            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
               layers.hazards
-                ? 'bg-amber-500/25 text-amber-200 border-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
-                : 'bg-slate-900 text-slate-500 border-slate-700'
+                ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
-            Hazards
+            <span>Hazards</span>
           </button>
 
           <button
             onClick={() => toggleLayer('routes')}
-            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
+            className={`px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
               layers.routes
-                ? 'bg-sky-500/25 text-sky-200 border-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.3)]'
-                : 'bg-slate-900 text-slate-500 border-slate-700'
+                ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/40'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
-            Corridors
-          </button>
-
-          <button
-            onClick={() => toggleLayer('staleness')}
-            className={`px-2.5 py-1 rounded text-xs font-bold border transition-colors ${
-              layers.staleness
-                ? 'bg-rose-500/25 text-rose-200 border-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.3)]'
-                : 'bg-slate-900 text-slate-500 border-slate-700'
-            }`}
-          >
-            Staleness Decay
+            <span>Corridors</span>
           </button>
         </div>
 
-        {/* Map Tool Actions: Zoom, Reset, Deploy Beacon */}
-        <div className="flex items-center gap-2 text-xs font-mono ml-auto">
+        {/* Action Tools & Zoom */}
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setIsDeployMode(!isDeployMode)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+            className={`flex items-center gap-1 px-3 py-1 rounded text-xs font-bold border transition-all ${
               isDeployMode
-                ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-extrabold shadow-[0_0_15px_rgba(6,182,212,0.6)] animate-pulse'
-                : 'bg-slate-800 text-cyan-300 border-cyan-500/40 hover:bg-slate-700'
+                ? 'bg-cyan-400 text-slate-950 border-cyan-300 animate-pulse shadow-[0_0_12px_rgba(6,182,212,0.5)]'
+                : 'bg-slate-800/90 text-cyan-300 border-slate-700 hover:bg-slate-700'
             }`}
           >
-            <Radio className="w-4 h-4" />
-            <span>{isDeployMode ? 'Click Map to Drop Beacon' : 'Deploy RF Beacon'}</span>
+            <Radio className="w-3.5 h-3.5" />
+            <span>{isDeployMode ? 'Click Map to Place' : 'Deploy Relay'}</span>
           </button>
 
-          <div className="flex items-center bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
+          {/* Full-view / Expand Map toggle */}
+          {onToggleExpand && (
+            <button
+              onClick={onToggleExpand}
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono bg-slate-800/90 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition-colors"
+              title={isExpanded ? 'Restore 3-Column Deck' : 'Expand Map Full Width'}
+            >
+              {isExpanded ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>3-Column Deck</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Expand Map</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Zoom controls */}
+          <div className="flex items-center bg-slate-800/90 rounded border border-slate-700">
             <button
               onClick={handleZoomIn}
-              className="p-1.5 text-slate-300 hover:text-cyan-300 border-r border-slate-700 transition-colors"
+              className="p-1 text-slate-300 hover:text-white border-r border-slate-700"
               title="Zoom In"
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={handleZoomOut}
-              className="p-1.5 text-slate-300 hover:text-cyan-300 border-r border-slate-700 transition-colors"
+              className="p-1 text-slate-300 hover:text-white border-r border-slate-700"
               title="Zoom Out"
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={handleReset}
-              className="p-1.5 text-slate-300 hover:text-cyan-300 transition-colors"
+              className="p-1 text-slate-300 hover:text-white"
               title="Reset View"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
-
-          <div className="text-xs font-bold text-cyan-300 px-2.5 py-1 bg-slate-950 rounded-lg border border-slate-800">
-            {Math.round(zoom * 100)}%
-          </div>
         </div>
-
       </div>
 
       {/* Deploy mode alert banner */}
       {isDeployMode && (
-        <div className="absolute top-14 left-1/2 transform -translate-x-1/2 z-20 px-5 py-2 bg-cyan-950 border-2 border-cyan-400 text-cyan-100 text-xs font-mono font-bold rounded-full shadow-[0_0_25px_rgba(6,182,212,0.5)] flex items-center gap-2">
-          <Radio className="w-4 h-4 animate-spin text-cyan-400" />
-          <span>BEACON DEPLOY ACTIVE: Click anywhere in the disaster rubble to drop a Mesh Relay Node</span>
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-cyan-950/95 border-2 border-cyan-400 text-cyan-200 text-xs font-mono font-bold rounded-full shadow-2xl flex items-center gap-2 animate-bounce">
+          <Radio className="w-4 h-4 text-cyan-400 animate-spin" />
+          <span>Click anywhere on the map to deploy an RF Breadcrumb Relay Beacon</span>
         </div>
       )}
 
-      {/* Main Interactive SVG Map Viewport */}
+      {/* Main Map Canvas */}
       <div
         className={`relative flex-1 w-full h-full overflow-hidden select-none ${
           isDeployMode ? 'cursor-crosshair' : isDragging ? 'cursor-grabbing' : 'cursor-grab'
@@ -217,833 +250,991 @@ export const TacticalMap: React.FC = () => {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={() => {
+          handleMouseUp();
+          setHoveredEntity(null);
+        }}
       >
         <svg
           ref={svgRef}
           className="w-full h-full"
-          viewBox="0 0 800 650"
+          viewBox="0 0 800 620"
           onClick={handleMapClick}
         >
           <defs>
-            {/* Fog of uncertainty diagonal hatch pattern - high contrast dark charcoal */}
+            {/* Rubble / Pancake Collapse Pattern */}
             <pattern
-              id="fogOfUncertainty"
+              id="rubblePattern"
               width="20"
               height="20"
               patternTransform="rotate(45 0 0)"
               patternUnits="userSpaceOnUse"
             >
-              <rect width="20" height="20" fill="#03060a" />
-              <line x1="0" y1="0" x2="0" y2="20" stroke="#1e293b" strokeWidth="4" opacity="0.9" />
+              <line x1="0" y1="0" x2="0" y2="20" stroke="#ef4444" strokeWidth="1.5" opacity="0.15" />
+              <circle cx="10" cy="10" r="1.5" fill="#ef4444" opacity="0.3" />
             </pattern>
 
-            {/* Pre-disaster CAD Grid Pattern - clean blue architectural lines */}
-            <pattern id="cadGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(30, 58, 138, 0.4)" strokeWidth="1" />
+            {/* Fog of Uncertainty Hatch Pattern */}
+            <pattern
+              id="cleanFogPattern"
+              width="16"
+              height="16"
+              patternTransform="rotate(45 0 0)"
+              patternUnits="userSpaceOnUse"
+            >
+              <line x1="0" y1="0" x2="0" y2="16" stroke="#334155" strokeWidth="2" opacity="0.45" />
             </pattern>
 
-            {/* Radial hazard pulse */}
-            <radialGradient id="hazardPulse" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(239, 68, 68, 0.55)" />
-              <stop offset="70%" stopColor="rgba(239, 68, 68, 0.2)" />
-              <stop offset="100%" stopColor="rgba(239, 68, 68, 0)" />
-            </radialGradient>
+            {/* Subtle tactical grid pattern */}
+            <pattern id="tacGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" opacity="0.5" />
+            </pattern>
 
-            {/* Staleness pulse gradient */}
-            <radialGradient id="staleGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(245, 158, 11, 0.28)" />
-              <stop offset="100%" stopColor="rgba(245, 158, 11, 0)" />
-            </radialGradient>
+            {/* Glowing marker filter */}
+            <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+            <filter id="redGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
 
-          {/* Transform group for Pan & Zoom */}
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
             
-            {/* Deep Tactical Canvas Background */}
-            <rect x="0" y="0" width="800" height="650" fill="#060a13" />
+            {/* Deep Obsidian Background & Tactical Grid */}
+            <rect x="0" y="0" width="800" height="620" fill="#060a12" />
+            <rect x="0" y="0" width="800" height="620" fill="url(#tacGrid)" />
 
-            {/* Pre-disaster CAD Blueprint Layer */}
-            {layers.blueprint && (
-              <rect x="0" y="0" width="800" height="650" fill="url(#cadGrid)" />
-            )}
+            {/* ========================================================= */}
+            {/* 1. SECTOR BLUEPRINTS (Clear, identifiable building wings) */}
+            {/* ========================================================= */}
 
-            {/* SECTOR POLYGONS & HIGH-CONTRAST LABELS */}
-            {sectors.map((sec) => {
-              const width = sec.bounds.maxX - sec.bounds.minX;
-              const height = sec.bounds.maxY - sec.bounds.minY;
-              const isStale = sec.stalenessMinutes > 10;
-              const isCritical = sec.structuralRating === 'critical_tilt';
-              const isUnstable = sec.structuralRating === 'unstable';
+            {/* SECTOR A: North Wing ER (Top-Left: 30,30 to 380,285) */}
+            <g id="sector-a">
+              <rect
+                x="30"
+                y="30"
+                width="350"
+                height="255"
+                rx="8"
+                fill="#0a1424"
+                stroke="#1e3a5f"
+                strokeWidth="2"
+              />
+              {/* Room partitions */}
+              <line x1="30" y1="120" x2="200" y2="120" stroke="#1e3a5f" strokeWidth="1.5" strokeDasharray="6,3" />
+              <line x1="200" y1="30" x2="200" y2="200" stroke="#1e3a5f" strokeWidth="1.5" />
+              <line x1="30" y1="200" x2="380" y2="200" stroke="#1e3a5f" strokeWidth="1.5" />
 
-              const sectorStroke = isCritical ? '#ef4444' : isUnstable ? '#f59e0b' : '#38bdf8';
-              const sectorFill = isCritical
-                ? 'rgba(239, 68, 68, 0.08)'
-                : isUnstable
-                ? 'rgba(245, 158, 11, 0.06)'
-                : 'rgba(56, 189, 248, 0.04)';
+              {/* Room labels */}
+              <text x="45" y="65" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">Triage Bay A</text>
+              <text x="45" y="150" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">Trauma Suite 1</text>
+              <text x="215" y="65" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">ER Clean Zone</text>
+              <text x="45" y="235" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono">Hallway Alpha</text>
 
-              return (
-                <g key={sec.id}>
-                  {/* Sector Boundary Box - Thick & High Contrast */}
-                  <rect
-                    x={sec.bounds.minX}
-                    y={sec.bounds.minY}
-                    width={width}
-                    height={height}
-                    fill={sectorFill}
-                    stroke={sectorStroke}
-                    strokeWidth="2.5"
-                    strokeDasharray={isCritical ? '8,4' : undefined}
-                    rx="8"
-                  />
+              {/* Sector Header Badge */}
+              <g transform="translate(42, 38)">
+                <rect x="0" y="0" width="240" height="22" rx="4" fill="#071224" stroke="#0284c7" strokeWidth="1.5" />
+                <text x="8" y="15" fill="#38bdf8" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
+                  🏥 SECTOR A: NORTH WING ER
+                </text>
+                <text x="175" y="14" fill="#34d399" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                  STABLE • 94%
+                </text>
+              </g>
+            </g>
 
-                  {/* Corner Accent Brackets for High-Tech Military C2 Look */}
-                  <path
-                    d={`M ${sec.bounds.minX} ${sec.bounds.minY + 20} L ${sec.bounds.minX} ${sec.bounds.minY} L ${sec.bounds.minX + 20} ${sec.bounds.minY}`}
-                    fill="none"
-                    stroke={sectorStroke}
-                    strokeWidth="4"
-                  />
-                  <path
-                    d={`M ${sec.bounds.maxX - 20} ${sec.bounds.minY} L ${sec.bounds.maxX} ${sec.bounds.minY} L ${sec.bounds.maxX} ${sec.bounds.minY + 20}`}
-                    fill="none"
-                    stroke={sectorStroke}
-                    strokeWidth="4"
-                  />
+            {/* SECTOR B: Main Tower Collapse (Top-Right: 420,30 to 770,285) */}
+            <g id="sector-b">
+              <rect
+                x="420"
+                y="30"
+                width="350"
+                height="255"
+                rx="8"
+                fill="#16101c"
+                stroke="#4c1d30"
+                strokeWidth="2"
+              />
 
-                  {/* Fog of uncertainty for uninspected rubble voids */}
-                  {sec.scannedPercentage < 100 && (
-                    <g>
-                      <rect
-                        x={sec.bounds.minX + (width * sec.scannedPercentage) / 100}
-                        y={sec.bounds.minY}
-                        width={width * (1 - sec.scannedPercentage / 100)}
-                        height={height}
-                        fill="url(#fogOfUncertainty)"
-                        rx="8"
-                      />
-                      {/* Unexplored Void Warning Stamp */}
-                      <text
-                        x={sec.bounds.minX + (width * sec.scannedPercentage) / 100 + 15}
-                        y={sec.bounds.minY + height / 2}
-                        fill="#64748b"
-                        fontSize="12"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="bold"
-                        letterSpacing="0.1em"
-                        opacity="0.8"
-                      >
-                        [UNVERIFIED VOID // FOG OF UNCERTAINTY]
-                      </text>
-                    </g>
-                  )}
+              {/* Rubble collapse field */}
+              <rect
+                x="430"
+                y="75"
+                width="330"
+                height="195"
+                rx="6"
+                fill="url(#rubblePattern)"
+                stroke="#ef4444"
+                strokeWidth="1"
+                strokeDasharray="4,4"
+                opacity="0.8"
+              />
 
-                  {/* Staleness Decay Warning Glow */}
-                  {layers.staleness && isStale && (
-                    <rect
-                      x={sec.bounds.minX}
-                      y={sec.bounds.minY}
-                      width={width}
-                      height={height}
-                      fill="url(#staleGlow)"
-                      className="animate-pulse"
-                    />
-                  )}
+              {/* Rubble Field Warning Label */}
+              <text x="595" y="95" textAnchor="middle" fill="#f87171" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                ⚠️ COLLAPSED PANCAKE RUBBLE SLAB
+              </text>
 
-                  {/* Prominent High-Contrast Sector Header Nameplate */}
-                  <g transform={`translate(${sec.bounds.minX + 10}, ${sec.bounds.minY + 10})`}>
-                    <rect
-                      x="0"
-                      y="0"
-                      width="280"
-                      height="26"
-                      fill="#0b1324"
-                      stroke={sectorStroke}
-                      strokeWidth="1.5"
-                      rx="4"
-                    />
-                    <text
-                      x="10"
-                      y="18"
-                      fill="#ffffff"
-                      fontSize="11"
-                      fontFamily="JetBrains Mono"
-                      fontWeight="bold"
-                      letterSpacing="0.05em"
-                    >
-                      {sec.name.toUpperCase()}
-                    </text>
-                    <rect
-                      x="215"
-                      y="4"
-                      width="58"
-                      height="18"
-                      fill={sec.scannedPercentage > 80 ? '#065f46' : '#78350f'}
-                      rx="3"
-                    />
-                    <text
-                      x="244"
-                      y="16"
-                      textAnchor="middle"
-                      fill="#ffffff"
-                      fontSize="10"
-                      fontFamily="JetBrains Mono"
-                      fontWeight="bold"
-                    >
-                      {sec.scannedPercentage}% SLAM
-                    </text>
-                  </g>
+              {/* Sector Header Badge */}
+              <g transform="translate(432, 38)">
+                <rect x="0" y="0" width="260" height="22" rx="4" fill="#1c0f1a" stroke="#f43f5e" strokeWidth="1.5" />
+                <text x="8" y="15" fill="#fb7185" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
+                  🏢 SECTOR B: MAIN TOWER COLLAPSE
+                </text>
+                <text x="195" y="14" fill="#f43f5e" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                  UNSTABLE • 68%
+                </text>
+              </g>
+            </g>
 
-                  {/* High-Visibility Staleness Warning Badge */}
-                  {layers.staleness && isStale && (
-                    <g transform={`translate(${sec.bounds.minX + 10}, ${sec.bounds.minY + 42})`}>
-                      <rect
-                        x="0"
-                        y="0"
-                        width="260"
-                        height="22"
-                        fill="#451a03"
-                        stroke="#f59e0b"
-                        strokeWidth="1.2"
-                        rx="4"
-                      />
-                      <text
-                        x="8"
-                        y="15"
-                        fill="#fef08a"
-                        fontSize="10"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="bold"
-                      >
-                        ⚠️ STALENESS: {sec.stalenessMinutes}m (AFTERSHOCK DRIFT RISK)
-                      </text>
-                    </g>
-                  )}
-                </g>
-              );
-            })}
+            {/* SECTOR C: Metro Void & Basement (Bottom-Right: 420,325 to 770,580) */}
+            <g id="sector-c">
+              <rect
+                x="420"
+                y="325"
+                width="350"
+                height="255"
+                rx="8"
+                fill="#120e18"
+                stroke="#3f1a28"
+                strokeWidth="2"
+              />
 
-            {/* SLAM Simulated LiDAR Pointcloud Vectors */}
-            {layers.slam && (
-              <g opacity="0.85">
-                {/* Sector Alpha mapped walls */}
+              {/* Elevator shafts & voids */}
+              <rect x="440" y="375" width="80" height="90" rx="4" fill="#1e1324" stroke="#6b21a8" strokeWidth="1.5" />
+              <text x="450" y="420" fill="#a855f7" fontSize="10" fontFamily="JetBrains Mono">Elevator Shaft</text>
+
+              {/* Fog of Uncertainty over unexplored subterranean void */}
+              <rect
+                x="540"
+                y="370"
+                width="220"
+                height="200"
+                rx="6"
+                fill="url(#cleanFogPattern)"
+                stroke="#64748b"
+                strokeWidth="1"
+                strokeDasharray="4,4"
+              />
+              <text x="650" y="555" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                🌫️ UNEXPLORED SUBTERRANEAN VOID
+              </text>
+
+              {/* Sector Header Badge */}
+              <g transform="translate(432, 333)">
+                <rect x="0" y="0" width="260" height="22" rx="4" fill="#1b0e1a" stroke="#e11d48" strokeWidth="1.5" />
+                <text x="8" y="15" fill="#f43f5e" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
+                  🚇 SECTOR C: METRO BASEMENT VOID
+                </text>
+                <text x="195" y="14" fill="#f43f5e" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                  CRITICAL • 35%
+                </text>
+              </g>
+            </g>
+
+            {/* SECTOR D: South Courtyard & Staging (Bottom-Left: 30,325 to 380,580) */}
+            <g id="sector-d">
+              <rect
+                x="30"
+                y="325"
+                width="350"
+                height="255"
+                rx="8"
+                fill="#081418"
+                stroke="#134e4a"
+                strokeWidth="2"
+              />
+
+              {/* Courtyard staging zones */}
+              <rect x="50" y="370" width="130" height="80" rx="4" fill="#042f2e" stroke="#10b981" strokeWidth="1" strokeDasharray="4,2" />
+              <text x="65" y="415" fill="#34d399" fontSize="10" fontFamily="JetBrains Mono">Staging Base HQ</text>
+
+              <rect x="210" y="370" width="150" height="180" rx="4" fill="#07232b" stroke="#0e7490" strokeWidth="1" />
+              <text x="225" y="415" fill="#38bdf8" fontSize="10" fontFamily="JetBrains Mono">Basement Sump Area</text>
+              <text x="225" y="430" fill="#64748b" fontSize="9" fontFamily="JetBrains Mono">(Flooded Drainage)</text>
+
+              {/* Sector Header Badge */}
+              <g transform="translate(42, 333)">
+                <rect x="0" y="0" width="250" height="22" rx="4" fill="#051c1c" stroke="#10b981" strokeWidth="1.5" />
+                <text x="8" y="15" fill="#34d399" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
+                  🌲 SECTOR D: COURTYARD STAGING
+                </text>
+                <text x="185" y="14" fill="#34d399" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                  SAFE • 88%
+                </text>
+              </g>
+            </g>
+
+            {/* CENTRAL CORRIDORS (Connecting all sectors) */}
+            <rect x="380" y="100" width="40" height="420" fill="#070d18" stroke="#1e293b" strokeWidth="1" />
+            <rect x="120" y="285" width="560" height="40" fill="#070d18" stroke="#1e293b" strokeWidth="1" />
+            <text x="400" y="310" textAnchor="middle" fill="#64748b" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+              ATRIUM
+            </text>
+
+            {/* ========================================================= */}
+            {/* 2. ROUTES & CORRIDORS (Safe vs Blocked paths)             */}
+            {/* ========================================================= */}
+            {layers.routes && (
+              <g id="routes-layer">
+                {/* Safe Corridor Alpha (Staging to ER) */}
                 <path
-                  d="M 60 80 L 360 80 M 60 140 L 220 140 M 60 220 L 360 220 M 180 80 L 180 220"
-                  stroke="#00f0ff"
-                  strokeWidth="2"
-                  strokeDasharray="4,2"
+                  d="M 120 400 L 120 305 L 290 305 L 290 190"
+                  fill="none"
+                  stroke="#00e5ff"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.85"
                 />
-                {/* Sector Beta collapsed pancake slabs */}
+                <rect x="130" y="293" width="90" height="18" rx="4" fill="#071b28" stroke="#00e5ff" strokeWidth="1" />
+                <text x="175" y="306" textAnchor="middle" fill="#38bdf8" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                  🟢 SAFE ROUTE
+                </text>
+
+                {/* Hazardous Crawlway to Survivor #1 */}
                 <path
-                  d="M 440 80 L 520 140 L 610 110 L 740 90 M 450 200 L 550 230 L 720 190"
-                  stroke="#38bdf8"
-                  strokeWidth="2.5"
-                  strokeDasharray="6,3"
+                  d="M 290 190 L 420 190 L 480 175 L 535 140"
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.8"
                 />
-                {/* Rubble scatter points - larger and distinct */}
-                <circle cx="490" cy="120" r="3" fill="#00f0ff" />
-                <circle cx="510" cy="135" r="2.5" fill="#38bdf8" />
-                <circle cx="560" cy="170" r="3.5" fill="#00f0ff" />
-                <circle cx="630" cy="140" r="4" fill="#38bdf8" />
-                <circle cx="670" cy="180" r="3" fill="#00f0ff" />
-                <circle cx="700" cy="110" r="2.5" fill="#38bdf8" />
+
+                {/* Blocked Atrium Corridor (Pancake Collapse) */}
+                <path
+                  d="M 430 250 L 520 250 L 580 250"
+                  fill="none"
+                  stroke="#ef4444"
+                  strokeWidth="3.5"
+                  strokeDasharray="6,4"
+                  strokeLinecap="round"
+                  opacity="0.9"
+                />
+                <rect x="475" y="240" width="85" height="18" rx="4" fill="#2d0c13" stroke="#ef4444" strokeWidth="1.5" />
+                <text x="517" y="253" textAnchor="middle" fill="#fca5a5" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                  ⛔ BLOCKED
+                </text>
+
+                {/* Discovered Subterranean Crawlway (Snakebot) */}
+                <path
+                  d="M 480 340 L 530 400 L 630 460"
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="3"
+                  strokeDasharray="5,3"
+                  strokeLinecap="round"
+                  opacity="0.85"
+                />
+                <rect x="525" y="390" width="85" height="18" rx="4" fill="#062e24" stroke="#10b981" strokeWidth="1" />
+                <text x="567" y="403" textAnchor="middle" fill="#34d399" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                  ✨ NEW VOID
+                </text>
               </g>
             )}
 
-            {/* CORRIDORS & EVACUATION PATHS - THICK, VIBRANT, HIGH VISIBILITY */}
-            {layers.routes &&
-              routes.map((rte) => {
-                const pathD = rte.points.reduce(
-                  (acc, pt, idx) => `${acc} ${idx === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`,
-                  ''
-                );
-
-                const isBlocked = rte.status === 'blocked';
-                const isNew = rte.status === 'newly_discovered';
-                const isHazardous = rte.status === 'hazardous';
-
-                const strokeColor = isBlocked
-                  ? '#ef4444'
-                  : isNew
-                  ? '#10b981'
-                  : isHazardous
-                  ? '#f59e0b'
-                  : '#00e5ff';
-
-                const midPt = rte.points[Math.floor(rte.points.length / 2)];
-
-                return (
-                  <g key={rte.id}>
-                    {/* High-visibility glowing background path */}
-                    <path
-                      d={pathD}
-                      fill="none"
-                      stroke={strokeColor}
-                      strokeWidth={isBlocked ? 4 : 6}
-                      strokeOpacity={isBlocked ? 0.4 : 0.3}
-                      strokeLinecap="round"
-                    />
-                    {/* Core Path Line */}
-                    <path
-                      d={pathD}
-                      fill="none"
-                      stroke={strokeColor}
-                      strokeWidth={isBlocked ? 3 : 3.5}
-                      strokeDasharray={isBlocked ? '8,6' : isNew ? '8,4' : undefined}
-                      strokeLinecap="round"
-                    />
-
-                    {/* Blocked Barrier Marker if impassable */}
-                    {isBlocked && (
-                      <g transform={`translate(${midPt.x - 12}, ${midPt.y - 12})`}>
-                        <rect x="0" y="0" width="24" height="24" fill="#7f1d1d" stroke="#ef4444" strokeWidth="2" rx="4" />
-                        <line x1="4" y1="4" x2="20" y2="20" stroke="#ffffff" strokeWidth="3" />
-                        <line x1="20" y1="4" x2="4" y2="20" stroke="#ffffff" strokeWidth="3" />
-                      </g>
-                    )}
-
-                    {/* Route Nameplate Tag */}
-                    <g transform={`translate(${midPt.x + 16}, ${midPt.y - 14})`}>
-                      <rect
-                        x="0"
-                        y="0"
-                        width="180"
-                        height="24"
-                        fill="#070d18"
-                        stroke={strokeColor}
-                        strokeWidth="1.5"
-                        rx="4"
-                      />
-                      <text
-                        x="8"
-                        y="16"
-                        fill={strokeColor}
-                        fontSize="10"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="bold"
-                      >
-                        {isBlocked ? '⛔ BLOCKED: ' : isNew ? '✨ NEW VOID: ' : 'CORRIDOR: '}
-                        {rte.name.split(' ')[0]} ({rte.widthCm}cm)
-                      </text>
-                    </g>
-                  </g>
-                );
-              })}
-
-            {/* RF MESH TOPOLOGY & RELAY BEACONS */}
+            {/* ========================================================= */}
+            {/* 3. RF MESH NETWORK & RELAYS                               */}
+            {/* ========================================================= */}
             {layers.mesh && (
-              <g>
-                {/* Inter-beacon connection trunks */}
-                {beacons.map((bcn, idx) => {
-                  if (idx === 0) return null;
-                  const parent = beacons[idx - 1];
-                  return (
-                    <line
-                      key={`mesh-link-${bcn.id}`}
-                      x1={parent.x}
-                      y1={parent.y}
-                      x2={bcn.x}
-                      y2={bcn.y}
-                      stroke="#10b981"
-                      strokeWidth="2.5"
-                      strokeDasharray="6,4"
-                      opacity="0.8"
-                    />
-                  );
-                })}
+              <g id="mesh-layer">
+                {/* Mesh Link Lines */}
+                <line x1="200" y1="200" x2="440" y2="260" stroke="#10b981" strokeWidth="1.8" strokeDasharray="4,4" opacity="0.5" />
+                <line x1="440" y1="260" x2="520" y2="380" stroke="#10b981" strokeWidth="1.8" strokeDasharray="4,4" opacity="0.5" />
 
-                {/* Beacon Nodes with Large Coverage Radii */}
+                {/* RF Mesh Coverage Radii */}
                 {beacons.map((bcn) => (
-                  <g key={bcn.id}>
-                    <circle
-                      cx={bcn.x}
-                      cy={bcn.y}
-                      r={bcn.radius}
-                      fill="rgba(16, 185, 129, 0.05)"
-                      stroke="#10b981"
-                      strokeWidth="1.5"
-                      strokeDasharray="6,6"
-                      opacity="0.6"
-                    />
-                    <circle cx={bcn.x} cy={bcn.y} r="12" fill="#064e3b" stroke="#34d399" strokeWidth="2.5" />
-                    <circle cx={bcn.x} cy={bcn.y} r="4" fill="#6ee7b7" className="animate-ping" />
-                    
-                    {/* Beacon Tag */}
-                    <g transform={`translate(${bcn.x + 16}, ${bcn.y - 12})`}>
-                      <rect x="0" y="0" width="130" height="22" fill="#062e24" stroke="#10b981" strokeWidth="1" rx="4" />
-                      <text
-                        x="8"
-                        y="15"
-                        fill="#6ee7b7"
-                        fontSize="10"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="bold"
-                      >
-                        📡 {bcn.label.split(' ')[0]} ({bcn.batteryHours}h)
-                      </text>
-                    </g>
-                  </g>
+                  <circle
+                    key={`rad-${bcn.id}`}
+                    cx={bcn.x}
+                    cy={bcn.y}
+                    r={Math.min(bcn.radius, 100)}
+                    fill="rgba(16, 185, 129, 0.04)"
+                    stroke="#10b981"
+                    strokeWidth="1"
+                    strokeDasharray="4,4"
+                    opacity="0.4"
+                  />
                 ))}
 
-                {/* Active Robot Mesh Links */}
-                {robots
-                  .filter((r) => r.commsStatus === 'connected')
-                  .map((r) => {
-                    const closestBcn = beacons.reduce((prev, curr) => {
-                      const dPrev = Math.hypot(prev.x - r.position.x, prev.y - r.position.y);
-                      const dCurr = Math.hypot(curr.x - r.position.x, curr.y - r.position.y);
-                      return dCurr < dPrev ? curr : prev;
-                    }, beacons[0]);
-
-                    return (
-                      <line
-                        key={`bot-link-${r.id}`}
-                        x1={r.position.x}
-                        y1={r.position.y}
-                        x2={closestBcn.x}
-                        y2={closestBcn.y}
-                        stroke="#00f0ff"
-                        strokeWidth="1.5"
-                        strokeDasharray="4,3"
-                        opacity={0.7}
-                      />
-                    );
-                  })}
+                {/* Relay Beacon Pins */}
+                {beacons.map((bcn) => (
+                  <g
+                    key={bcn.id}
+                    className="cursor-pointer"
+                    onMouseEnter={() =>
+                      setHoveredEntity({
+                        type: 'beacon',
+                        id: bcn.id,
+                        x: bcn.x,
+                        y: bcn.y,
+                        title: bcn.label,
+                        subtitle: `Battery: ${bcn.batteryHours}h • Uplink: ${bcn.uplinkId}`,
+                        badge: 'ACTIVE RF REPEATER',
+                      })
+                    }
+                    onMouseLeave={() => setHoveredEntity(null)}
+                  >
+                    <circle cx={bcn.x} cy={bcn.y} r="10" fill="#042f2e" stroke="#10b981" strokeWidth="2" />
+                    <circle cx={bcn.x} cy={bcn.y} r="4" fill="#34d399" />
+                    <text x={bcn.x} y={bcn.y + 20} textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                      {bcn.label.split(' ')[0]}
+                    </text>
+                  </g>
+                ))}
               </g>
             )}
 
-            {/* HAZARDS - BOLD DANGER ZONES & NUMERICAL READOUTS */}
-            {layers.hazards &&
-              hazards.map((haz) => {
-                const isSelected = selectedHazardId === haz.id;
-                const isGas = haz.type === 'gas_leak';
-                const isCollapse = haz.type === 'structural_collapse';
-                const hazColor = isGas ? '#ef4444' : isCollapse ? '#f97316' : '#eab308';
-
-                return (
-                  <g
-                    key={haz.id}
-                    className="cursor-pointer"
-                    onClick={() => selectHazard(haz.id)}
-                  >
-                    {/* Danger Radius Pulse */}
-                    <circle
-                      cx={haz.location.x}
-                      cy={haz.location.y}
-                      r={haz.location.radius}
-                      fill="url(#hazardPulse)"
-                      stroke={hazColor}
-                      strokeWidth={isSelected ? '3' : '2'}
-                      strokeDasharray="6,4"
-                      className="animate-pulse"
-                    />
-
-                    {/* Hazard Center Badge - Large & Distinct */}
-                    <circle
-                      cx={haz.location.x}
-                      cy={haz.location.y}
-                      r="16"
-                      fill={isGas ? '#450a0a' : isCollapse ? '#431407' : '#422006'}
-                      stroke={hazColor}
-                      strokeWidth="2.5"
-                    />
-
-                    <text
-                      x={haz.location.x}
-                      y={haz.location.y + 5}
-                      textAnchor="middle"
-                      fontSize="14"
-                      fill="#ffffff"
-                      fontWeight="bold"
-                    >
-                      {isGas ? '☣' : isCollapse ? '⚠' : '⚡'}
-                    </text>
-
-                    {/* High-Visibility Hazard Tag */}
-                    <g transform={`translate(${haz.location.x + 22}, ${haz.location.y - 18})`}>
-                      <rect
-                        x="0"
-                        y="0"
-                        width="210"
-                        height="42"
-                        fill="#090e18"
-                        stroke={hazColor}
-                        strokeWidth="1.8"
-                        rx="5"
-                      />
-                      <text
-                        x="10"
-                        y="17"
-                        fill={hazColor}
-                        fontSize="11"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="bold"
-                      >
-                        {haz.title}
-                      </text>
-                      <text
-                        x="10"
-                        y="32"
-                        fill="#ffffff"
-                        fontSize="10"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="600"
-                      >
-                        {haz.readout}
-                      </text>
-                    </g>
-                  </g>
-                );
-              })}
-
-            {/* DISCOVERED SURVIVORS - HIGH CONTRAST TRIAGE BEACONS */}
-            {layers.vitals &&
-              survivors.map((surv) => {
-                const isSelected = selectedSurvivorId === surv.id;
-                const isImmediate = surv.triage === 'immediate';
-                const ringColor = isImmediate ? '#ef4444' : '#f59e0b';
-                const ringBg = isImmediate ? '#450a0a' : '#451a03';
-
-                return (
-                  <g
-                    key={surv.id}
-                    className="cursor-pointer"
-                    onClick={() => selectSurvivor(surv.id)}
-                  >
-                    {/* Concentric Pulse Rings */}
-                    <circle
-                      cx={surv.location.x}
-                      cy={surv.location.y}
-                      r="28"
-                      fill="none"
-                      stroke={ringColor}
-                      strokeWidth="2"
-                      opacity="0.4"
-                      className="animate-ping"
-                    />
-                    <circle
-                      cx={surv.location.x}
-                      cy={surv.location.y}
-                      r="18"
-                      fill={ringBg}
-                      stroke={ringColor}
-                      strokeWidth={isSelected ? '3.5' : '2.5'}
-                    />
-
-                    {/* Center Heartbeat Icon */}
-                    <circle cx={surv.location.x} cy={surv.location.y} r="7" fill={ringColor} />
-
-                    {/* High-Visibility Vital Signs Tag */}
-                    <g transform={`translate(${surv.location.x + 24}, ${surv.location.y - 20})`}>
-                      <rect
-                        x="0"
-                        y="0"
-                        width="175"
-                        height="44"
-                        fill="#0a0f1d"
-                        stroke={ringColor}
-                        strokeWidth="2"
-                        rx="5"
-                      />
-                      <rect
-                        x="6"
-                        y="6"
-                        width="163"
-                        height="16"
-                        fill={isImmediate ? '#7f1d1d' : '#78350f'}
-                        rx="3"
-                      />
-                      <text
-                        x="87"
-                        y="18"
-                        textAnchor="middle"
-                        fill="#ffffff"
-                        fontSize="10"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="bold"
-                      >
-                        {surv.label.split(' ')[0]} [{surv.triage.toUpperCase()}]
-                      </text>
-                      <text
-                        x="10"
-                        y="36"
-                        fill="#ffffff"
-                        fontSize="11"
-                        fontFamily="JetBrains Mono"
-                        fontWeight="bold"
-                      >
-                        ❤️ {surv.vitals.heartRate} BPM • {surv.vitals.spO2}% SpO2
-                      </text>
-                    </g>
-                  </g>
-                );
-              })}
-
-            {/* ROBOT SWARM FLEET (BOLD, CRISP, HIGH-VISIBILITY MARKERS) */}
-            {robots.map((bot) => {
-              const isSelected = selectedRobotId === bot.id;
-              const isDisconnected = bot.commsStatus === 'disconnected';
-              const isDegraded = bot.commsStatus === 'degraded';
-
-              // GHOST MODE FOR DISCONNECTED ROBOTS (e.g. SERPENS-3)
-              if (isDisconnected) {
-                const projectedX = bot.lastKnownPosition.x + bot.deadReckoningVector.dx * 35;
-                const projectedY = bot.lastKnownPosition.y + bot.deadReckoningVector.dy * 35;
-
-                return (
-                  <g key={bot.id} className="cursor-pointer" onClick={() => selectRobot(bot.id)}>
-                    {/* Last confirmed position anchor */}
-                    <circle
-                      cx={bot.lastKnownPosition.x}
-                      cy={bot.lastKnownPosition.y}
-                      r="14"
-                      fill="rgba(244, 63, 94, 0.3)"
-                      stroke="#f43f5e"
-                      strokeWidth="2.5"
-                    />
-                    <circle cx={bot.lastKnownPosition.x} cy={bot.lastKnownPosition.y} r="6" fill="#f43f5e" />
-
-                    {/* Projected Dead Reckoning Vector Line */}
-                    <line
-                      x1={bot.lastKnownPosition.x}
-                      y1={bot.lastKnownPosition.y}
-                      x2={projectedX}
-                      y2={projectedY}
-                      stroke="#f43f5e"
-                      strokeWidth="3"
-                      strokeDasharray="6,4"
-                    />
-
-                    {/* Uncertainty Ellipse */}
-                    <circle
-                      cx={projectedX}
-                      cy={projectedY}
-                      r="32"
-                      fill="rgba(244, 63, 94, 0.15)"
-                      stroke="#f43f5e"
-                      strokeWidth="1.5"
-                      strokeDasharray="4,4"
-                      className="animate-pulse"
-                    />
-
-                    {/* Ghost Icon Box */}
-                    <g transform={`translate(${projectedX - 14}, ${projectedY - 14})`}>
-                      <rect
-                        x="0"
-                        y="0"
-                        width="28"
-                        height="28"
-                        fill="#1e1b4b"
-                        stroke="#f43f5e"
-                        strokeWidth="2.5"
-                        rx="6"
-                      />
-                      <text x="14" y="19" textAnchor="middle" fill="#ffffff" fontSize="13" fontWeight="bold">
-                        👻
-                      </text>
-                    </g>
-
-                    {/* High-Visibility Ghost Telemetry Tag */}
-                    <g transform={`translate(${projectedX + 22}, ${projectedY - 24})`}>
-                      <rect
-                        x="0"
-                        y="0"
-                        width="190"
-                        height="50"
-                        fill="#0b0f19"
-                        stroke="#f43f5e"
-                        strokeWidth="2"
-                        rx="6"
-                      />
-                      <text x="10" y="18" fill="#f43f5e" fontSize="11" fontFamily="JetBrains Mono" fontWeight="bold">
-                        ⚠️ {bot.name} [GHOST MODE]
-                      </text>
-                      <text x="10" y="32" fill="#cbd5e1" fontSize="10" fontFamily="JetBrains Mono">
-                        LOST: {Math.floor(bot.lastContactSecondsAgo / 60)}m {bot.lastContactSecondsAgo % 60}s AGO
-                      </text>
-                      <text x="10" y="44" fill="#38bdf8" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
-                        📦 {bot.storeAndForwardBacklog} PKTS BUFFERED
-                      </text>
-                    </g>
-                  </g>
-                );
-              }
-
-              // CONNECTED OR DEGRADED ACTIVE ROBOT
-              const botColor = isDegraded ? '#f59e0b' : '#00f0ff';
-              const botBg = isSelected ? '#083344' : '#0f172a';
-
-              return (
+            {/* ========================================================= */}
+            {/* 4. HAZARDS (Methane leak, 18° tilt, electrical)          */}
+            {/* ========================================================= */}
+            {layers.hazards && (
+              <g id="hazards-layer">
+                {/* HAZ-01: Methane Gas Leak in Sector Beta */}
                 <g
-                  key={bot.id}
-                  className="cursor-pointer transition-transform duration-300"
-                  onClick={() => selectRobot(bot.id)}
-                  onDoubleClick={() => openFpv(bot.id)}
+                  className="cursor-pointer"
+                  onClick={() => selectHazard('HAZ-01')}
+                  onMouseEnter={() =>
+                    setHoveredEntity({
+                      type: 'hazard',
+                      id: 'HAZ-01',
+                      x: 580,
+                      y: 220,
+                      title: 'Methane Gas Rupture (CH4)',
+                      subtitle: '520 PPM • Lower Explosive Limit Alert',
+                      badge: 'CRITICAL HAZARD',
+                    })
+                  }
+                  onMouseLeave={() => setHoveredEntity(null)}
                 >
-                  {/* Selected halo */}
-                  {isSelected && (
-                    <circle
-                      cx={bot.position.x}
-                      cy={bot.position.y}
-                      r="28"
-                      fill="none"
-                      stroke={botColor}
-                      strokeWidth="2.5"
-                      strokeDasharray="6,3"
-                      className="animate-spin"
-                    />
-                  )}
-
-                  {/* Heading Direction Arrow */}
-                  <line
-                    x1={bot.position.x}
-                    y1={bot.position.y}
-                    x2={bot.position.x + Math.cos((bot.heading * Math.PI) / 180) * 22}
-                    y2={bot.position.y + Math.sin((bot.heading * Math.PI) / 180) * 22}
-                    stroke={botColor}
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Robot Center Body - Larger (26x26) */}
-                  <rect
-                    x={bot.position.x - 13}
-                    y={bot.position.y - 13}
-                    width="26"
-                    height="26"
-                    fill={botBg}
-                    stroke={botColor}
-                    strokeWidth={isSelected ? '3' : '2'}
-                    rx="6"
-                  />
-
-                  {/* Inner glyph */}
-                  <circle cx={bot.position.x} cy={bot.position.y} r="4.5" fill={botColor} />
-
-                  {/* High-Visibility Robot Telemetry Tag */}
-                  <g transform={`translate(${bot.position.x + 18}, ${bot.position.y - 18})`}>
-                    <rect
-                      x="0"
-                      y="0"
-                      width="115"
-                      height="34"
-                      fill="#070c18"
-                      stroke={botColor}
-                      strokeWidth="1.5"
-                      rx="5"
-                    />
-                    <text
-                      x="8"
-                      y="15"
-                      fill="#ffffff"
-                      fontSize="11"
-                      fontFamily="JetBrains Mono"
-                      fontWeight="bold"
-                    >
-                      {bot.name}
-                    </text>
-                    <text
-                      x="8"
-                      y="27"
-                      fill={bot.battery < 30 ? '#ef4444' : '#34d399'}
-                      fontSize="10"
-                      fontFamily="JetBrains Mono"
-                      fontWeight="600"
-                    >
-                      ⚡ {Math.round(bot.battery)}% • 📶 {bot.signalStrength}%
-                    </text>
-                  </g>
+                  <circle cx="580" cy="220" r="45" fill="rgba(239, 68, 68, 0.12)" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4,4" />
+                  <circle cx="580" cy="220" r="14" fill="#1e101a" stroke="#ef4444" strokeWidth="2" />
+                  <text x="580" y="224.5" textAnchor="middle" fontSize="13" fill="#ffffff">☣</text>
+                  
+                  {/* Clean pill label below */}
+                  <rect x="525" y="238" width="110" height="18" rx="4" fill="#1c0a10" stroke="#ef4444" strokeWidth="1" />
+                  <text x="580" y="251" textAnchor="middle" fill="#fca5a5" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                    ☣ CH4 GAS 520 PPM
+                  </text>
                 </g>
-              );
-            })}
+
+                {/* HAZ-02: Structural Column Shear in Sector Gamma */}
+                <g
+                  className="cursor-pointer"
+                  onClick={() => selectHazard('HAZ-02')}
+                  onMouseEnter={() =>
+                    setHoveredEntity({
+                      type: 'hazard',
+                      id: 'HAZ-02',
+                      x: 600,
+                      y: 365,
+                      title: 'Bearing Column Shear Rupture',
+                      subtitle: '18.4° Deflection Tilt • 92% Yield Stress',
+                      badge: 'COLLAPSE RISK',
+                    })
+                  }
+                  onMouseLeave={() => setHoveredEntity(null)}
+                >
+                  <circle cx="600" cy="365" r="40" fill="rgba(245, 158, 11, 0.12)" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4,4" />
+                  <circle cx="600" cy="365" r="14" fill="#1a1409" stroke="#f59e0b" strokeWidth="2" />
+                  <text x="600" y="369.5" textAnchor="middle" fontSize="13" fill="#ffffff">⚠</text>
+                  
+                  {/* Clean pill label above */}
+                  <rect x="545" y="335" width="110" height="18" rx="4" fill="#1a1206" stroke="#f59e0b" strokeWidth="1" />
+                  <text x="600" y="348" textAnchor="middle" fill="#fde68a" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                    ⚠ 18° COLUMN TILT
+                  </text>
+                </g>
+
+                {/* HAZ-03: Substation Transformer in Sector Beta */}
+                <g
+                  className="cursor-pointer"
+                  onClick={() => selectHazard('HAZ-03')}
+                  onMouseEnter={() =>
+                    setHoveredEntity({
+                      type: 'hazard',
+                      id: 'HAZ-03',
+                      x: 735,
+                      y: 255,
+                      title: 'Substation Transformer Feeder Short',
+                      subtitle: '480V Arc Flash Hazard • Water Intrusion',
+                      badge: 'ELECTRICAL',
+                    })
+                  }
+                  onMouseLeave={() => setHoveredEntity(null)}
+                >
+                  <circle cx="735" cy="255" r="28" fill="rgba(245, 158, 11, 0.1)" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4,4" />
+                  <circle cx="735" cy="255" r="13" fill="#1a1409" stroke="#f59e0b" strokeWidth="1.8" />
+                  <text x="735" y="259" textAnchor="middle" fontSize="11" fill="#ffffff">⚡</text>
+                </g>
+              </g>
+            )}
+
+            {/* ========================================================= */}
+            {/* 5. SURVIVORS (Pulsing beacons & clear triage tags)        */}
+            {/* ========================================================= */}
+            <g id="survivors-layer">
+              {/* SURV-01: Adult Male in Sector Beta (Trapped in Rubble) */}
+              <g
+                className="cursor-pointer"
+                onClick={() => {
+                  selectSurvivor('SURV-01');
+                  soundManager.playSonarPing();
+                }}
+                onMouseEnter={() =>
+                  setHoveredEntity({
+                    type: 'survivor',
+                    id: 'SURV-01',
+                    x: 535,
+                    y: 140,
+                    title: 'Survivor #1 (Adult Male)',
+                    subtitle: 'HR: 118 BPM • SpO2: 91% • Depth: 2.1m (Pinned)',
+                    badge: 'RED // IMMEDIATE',
+                  })
+                }
+                onMouseLeave={() => setHoveredEntity(null)}
+              >
+                {/* Soft pulse wave */}
+                <circle cx="535" cy="140" r="24" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.4" className="animate-ping" />
+                {/* Pin Body */}
+                <circle
+                  cx="535"
+                  cy="140"
+                  r="15"
+                  fill="#1c0c14"
+                  stroke="#ef4444"
+                  strokeWidth={selectedSurvivorId === 'SURV-01' ? '3.5' : '2'}
+                  filter="url(#redGlow)"
+                />
+                <text x="535" y="145" textAnchor="middle" fontSize="13">❤️</text>
+                
+                {/* Clean pill label above (zero collision!) */}
+                <rect x="475" y="108" width="120" height="20" rx="4" fill="#200a12" stroke="#ef4444" strokeWidth="1.2" />
+                <text x="535" y="122" textAnchor="middle" fill="#fca5a5" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                  ❤️ S-1 [CRITICAL]
+                </text>
+              </g>
+
+              {/* SURV-02: Child in Sector Gamma (Subterranean Shaft) */}
+              <g
+                className="cursor-pointer"
+                onClick={() => {
+                  selectSurvivor('SURV-02');
+                  soundManager.playSonarPing();
+                }}
+                onMouseEnter={() =>
+                  setHoveredEntity({
+                    type: 'survivor',
+                    id: 'SURV-02',
+                    x: 650,
+                    y: 410,
+                    title: 'Survivor #2 (Child)',
+                    subtitle: 'HR: 132 BPM • SpO2: 94% • Depth: 4.8m (Void)',
+                    badge: 'RED // IMMEDIATE',
+                  })
+                }
+                onMouseLeave={() => setHoveredEntity(null)}
+              >
+                <circle cx="650" cy="410" r="24" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.4" className="animate-ping" />
+                <circle
+                  cx="650"
+                  cy="410"
+                  r="15"
+                  fill="#1c0c14"
+                  stroke="#ef4444"
+                  strokeWidth={selectedSurvivorId === 'SURV-02' ? '3.5' : '2'}
+                  filter="url(#redGlow)"
+                />
+                <text x="650" y="415" textAnchor="middle" fontSize="13">❤️</text>
+
+                {/* Clean pill label above */}
+                <rect x="590" y="378" width="120" height="20" rx="4" fill="#200a12" stroke="#ef4444" strokeWidth="1.2" />
+                <text x="650" y="392" textAnchor="middle" fill="#fca5a5" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                  ❤️ S-2 [CRITICAL]
+                </text>
+              </g>
+
+              {/* SURV-04: Confined crawlway survivor */}
+              <g
+                className="cursor-pointer"
+                onClick={() => {
+                  selectSurvivor('SURV-04');
+                  soundManager.playSonarPing();
+                }}
+                onMouseEnter={() =>
+                  setHoveredEntity({
+                    type: 'survivor',
+                    id: 'SURV-04',
+                    x: 715,
+                    y: 165,
+                    title: 'Survivor #4 (Adult Female)',
+                    subtitle: 'HR: 72 BPM • SpO2: 96% • Stable Void Pocket',
+                    badge: 'GREEN // MINOR',
+                  })
+                }
+                onMouseLeave={() => setHoveredEntity(null)}
+              >
+                <circle
+                  cx="715"
+                  cy="165"
+                  r="14"
+                  fill="#06221c"
+                  stroke="#10b981"
+                  strokeWidth={selectedSurvivorId === 'SURV-04' ? '3' : '1.8'}
+                />
+                <text x="715" y="170" textAnchor="middle" fontSize="12">💚</text>
+                
+                {/* Clean pill label above */}
+                <rect x="665" y="135" width="100" height="18" rx="4" fill="#071e19" stroke="#10b981" strokeWidth="1" />
+                <text x="715" y="148" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="JetBrains Mono" fontWeight="bold">
+                  💚 S-4 [MINOR]
+                </text>
+              </g>
+            </g>
+
+            {/* ========================================================= */}
+            {/* 6. ROBOTS & GHOST MODE (Clean pins with no clutter)       */}
+            {/* ========================================================= */}
+            <g id="robots-layer">
+              
+              {/* ROB-01: SkyEye-1 (Aerial Drone over Sector Alpha) */}
+              <g
+                className="cursor-pointer"
+                onClick={() => selectRobot('ROB-01')}
+                onDoubleClick={() => openFpv('ROB-01')}
+                onMouseEnter={() =>
+                  setHoveredEntity({
+                    type: 'robot',
+                    id: 'ROB-01',
+                    x: 260,
+                    y: 140,
+                    title: 'SkyEye-1 (AERO-SCOUT)',
+                    subtitle: 'Battery: 82% • Signal: 96% • Aerial LiDAR Survey',
+                    badge: 'CONNECTED',
+                  })
+                }
+                onMouseLeave={() => setHoveredEntity(null)}
+              >
+                {selectedRobotId === 'ROB-01' && (
+                  <circle cx="260" cy="140" r="22" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
+                )}
+                <circle cx="260" cy="140" r="16" fill="#071b28" stroke="#00f0ff" strokeWidth={selectedRobotId === 'ROB-01' ? '3' : '2'} />
+                <text x="260" y="145" textAnchor="middle" fontSize="13">🛸</text>
+                
+                {/* Clean Pill Label Below */}
+                <rect x="210" y="162" width="100" height="20" rx="4" fill="#071220" stroke="#00f0ff" strokeWidth="1" />
+                <text x="260" y="176" textAnchor="middle" fill="#ffffff" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                  ROB-01 SkyEye
+                </text>
+              </g>
+
+              {/* ROB-02: Vulcan-X (Heavy Quadruped searching Sector Beta rubble) */}
+              <g
+                className="cursor-pointer"
+                onClick={() => selectRobot('ROB-02')}
+                onDoubleClick={() => openFpv('ROB-02')}
+                onMouseEnter={() =>
+                  setHoveredEntity({
+                    type: 'robot',
+                    id: 'ROB-02',
+                    x: 480,
+                    y: 175,
+                    title: 'Vulcan-X (K9-TITAN)',
+                    subtitle: 'Battery: 69% • Signal: 78% • Acoustic Geophone Sweep',
+                    badge: 'CONNECTED',
+                  })
+                }
+                onMouseLeave={() => setHoveredEntity(null)}
+              >
+                {selectedRobotId === 'ROB-02' && (
+                  <circle cx="480" cy="175" r="22" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
+                )}
+                <circle cx="480" cy="175" r="16" fill="#071b28" stroke="#00f0ff" strokeWidth={selectedRobotId === 'ROB-02' ? '3' : '2'} />
+                <text x="480" y="180" textAnchor="middle" fontSize="13">🐕</text>
+                
+                {/* Clean Pill Label Below */}
+                <rect x="430" y="198" width="100" height="20" rx="4" fill="#071220" stroke="#00f0ff" strokeWidth="1" />
+                <text x="480" y="212" textAnchor="middle" fill="#ffffff" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                  ROB-02 Vulcan
+                </text>
+              </g>
+
+              {/* ROB-03: Serpens-3 (Snake Crawler // GHOST MODE SHOWCASE) */}
+              {/* Concrete blocks radio: pins last known spot + draws dead reckoning vector */}
+              <g
+                className="cursor-pointer"
+                onClick={() => selectRobot('ROB-03')}
+                onDoubleClick={() => openFpv('ROB-03')}
+                onMouseEnter={() =>
+                  setHoveredEntity({
+                    type: 'robot',
+                    id: 'ROB-03',
+                    x: 630,
+                    y: 470,
+                    title: 'Serpens-3 (VOID-SNAKE)',
+                    subtitle: 'GHOST MODE // Lost 5m ago • 42 Pkts Buffered Offline',
+                    badge: 'LOST SIGNAL',
+                  })
+                }
+                onMouseLeave={() => setHoveredEntity(null)}
+              >
+                {/* Last Known Position Pin (590, 430) */}
+                <circle cx="590" cy="430" r="5" fill="#f43f5e" />
+                <text x="580" y="420" fill="#f43f5e" fontSize="9" fontFamily="JetBrains Mono">Last Contact</text>
+
+                {/* Projected Dead Reckoning Trajectory Vector to (630, 470) */}
+                <line x1="590" y1="430" x2="630" y2="470" stroke="#f43f5e" strokeWidth="2.5" strokeDasharray="5,3" />
+                
+                {/* Estimated Robot Position */}
+                {selectedRobotId === 'ROB-03' && (
+                  <circle cx="630" cy="470" r="23" fill="none" stroke="#f43f5e" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
+                )}
+                <circle cx="630" cy="470" r="16" fill="#200d18" stroke="#f43f5e" strokeWidth={selectedRobotId === 'ROB-03' ? '3' : '2'} />
+                <text x="630" y="475" textAnchor="middle" fontSize="13">👻</text>
+
+                {/* High-Visibility Ghost Badge Below */}
+                <rect x="565" y="493" width="130" height="20" rx="4" fill="#200b14" stroke="#f43f5e" strokeWidth="1.2" />
+                <text x="630" y="507" textAnchor="middle" fill="#fca5a5" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                  Serpens-3 ⚠️ LOST (5m)
+                </text>
+              </g>
+
+              {/* ROB-04: Titan-2 (Tracked Rover Mast Anchor at 440, 310) */}
+              <g
+                className="cursor-pointer"
+                onClick={() => selectRobot('ROB-04')}
+                onDoubleClick={() => openFpv('ROB-04')}
+                onMouseEnter={() =>
+                  setHoveredEntity({
+                    type: 'robot',
+                    id: 'ROB-04',
+                    x: 440,
+                    y: 310,
+                    title: 'Titan-2 (SHORE-ROVER)',
+                    subtitle: 'Battery: 88% • Signal: 91% • High-Gain RF Mast Bridge',
+                    badge: 'CONNECTED',
+                  })
+                }
+                onMouseLeave={() => setHoveredEntity(null)}
+              >
+                {selectedRobotId === 'ROB-04' && (
+                  <circle cx="440" cy="310" r="22" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
+                )}
+                <circle cx="440" cy="310" r="16" fill="#071b28" stroke="#00f0ff" strokeWidth={selectedRobotId === 'ROB-04' ? '3' : '2'} />
+                <text x="440" y="315" textAnchor="middle" fontSize="13">🚜</text>
+                
+                {/* Clean Pill Label Below */}
+                <rect x="395" y="333" width="90" height="20" rx="4" fill="#071220" stroke="#00f0ff" strokeWidth="1" />
+                <text x="440" y="347" textAnchor="middle" fill="#ffffff" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                  ROB-04 Titan
+                </text>
+              </g>
+
+              {/* ROB-05: Gecko-04 (Wall Climber at 675, 215) */}
+              <g
+                className="cursor-pointer"
+                onClick={() => selectRobot('ROB-05')}
+                onDoubleClick={() => openFpv('ROB-05')}
+                onMouseEnter={() =>
+                  setHoveredEntity({
+                    type: 'robot',
+                    id: 'ROB-05',
+                    x: 675,
+                    y: 215,
+                    title: 'Gecko-04 (WALL-CRAWL)',
+                    subtitle: 'Battery: 48% • Signal: 44% (Degraded) • Vertical Shear Wall Scan',
+                    badge: 'DEGRADED',
+                  })
+                }
+                onMouseLeave={() => setHoveredEntity(null)}
+              >
+                {selectedRobotId === 'ROB-05' && (
+                  <circle cx="675" cy="215" r="22" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
+                )}
+                <circle cx="675" cy="215" r="16" fill="#1c1609" stroke="#f59e0b" strokeWidth={selectedRobotId === 'ROB-05' ? '3' : '2'} />
+                <text x="675" y="220" textAnchor="middle" fontSize="13">🦎</text>
+
+                {/* Clean Pill Label Below */}
+                <rect x="630" y="238" width="90" height="20" rx="4" fill="#191307" stroke="#f59e0b" strokeWidth="1" />
+                <text x="675" y="252" textAnchor="middle" fill="#fde68a" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                  ROB-05 Gecko
+                </text>
+              </g>
+
+              {/* ROB-06: Aqua-1 (Amphibious Sump Rover at 210, 480) */}
+              <g
+                className="cursor-pointer"
+                onClick={() => selectRobot('ROB-06')}
+                onDoubleClick={() => openFpv('ROB-06')}
+                onMouseEnter={() =>
+                  setHoveredEntity({
+                    type: 'robot',
+                    id: 'ROB-06',
+                    x: 210,
+                    y: 480,
+                    title: 'Aqua-1 (SUMP-PROBE)',
+                    subtitle: 'Battery: 76% • Signal: 72% • Basement Water Runoff Inspection',
+                    badge: 'CONNECTED',
+                  })
+                }
+                onMouseLeave={() => setHoveredEntity(null)}
+              >
+                {selectedRobotId === 'ROB-06' && (
+                  <circle cx="210" cy="480" r="22" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeDasharray="4,2" className="animate-spin" />
+                )}
+                <circle cx="210" cy="480" r="16" fill="#071b28" stroke="#00f0ff" strokeWidth={selectedRobotId === 'ROB-06' ? '3' : '2'} />
+                <text x="210" y="485" textAnchor="middle" fontSize="13">🌊</text>
+
+                {/* Clean Pill Label Below */}
+                <rect x="165" y="503" width="90" height="20" rx="4" fill="#071220" stroke="#00f0ff" strokeWidth="1" />
+                <text x="210" y="517" textAnchor="middle" fill="#ffffff" fontSize="10" fontFamily="JetBrains Mono" fontWeight="bold">
+                  ROB-06 Aqua
+                </text>
+              </g>
+
+            </g>
+
+            {/* ========================================================= */}
+            {/* 7. SLEEK ON-DEMAND HOVER TOOLTIP                          */}
+            {/* ========================================================= */}
+            {hoveredEntity && (
+              <g
+                transform={`translate(${
+                  hoveredEntity.x > 500 ? hoveredEntity.x - 240 : hoveredEntity.x + 20
+                }, ${
+                  hoveredEntity.y > 450 ? hoveredEntity.y - 75 : hoveredEntity.y - 45
+                })`}
+                className="pointer-events-none transition-all duration-150"
+              >
+                <rect
+                  x="0"
+                  y="0"
+                  width="230"
+                  height="56"
+                  fill="#07101e"
+                  stroke="#38bdf8"
+                  strokeWidth="1.5"
+                  rx="6"
+                  filter="url(#cyanGlow)"
+                />
+                {hoveredEntity.badge && (
+                  <text
+                    x="10"
+                    y="16"
+                    fill="#38bdf8"
+                    fontSize="9"
+                    fontFamily="JetBrains Mono"
+                    fontWeight="bold"
+                    letterSpacing="1"
+                  >
+                    {hoveredEntity.badge}
+                  </text>
+                )}
+                <text
+                  x="10"
+                  y="32"
+                  fill="#ffffff"
+                  fontSize="11"
+                  fontFamily="JetBrains Mono"
+                  fontWeight="bold"
+                >
+                  {hoveredEntity.title}
+                </text>
+                <text
+                  x="10"
+                  y="46"
+                  fill="#94a3b8"
+                  fontSize="9.5"
+                  fontFamily="JetBrains Mono"
+                >
+                  {hoveredEntity.subtitle}
+                </text>
+              </g>
+            )}
 
           </g>
         </svg>
 
-        {/* Tactical On-Screen Legend Bar at Bottom of Map */}
-        <div className="absolute bottom-2 right-2 z-20 flex items-center gap-3 px-3 py-1.5 rounded-lg bg-[#080d1a]/95 border border-slate-700 text-[11px] font-mono text-slate-300 shadow-xl backdrop-blur">
+        {/* ========================================================= */}
+        {/* 8. DOCKED ENTITY INSPECTOR PANEL (At Bottom-Left)         */}
+        {/* ========================================================= */}
+        {(selectedRobot || selectedSurvivor || selectedHazard) && (
+          <div className="absolute bottom-3 left-3 z-30 p-3.5 rounded-xl bg-[#091122]/95 border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] backdrop-blur max-w-sm font-mono text-xs">
+            
+            {/* Robot Inspector */}
+            {selectedRobot && (
+              <div>
+                <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{getRobotEmoji(selectedRobot.type)}</span>
+                    <span className="font-bold text-white text-sm">{selectedRobot.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold">
+                      {selectedRobot.callsign}
+                    </span>
+                  </div>
+
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                      selectedRobot.commsStatus === 'connected'
+                        ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
+                        : selectedRobot.commsStatus === 'degraded'
+                        ? 'bg-amber-950 text-amber-300 border-amber-700'
+                        : 'bg-rose-950 text-rose-300 border-rose-700 animate-pulse'
+                    }`}
+                  >
+                    {selectedRobot.commsStatus.toUpperCase()}
+                  </span>
+                </div>
+
+                {/* Telemetry stats */}
+                <div className="grid grid-cols-2 gap-2 mb-2 text-[11px] text-slate-300">
+                  <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                    <span>⚡ Battery:</span>
+                    <span className={`font-bold ${selectedRobot.battery < 30 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                      {Math.round(selectedRobot.battery)}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                    <span>📶 Signal:</span>
+                    <span className={`font-bold ${selectedRobot.signalStrength < 50 ? 'text-amber-400' : 'text-cyan-400'}`}>
+                      {selectedRobot.signalStrength}%
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-300 mb-3 leading-relaxed bg-slate-900/50 p-1.5 rounded border border-slate-800/60 line-clamp-2">
+                  <strong className="text-cyan-400">Mission:</strong> {selectedRobot.currentTask}
+                </p>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openFpv(selectedRobot.id)}
+                    className="flex-1 py-1.5 px-3 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.3)] transition-all"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Open FPV Cockpit</span>
+                  </button>
+
+                  {selectedRobot.commsStatus === 'disconnected' && (
+                    <button
+                      onClick={() => restoreComms(selectedRobot.id)}
+                      className="py-1.5 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow transition-all"
+                    >
+                      <Signal className="w-3.5 h-3.5" />
+                      <span>Sync Comms</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => deployBeaconAt(selectedRobot.position.x + 20, selectedRobot.position.y + 20)}
+                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
+                    title="Drop RF Mesh Relay at Robot Spot"
+                  >
+                    <Radio className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Survivor Inspector (if survivor selected & no robot) */}
+            {!selectedRobot && selectedSurvivor && (
+              <div>
+                <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">❤️</span>
+                    <span className="font-bold text-white text-sm">{selectedSurvivor.label}</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700 font-bold animate-pulse">
+                    {selectedSurvivor.triage.toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mb-2 text-[11px] text-slate-300">
+                  <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                    <span className="text-slate-400">Heart Rate: </span>
+                    <strong className="text-rose-400">{selectedSurvivor.vitals.heartRate} BPM</strong>
+                  </div>
+                  <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                    <span className="text-slate-400">Oxygen SpO2: </span>
+                    <strong className="text-cyan-400">{selectedSurvivor.vitals.spO2}%</strong>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-300 mb-3 bg-slate-900/50 p-1.5 rounded border border-slate-800/60 leading-relaxed">
+                  <strong className="text-amber-400">Entrapment:</strong> Depth {selectedSurvivor.location.depthMeters}m • {selectedSurvivor.notes}
+                </p>
+
+                <button
+                  onClick={() => dispatchRobotToSurvivor('ROB-02', selectedSurvivor.id)}
+                  className="w-full py-1.5 px-3 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(244,63,94,0.4)] transition-all"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Dispatch Vulcan-X Life Support</span>
+                </button>
+              </div>
+            )}
+
+            {/* Hazard Inspector */}
+            {!selectedRobot && !selectedSurvivor && selectedHazard && (
+              <div>
+                <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{selectedHazard.type === 'gas_leak' ? '☣' : '⚠'}</span>
+                    <span className="font-bold text-white text-sm">{selectedHazard.title}</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700 font-bold">
+                    {selectedHazard.severity.toUpperCase()}
+                  </span>
+                </div>
+
+                <p className="text-xs text-amber-300 font-bold mb-2 bg-amber-950/40 p-2 rounded border border-amber-500/40">
+                  {selectedHazard.readout}
+                </p>
+
+                <p className="text-[11px] text-slate-400 mb-2">
+                  Location: {selectedHazard.location.sector} • Perimeter: {selectedHazard.location.radius}m
+                </p>
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 9. TACTICAL MAP LEGEND RIBBON (Bottom-Right)              */}
+        {/* ========================================================= */}
+        <div className="absolute bottom-3 right-3 z-20 hidden md:flex items-center gap-3 px-3.5 py-2 rounded-lg bg-[#070e1c]/95 border border-slate-700/80 text-[11px] font-mono text-slate-300 shadow-xl backdrop-blur select-none">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
             <span>Active Bot</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
             <span>Ghost Bot</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-            <span>Immediate Red</span>
+            <span>Survivor</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-            <span>RF Relay</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+            <span>Hazard</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-4 h-1 rounded bg-cyan-400" />
-            <span>Safe Corridor</span>
+            <span className="w-3.5 h-1 rounded bg-cyan-400" />
+            <span>Safe Path</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-4 h-1 rounded bg-rose-500 border border-dashed" />
+            <span className="w-3.5 h-1 rounded bg-rose-500 border border-dashed" />
             <span>Blocked</span>
           </div>
         </div>
-
-        {/* Selected Robot Quick Telemetry Widget */}
-        {selectedRobotId && (
-          <div className="absolute bottom-3 left-3 z-20 p-3.5 rounded-xl bg-[#080e1c]/95 border-2 border-cyan-400 shadow-2xl backdrop-blur max-w-sm">
-            {(() => {
-              const bot = robots.find((r) => r.id === selectedRobotId);
-              if (!bot) return null;
-              return (
-                <div>
-                  <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse" />
-                      <span className="font-bold text-slate-100 tactical-font text-sm">{bot.name}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold">
-                        {bot.callsign}
-                      </span>
-                    </div>
-                    <span className="text-xs font-mono text-slate-300 capitalize">{bot.type.replace('_', ' ')}</span>
-                  </div>
-
-                  <p className="text-xs text-slate-200 font-mono mb-3 line-clamp-2 leading-relaxed">
-                    {bot.currentTask}
-                  </p>
-
-                  <div className="flex items-center gap-2 font-mono text-xs">
-                    <button
-                      onClick={() => openFpv(bot.id)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold shadow transition-colors"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>FPV Cockpit</span>
-                    </button>
-
-                    {bot.commsStatus === 'disconnected' && (
-                      <button
-                        onClick={() => restoreComms(bot.id)}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow transition-colors flex items-center gap-1"
-                      >
-                        <Signal className="w-3.5 h-3.5" />
-                        <span>Force Sync</span>
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => deployBeaconAt(bot.position.x + 20, bot.position.y + 20)}
-                      className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
-                      title="Drop Mesh Relay Beacon Here"
-                    >
-                      <Radio className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        )}
 
       </div>
     </div>
