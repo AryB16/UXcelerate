@@ -58,7 +58,7 @@ export const InteractiveTour: React.FC = () => {
       description:
         'Here are your 6 rescue robots. Click on any robot to check its battery, signal, camera view, and live sensor readings like heat and gas levels.',
       hint: 'Click on Vulcan-X (K9-TITAN) or SkyEye-1 to see their sensors update in the bottom box.',
-      positionClasses: 'top-1/2 -translate-y-1/2 right-4 md:right-8',
+      positionClasses: 'top-1/2 -translate-y-1/2 left-[280px]',
     },
     {
       step: 3,
@@ -80,7 +80,7 @@ export const InteractiveTour: React.FC = () => {
       description:
         'When concrete blocks radio signals, robots keep searching on their own and save data locally. Dropping a small relay restores full communication.',
       hint: 'Click "Eject Relay Beacon" or "Deploy RF Beacon" near Serpens to bring it back online.',
-      positionClasses: 'top-1/2 -translate-y-1/2 left-4 md:left-8',
+      positionClasses: 'top-1/2 -translate-y-1/2 left-[280px]',
     },
     {
       step: 5,
@@ -91,7 +91,7 @@ export const InteractiveTour: React.FC = () => {
       description:
         'Found survivors are sorted by medical urgency (Red = Immediate, Yellow = Stable, Green = Minor). You can send rescue teams or oxygen with a click.',
       hint: 'Check the bottom bar for overall rescue progress and cleared routes.',
-      positionClasses: 'top-1/2 -translate-y-1/2 left-4 md:left-8',
+      positionClasses: 'top-1/2 -translate-y-1/2 right-[280px]',
     },
   ];
 
